@@ -1,0 +1,8 @@
+# 忽略任意位置的 node_modules 目录
+**/node_modules/
+
+# 忽略任意位置的 package-lock.json 文件
+**/package-lock.json
+
+# 忽略任意位置的 dist 目录
+**/dist/
