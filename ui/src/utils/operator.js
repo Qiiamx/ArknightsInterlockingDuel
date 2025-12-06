@@ -1,19 +1,19 @@
 import branches from '@/assets/branches.json'
 import operators from '@/assets/operators.json'
-// 根据ban掉的干员索引， ban掉的分支索引，随机获得num个符合要求的干员索引
-export const getOprIdx = (num, ban_opr_idx, ban_branch_idx)=>{
+// 根据ban掉的干员索引， ban掉的分支索引, ban掉的稀有度，随机获得num个符合要求的干员索引
+export const getOprIdx = (num, banOprs, banBranches, banRare)=>{
   // 1. 被禁分支名集合
-  const banBranchNames = new Set(
-    ban_branch_idx.map(i => branches[i]?.分支).filter(Boolean)
+  const banBranchesNames = new Set(
+    banBranches.map(i => branches[i]?.分支).filter(Boolean)
   )
 
   // 2. 被禁干员索引集合
-  const banSet = new Set(ban_opr_idx)
+  const banSet = new Set(banOprs)
 
   // 3. 所有可用下标
   const pool = operators
     .map((op, idx) =>
-      !banSet.has(idx) && !banBranchNames.has(op.分支) ? idx : -1
+      !banSet.has(idx) && !banBranchesNames.has(op.分支) && (banRare==null || banRare!=op.稀有度) ? idx : -1
     )
     .filter(idx => idx !== -1)
 
@@ -29,8 +29,8 @@ export const getOprIdx = (num, ban_opr_idx, ban_branch_idx)=>{
 }
 
 // 根据干员索引， 获取分支索引
-export const getBranchIdx = (opr_idx)=>{
-  const op = operators[opr_idx];
+export const getBranchIdx = (oprIdx)=>{
+  const op = operators[oprIdx];
   if (!op) return -1;                         // 越界保护
   return branches.findIndex(b => b.分支 === op.分支);
 }

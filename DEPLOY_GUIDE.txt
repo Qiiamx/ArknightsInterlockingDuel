@@ -1,0 +1,58 @@
+本指南默认你具备以下知识
+1. nginx
+2. vue build
+3. node pm2
+
+部署如下
+cd ui
+npm i
+npm run build
+### 这里你就应该有一个打包好的前端文件夹了 /path/to/dist
+
+cd ../service
+npm i
+npm install pm2 -g
+pm2 start service.js
+### 启动了后端服务(3000端口)
+
+
+### 自行安装nginx
+### 确保 /etc/nginx/nginx.conf 中配置了  include /etc/nginx/conf.d/*.conf
+### 确保 /etc/nginx/nginx.conf 中配置的用户有权限访问 /path/to/dist 和 3000端口
+
+touch /etc/nginx/conf.d/aid.conf
+vi aid.conf
+```
+server {
+    listen 80;
+    server_name _;                # 有域名就写域名
+
+    # === 静态站点 ===
+    location / {
+        root /path/to/dist;   # 你的 dist 放这里
+        try_files $uri $uri/ /index.html;
+    }
+    location /api {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+    # === WebSocket 反向代理 ===
+    location /ws {
+        proxy_pass http://127.0.0.1:3000;   # Node 服务端口
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+### 测试配置文件, 启动nginx
+nginx -t
+nginx
+
+### 访问你的服务器IP
+http://your_server_ip:80

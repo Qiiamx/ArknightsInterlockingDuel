@@ -53,8 +53,7 @@ onMounted(() => {
     if(!heartbeat.value){
       heartbeat.value = setInterval(()=>{
         ws.value.send(JSON.stringify({"heartbeat": new Date().getTime()}))
-        console.log('hearbeat')
-      }, 30000)
+      }, 10000)
     }
 })
 

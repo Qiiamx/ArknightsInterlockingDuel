@@ -1,6 +1,7 @@
 <script setup>
 
 import { useMatchStore } from '@/stores/match'
+import OperatorBox from './operator-box.vue';
 const { match } = useMatchStore()
 </script>
 
@@ -11,19 +12,25 @@ const { match } = useMatchStore()
     <div>剩余 {{ match.time }} 秒</div>
     <div>禁用干员</div>
     <div>
-      <span v-for="opr in match.ban_opr" :key="opr">{{ opr }},</span>
+      <span v-for="idx in match.banOprs" :key="idx">
+        <OperatorBox :opr-idx="idx"></OperatorBox>
+      </span>
     </div>
     <div>禁用分支</div>
     <div>
-      <span v-for="opr in match.ban_branch" :key="opr">{{ opr }},</span>
+      <span v-for="idx in match.banBranchs" :key="idx">{{ idx }},</span>
     </div>
     <div>公共干员</div>
     <div>
-      <span v-for="opr in match.public_opr" :key="opr">{{ opr }},</span>
+      <span v-for="idx in match.publicOprs" :key="idx">
+        <OperatorBox :opr-idx="idx"></OperatorBox>
+      </span>
     </div>
     <div>博弈干员</div>
     <div>
-      <span v-if="match.select_opr">{{ match.select_opr }},</span>
+      <span v-if="match.selectOpr">
+        <OperatorBox :opr-idx="match.selectOpr"></OperatorBox>
+      </span>
     </div>
   </div>
 </template>
