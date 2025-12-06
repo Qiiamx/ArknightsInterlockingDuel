@@ -165,9 +165,9 @@ wss.on('connection', (ws, req) => {
 		console.log(`[-]用户 ${userId} 离开房间 ${user.roomId}`);
 
 		if (set && set.size === 0) {
-			roomMap.delete(user.roomId);
-			lock.delete(user.roomId);
-			console.log(`[-]房间 ${user.roomId} 关闭`);
+			// roomMap.delete(user.roomId);
+			// lock.delete(user.roomId);
+			// console.log(`[-]房间 ${user.roomId} 关闭`);
 		}
 	});
 });

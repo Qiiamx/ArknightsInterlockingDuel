@@ -4,7 +4,7 @@ import { useMatchStore } from '@/stores/match'
 import OperatorBox from './operator-box.vue';
 const { match } = useMatchStore()
 </script>
-
+<!-- todo  主持人Log  观众也看不到公共干员3 -->
 <template>
   <div>
     <div v-if="match.round>0">轮次 {{ match.round }}</div>
