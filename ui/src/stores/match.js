@@ -96,7 +96,6 @@ export const useMatchStore = defineStore('match', () => {
 	}
 	const submit = (func, forceData) => {
 		// 提交数据, 成功返回 ok: true
-		console.log('submit')
 		fetch(`/api/submit-data`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -220,8 +219,8 @@ export const useMatchStore = defineStore('match', () => {
 			match.value.timeStep21 = MIND_TIME
 			match.value.selectOpr = getOprIdx(1, match.value.banOprs, match.value.banBranches)[0]
 			match.value.banOprs.push(match.value.selectOpr)
-			team1.value.showClasses.push(match.value.selectOpr)
-			team2.value.showClasses.push(match.value.selectOpr)
+			addVisibleIdx([team1, team2], ['showClasses'], [match.value.selectOpr])
+			addVisibleIdx([viewer], ['showClasses', 'showBranches', 'showRares', 'showNames'], [match.value.selectOpr])
 
 			//重置所有队伍的抉择状态
 			team1.value.betCP = 0

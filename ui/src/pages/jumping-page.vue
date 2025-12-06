@@ -17,16 +17,27 @@ onMounted(() => {
     if (!shareId) {
         return
     }
+    createWebSocket()
+    // 30秒心跳
+    if(!heartbeat.value){
+      heartbeat.value = setInterval(()=>{
+        ws.value?.send(JSON.stringify({"heartbeat": new Date().getTime()}))
+      }, 10000)
+    }
+})
+
+onUnmounted(() => {
+    ws.value?.close()
+})
+const createWebSocket = (time)=>{
+    if(time <= 0){
+      alert('与服务器断开连接, 尝试重连失败...')
+    }
     // 1. 连接
-    // const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // let wsUrl = `${wsProtocol}//${location.host}/ws?userId=${userInfo.userId}&shareId=${shareId}`;
-    // if(location.host.indexOf('localhost')>=0 || location.host.indexOf('127.0.0.1')>=0){
-    //     wsUrl = `http://127.0.0.1:3000/ws?userId=${userInfo.userId}&shareId=${shareId}`;
-    // }
     ws.value = new WebSocket(`/ws?userId=${userInfo.userId}&shareId=${shareId}`)
 
     // 2. 监听事件
-    ws.value.onopen = () => console.log('✅ ws opened')
+    ws.value.onopen = () => console.debug('ws opened')
     ws.value.onmessage = (e) => {
         // 连接成功时,会分发到指定的页面, 主持去owner, 选手去 player, 观众去 viewer
         let data = JSON.parse(e.data)
@@ -43,23 +54,16 @@ onMounted(() => {
         }
         router.push('/match');
     }
+    ws.value.onerror = (ws, event) =>{
+      console.log('ws error', ws, event)
+    }
     ws.value.onclose = () => {
-      console.log('❌ ws closed')
-      clearInterval(heartbeat.value)
-      heartbeat.value = null
-      alert("离线，请从分享链接重新进入")
+      console.debug('ws closed')
+      setTimeout(()=>{
+        createWebSocket(time - 1)
+      }, 1000)
     }
-    // 30秒心跳
-    if(!heartbeat.value){
-      heartbeat.value = setInterval(()=>{
-        ws.value.send(JSON.stringify({"heartbeat": new Date().getTime()}))
-      }, 10000)
-    }
-})
-
-onUnmounted(() => {
-    ws.value?.close()
-})
+}
 const randomId = ()=>{
   return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)

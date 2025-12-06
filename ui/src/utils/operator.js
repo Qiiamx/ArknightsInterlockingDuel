@@ -50,10 +50,7 @@ export const getLastOprCount = (banOprs, banBranches)=>{
 
 // 根据干员索引， 获取分支索引
 export const getBranchIdx = (oprIdx)=>{
-  console.log(operators)
-  console.log(oprIdx)
   const op = operators[oprIdx];
-  console.log(op)
   if (!op) return -1;                         // 越界保护
   return branches.findIndex(b => b.分支 === op.分支);
 }
