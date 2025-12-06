@@ -304,14 +304,14 @@ export const useMatchStore = defineStore('match', () => {
 			if (team1.value.decision == 2) {
 				// team1休息
 				team1.value.lastCP = team1.value.lastCP + REST_INCREASE_CP
-				if(team1.value.betIP > 0){
+				if(team1.value.betIP < 1){
 					team1.value.lastIP = team1.value.lastIP + REST_INCREASE_IP
 				}
 			}
 			if (team2.value.decision == 2) {
 				// team2休息
 				team2.value.lastCP = team2.value.lastCP + REST_INCREASE_CP
-				if(team2.value.betIP > 0){
+				if(team2.value.betIP < 1){
 					team2.value.lastIP = team2.value.lastIP + REST_INCREASE_IP
 				}
 			}
