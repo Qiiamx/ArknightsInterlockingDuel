@@ -81,7 +81,7 @@ server.on('request', (req, res) => {
 		let body = '';
 		req.on('data', c => body += c);
 		req.on('end', async () => {
-			const { userId, data } = JSON.parse(body);
+			const { userId, data, force } = JSON.parse(body);
 			if (!userMap.has(userId)) {
 				res.writeHead(400, { 'Content-Type': 'application/json' });
 				res.end(JSON.stringify({ ok: false }));
@@ -93,7 +93,7 @@ server.on('request', (req, res) => {
 				// 校对版本号， 不正确的直接让前端重试， 正确的通过广播更新给所有人
 				if (roomMap.has(roomId)) {
 					let room = roomMap.get(roomId)
-					if(room.version == null || room.version == data.match.version){
+					if(room.version == null || room.version == data.match.version || force){
 						let uuid = v4()
 						room.version = uuid
 						data.match.version = uuid

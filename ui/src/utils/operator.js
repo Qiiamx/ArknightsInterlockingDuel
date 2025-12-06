@@ -28,9 +28,32 @@ export const getOprIdx = (num, banOprs, banBranches, banRare)=>{
   return pool.slice(0, num)
 }
 
+export const getLastOprCount = (banOprs, banBranches)=>{
+  // 1. 被禁分支名集合
+  const banBranchesNames = new Set(
+    banBranches.map(i => branches[i]?.分支).filter(Boolean)
+  )
+
+  // 2. 被禁干员索引集合
+  const banSet = new Set(banOprs)
+
+  // 3. 所有可用下标
+  const pool = operators
+    .map((op, idx) =>
+      !banSet.has(idx) && !banBranchesNames.has(op.分支) ? idx : -1
+    )
+    .filter(idx => idx !== -1)
+
+  // 4. 不够就全返回
+  return pool.length
+}
+
 // 根据干员索引， 获取分支索引
 export const getBranchIdx = (oprIdx)=>{
+  console.log(operators)
+  console.log(oprIdx)
   const op = operators[oprIdx];
+  console.log(op)
   if (!op) return -1;                         // 越界保护
   return branches.findIndex(b => b.分支 === op.分支);
 }

@@ -2,7 +2,7 @@
 import { useMatchStore } from '@/stores/match';
 import { computed } from 'vue';
 import operators from '@/assets/operators.json'
-const { userInfo, team1, team2 } = useMatchStore()
+const { userInfo, team1, team2, viewer } = useMatchStore()
 const props = defineProps(['oprIdx'])
 const data = computed(()=>{
     let obj = {...operators[props.oprIdx]}
@@ -32,6 +32,21 @@ const data = computed(()=>{
             delete obj.分支
         }
         if(team2.showRares.indexOf(props.oprIdx) < 0){
+            delete obj.稀有度
+        }
+    }
+
+    if(userInfo.viewer){
+        if(viewer.showNames.indexOf(props.oprIdx) < 0){
+            delete obj.干员
+        }
+        if(viewer.showClasses.indexOf(props.oprIdx) < 0){
+            delete obj.职业
+        }
+        if(viewer.showBranches.indexOf(props.oprIdx) < 0){
+            delete obj.分支
+        }
+        if(viewer.showRares.indexOf(props.oprIdx) < 0){
             delete obj.稀有度
         }
     }
