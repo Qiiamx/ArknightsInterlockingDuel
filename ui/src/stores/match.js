@@ -216,6 +216,12 @@ export const useMatchStore = defineStore('match', () => {
 		step3: () => {
 			// 博弈结束，阶段3
 			// 展示公共区不可见的1名五星干员
+			team1.value.showBranches.push(match.value.publicOprs[2])
+			team1.value.showRares.push(match.value.publicOprs[2])
+			team1.value.showNames.push(match.value.publicOprs[2])
+			team2.value.showBranches.push(match.value.publicOprs[2])
+			team2.value.showRares.push(match.value.publicOprs[2])
+			team2.value.showNames.push(match.value.publicOprs[2])
 		},
 		step24: () => {
 			// owner界面倒计时结束后，调用本功能
