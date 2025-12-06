@@ -12,6 +12,7 @@ const { userInfo, serverOpr } = useMatchStore()
 const shareId = route.query.shareId
 const ws = ref()        // WebSocket 实例
 const heartbeat = ref()
+const retryTimes = ref(5);
 onMounted(() => {
     userInfo.userId = randomId()
     if (!shareId) {
@@ -29,8 +30,8 @@ onMounted(() => {
 onUnmounted(() => {
     ws.value?.close()
 })
-const createWebSocket = (time)=>{
-    if(time <= 0){
+const createWebSocket = ()=>{
+    if(retryTimes.value <= 0){
       alert('与服务器断开连接, 尝试重连失败...')
     }
     // 1. 连接
@@ -39,7 +40,7 @@ const createWebSocket = (time)=>{
     // 2. 监听事件
     ws.value.onopen = () => console.debug('ws opened')
     ws.value.onmessage = (e) => {
-        // 连接成功时,会分发到指定的页面, 主持去owner, 选手去 player, 观众去 viewer
+        retryTimes.value = 5; //成功收到消息时,重置尝试次数
         let data = JSON.parse(e.data)
         if(data.type){
             switch(data.type){
@@ -60,7 +61,8 @@ const createWebSocket = (time)=>{
     ws.value.onclose = () => {
       console.debug('ws closed')
       setTimeout(()=>{
-        createWebSocket(time - 1)
+        retryTimes.value = retryTimes.value - 1
+        createWebSocket()
       }, 1000)
     }
 }

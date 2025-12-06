@@ -1,14 +1,14 @@
 import branches from '@/assets/branches.json'
 import operators from '@/assets/operators.json'
 // 根据ban掉的干员索引， ban掉的分支索引, ban掉的稀有度，随机获得num个符合要求的干员索引
-export const getOprIdx = (num, banOprs, banBranches, banRare)=>{
+export const getOprIdx = (num, excludeOprSequence, banBranches, banRare)=>{
   // 1. 被禁分支名集合
   const banBranchesNames = new Set(
     banBranches.map(i => branches[i]?.分支).filter(Boolean)
   )
 
   // 2. 被禁干员索引集合
-  const banSet = new Set(banOprs)
+  const banSet = new Set(excludeOprSequence.flat())
 
   // 3. 所有可用下标
   const pool = operators
@@ -28,14 +28,14 @@ export const getOprIdx = (num, banOprs, banBranches, banRare)=>{
   return pool.slice(0, num)
 }
 
-export const getLastOprCount = (banOprs, banBranches)=>{
+export const getLastOprCount = (excludeOprSequence, banBranches)=>{
   // 1. 被禁分支名集合
   const banBranchesNames = new Set(
     banBranches.map(i => branches[i]?.分支).filter(Boolean)
   )
 
   // 2. 被禁干员索引集合
-  const banSet = new Set(banOprs)
+  const banSet = new Set(excludeOprSequence.flat())
 
   // 3. 所有可用下标
   const pool = operators
