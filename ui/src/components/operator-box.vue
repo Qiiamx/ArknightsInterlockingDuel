@@ -3,7 +3,7 @@ import { useMatchStore } from '@/stores/match';
 import { computed } from 'vue';
 import operators from '@/assets/operators.json'
 const { userInfo, team1, team2, viewer } = useMatchStore()
-const props = defineProps(['oprIdx'])
+const props = defineProps(['oprIdx', 'showCp']) // 干员索引, 是否显示调用点
 const data = computed(()=>{
     let obj = {...operators[props.oprIdx]}
     if(userInfo.team1){
@@ -19,6 +19,7 @@ const data = computed(()=>{
         if(team1.showRares.indexOf(props.oprIdx) < 0){
             delete obj.稀有度
         }
+        obj.cp = team1.recordCp[props.oprIdx]
     }
     
     if(userInfo.team2){
@@ -34,6 +35,7 @@ const data = computed(()=>{
         if(team2.showRares.indexOf(props.oprIdx) < 0){
             delete obj.稀有度
         }
+        obj.cp = team2.recordCp[props.oprIdx]
     }
 
     if(userInfo.viewer){
@@ -49,6 +51,7 @@ const data = computed(()=>{
         if(viewer.showRares.indexOf(props.oprIdx) < 0){
             delete obj.稀有度
         }
+        obj.cp = viewer.recordCp[props.oprIdx]
     }
     return obj;
 })
@@ -65,6 +68,9 @@ const data = computed(()=>{
             <span>职业: {{ data.职业 || '-' }}</span>
             &nbsp;
             <span>分支: {{ data.分支 || '-'}}</span>
+        </div>
+        <div v-if="data.cp">
+            调用点: {{ data.cp }}
         </div>
     </div>
 </template>

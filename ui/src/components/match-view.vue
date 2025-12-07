@@ -10,9 +10,9 @@ const { match } = useMatchStore()
   <div>
     <div v-if="match.round>0">轮次 {{ match.round }}</div>
     <div v-if="match.step>0">阶段 {{ ['开局','博弈','终止','攻略'][match.step-1] }}</div>
-    <div>开局剩余 {{ match.timeStep1 }} 秒</div>
-    <div>博弈剩余 {{ match.timeStep21 }} 秒</div>
-    <div>结算剩余 {{ match.timeStep24 }} 秒</div>
+    <div v-if="match.settling">开局剩余 {{ match.timeStep1 }} 秒</div>
+    <div v-if="match.duling">决策剩余 {{ match.timeStep21 }} 秒</div>
+    <div v-if="match.showing">公布剩余 {{ match.timeStep24 }} 秒</div>
     <div>禁用干员</div>
     <div>
       <span v-for="idx in match.banOprs" :key="idx">

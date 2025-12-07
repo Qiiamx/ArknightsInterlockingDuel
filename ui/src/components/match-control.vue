@@ -10,7 +10,7 @@ const intervalId = ref(null)
 
 // 结算计时
 const showTick = () => {
-  if (match.value.timeStep24 <= 0) {
+  if (match.value.timeStep24 <= 1) {
     // 到 0 了，清掉定时器并结束
     stopSettlementTimer()
     if (  match.value.continueMind && (team1.value.betFlag || team2.value.betFlag)  ) {
@@ -43,7 +43,7 @@ const stopSettlementTimer = () => {
 
 // 博弈计时
 const mindTick = () => {
-  if (match.value.timeStep21 <= 0) {
+  if (match.value.timeStep21 <= 1) {
     // 到 0 了，清掉定时器并结束
     stopMindTimer()
     // 开始结算
@@ -78,7 +78,7 @@ const mindLoop = () => {
 
 // 开局计时
 const settlementTick = () => {
-  if (match.value.timeStep1 <= 0) {
+  if (match.value.timeStep1 <= 1) {
     // 到 0 了，清掉定时器并结束
     stopStartTimer()
     // 开始博弈阶段

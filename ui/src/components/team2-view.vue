@@ -10,7 +10,7 @@ const { userInfo, team2 } = useMatchStore()
     <div>获得干员</div>
     <div>
       <span v-for="idx in team2.getOprs" :key="idx">
-        <OperatorBox :opr-idx="idx"></OperatorBox>
+        <OperatorBox :opr-idx="idx" :show-cp="true"></OperatorBox>
       </span>
     </div>
     <div> 队伍名称 {{ team2.name }}</div>

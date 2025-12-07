@@ -38,7 +38,9 @@ export const useMatchStore = defineStore('match', () => {
 		timeStep1: SETTLEMENT_TIME, // 开局倒计时（由OWNER来更新）
 		timeStep21: MIND_TIME, // 博弈倒计时（由OWNER来更新）
 		timeStep24: SHOW_TIME, // 结算倒计时（由OWNER来更新）
-		duling: false, // 博弈中 true选手可以操作 false不可以
+		settling: false, // 开局中 备用:用于动画
+		duling: false, // 博弈中 true选手可以操作 false不可以 备用:用于动画
+		showing: false, // 结算中 备用:用于动画
 		continueMind: true, // 还能继续博弈
 		version: null, // 乐观锁（这个参数很重要，不要修改，不要移除，用于避免两个用户同时操作，其中一方的数据被另一方覆盖）
 	});
@@ -48,6 +50,7 @@ export const useMatchStore = defineStore('match', () => {
 		nicknames: [], //选手名称
 		avatars: [], //选手QQ-头像
 		getOprs: [], //已获得的干员
+		recordCp: {}, //消耗调用点
 		showRares: [], //显示稀有度的干员索引
 		showBranches: [], //显示分支的干员索引
 		showClasses: [], //显示职业的干员索引
@@ -67,6 +70,7 @@ export const useMatchStore = defineStore('match', () => {
 		nicknames: [], //选手名称
 		avatars: [], //选手QQ-头像
 		getOprs: [], //已获得的干员
+		recordCp: {}, //消耗调用点
 		showRares: [], //显示稀有度的干员索引
 		showBranches: [], //显示分支的干员索引
 		showClasses: [], //显示职业的干员索引
@@ -85,6 +89,7 @@ export const useMatchStore = defineStore('match', () => {
 		showBranches: [], //显示分支的干员索引
 		showClasses: [], //显示职业的干员索引
 		showNames: [], //显示名称的干员索引
+		recordCp: {}
 	})
 	// 对 targets 增加 types 的 indexes
 	const addVisibleIdx = (targets, types, indexes,) => {
@@ -209,6 +214,7 @@ export const useMatchStore = defineStore('match', () => {
 			// submit(() => { matchOpr.nextStep() }) 重复提交
 		},
 		step1: () => {
+			match.value.settling = true
 			match.value.publicOprs = getOprIdx(3, [match.value.banOprs], match.value.banBranches, "6")
 			// 展示3号公共干员的职业和稀有度
 			addVisibleIdx([team1, team2, viewer], ['showClasses', 'showRares'], [match.value.publicOprs[2]])
@@ -217,6 +223,8 @@ export const useMatchStore = defineStore('match', () => {
 			submit(() => { matchOpr.step1() })
 		},
 		step21: () => {
+			match.value.settling = false
+			match.value.showing = false
 			match.value.duling = true
 			// 博弈阶段，抽取干员，由owner开始倒计时
 			match.value.timeStep21 = MIND_TIME
@@ -261,6 +269,7 @@ export const useMatchStore = defineStore('match', () => {
 			// 倒计时5秒进入下一轮(owner调用)
 			match.value.timeStep24 = SHOW_TIME
 			match.value.duling = false
+			match.value.showing = true
 			if (team1.value.decision == 1) {
 				// team1下注，扣除CP
 				team1.value.lastCP = team1.value.lastCP - team1.value.betCP
@@ -275,12 +284,16 @@ export const useMatchStore = defineStore('match', () => {
 				if (payTeam < 0) {
 					// team2更多
 					team2.value.getOprs.push(match.value.selectOpr)
+					team2.value.recordCp[match.value.selectOpr] = team2.value.betCP
+					viewer.value.recordCp[match.value.selectOpr] = team2.value.betCP
 					addVisibleIdx([team2], ['showClasses', 'showBranches', 'showRares', 'showNames'], [match.value.selectOpr])
 					// 向team1展示本轮team2消耗的betCP
 					team2.value.showBetCP = team2.value.betCP
 				} else if (payTeam > 0) {
 					// team1更多
 					team1.value.getOprs.push(match.value.selectOpr)
+					team1.value.recordCp[match.value.selectOpr] = team1.value.betCP
+					viewer.value.recordCp[match.value.selectOpr] = team1.value.betCP
 					addVisibleIdx([team1], ['showClasses', 'showBranches', 'showRares', 'showNames'], [match.value.selectOpr])
 					// 向team2展示本轮team1消耗的betCP
 					team1.value.showBetCP = team1.value.betCP
@@ -295,10 +308,14 @@ export const useMatchStore = defineStore('match', () => {
 			} else if (team1.value.decision == 1 && team2.value.decision != 1) {
 				// team1下注，team2没有下注
 				team1.value.getOprs.push(match.value.selectOpr)
+				team1.value.recordCp[match.value.selectOpr] = team1.value.betCP
+				viewer.value.recordCp[match.value.selectOpr] = team1.value.betCP
 				addVisibleIdx([team1], ['showClasses', 'showBranches', 'showRares', 'showNames'], [match.value.selectOpr])
 			} else if (team2.value.decision == 1 && team1.value.decision != 1) {
 				// team2下注，team1没有下注
 				team2.value.getOprs.push(match.value.selectOpr)
+				team2.value.recordCp[match.value.selectOpr] = team2.value.betCP
+				viewer.value.recordCp[match.value.selectOpr] = team2.value.betCP
 				addVisibleIdx([team2], ['showClasses', 'showBranches', 'showRares', 'showNames'], [match.value.selectOpr])
 			}
 			if (team1.value.decision == 2) {
