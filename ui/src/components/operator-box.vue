@@ -2,7 +2,7 @@
 import { useMatchStore } from '@/stores/match';
 import { computed } from 'vue';
 import operators from '@/assets/operators.json'
-const { userInfo, team1, team2, viewer } = useMatchStore()
+const { userInfo, team1, team2 } = useMatchStore()
 const props = defineProps(['oprIdx', 'showCp']) // 干员索引, 是否显示调用点
 const data = computed(()=>{
     let obj = {...operators[props.oprIdx]}
@@ -39,19 +39,20 @@ const data = computed(()=>{
     }
 
     if(userInfo.viewer){
-        if(viewer.showNames.indexOf(props.oprIdx) < 0){
+        // 双方选手都不可见时, 观众也不可见
+        if(team1.showNames.indexOf(props.oprIdx) < 0 && team2.showNames.indexOf(props.oprIdx) < 0 ){
             delete obj.干员
         }
-        if(viewer.showClasses.indexOf(props.oprIdx) < 0){
+        if(team1.showClasses.indexOf(props.oprIdx) < 0 && team2.showClasses.indexOf(props.oprIdx) < 0){
             delete obj.职业
         }
-        if(viewer.showBranches.indexOf(props.oprIdx) < 0){
+        if(team1.showBranches.indexOf(props.oprIdx) < 0 && team2.showBranches.indexOf(props.oprIdx) < 0){
             delete obj.分支
         }
-        if(viewer.showRares.indexOf(props.oprIdx) < 0){
+        if(team1.showRares.indexOf(props.oprIdx) < 0 && team2.showRares.indexOf(props.oprIdx) < 0){
             delete obj.稀有度
         }
-        obj.cp = viewer.recordCp[props.oprIdx]
+        obj.cp = team1.recordCp[props.oprIdx] || team2.recordCp[props.oprIdx]
     }
     return obj;
 })
