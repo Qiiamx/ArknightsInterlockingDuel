@@ -3,7 +3,8 @@ aka AID
 
 项目分为前后端
 均需要node 20 +
-前端启动方式
+前端单独启动方式
+cd ui
 npm i
 npm run dev
 
@@ -11,8 +12,15 @@ npm run dev
 npm i
 node service.js
 
-无需修改其它代码(理论上)
+部署方式
+cd ui
+npm run build
+# 这一步会在根目录(不是ui下)生成一个dist文件夹
+cd ..
+pm2 start service.js
+# service.js会自动把 dist当作根目录开启80端口的访问
 
+无需修改其它代码(理论上)
 主要逻辑均由前端的 match.js 控制, 后端就是一个广播器
 
 

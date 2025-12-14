@@ -10,6 +10,9 @@ export default defineConfig({
 		vue(),
 		vueDevTools(),
 	],
+	build: {
+		outDir: "../dist",
+	},
 	server: {
 		// 本地
 		// proxy: {

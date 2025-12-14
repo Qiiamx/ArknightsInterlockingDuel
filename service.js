@@ -4,6 +4,8 @@ const { createServer } = require('http')
 const { parse, URL } = require('url')
 const { Server, OPEN } = require('ws')
 const { Mutex } = require('async-mutex')
+const path = require('path')
+const fs = require('fs')
 
 /* 内存结构
 	shareMap : Map<shareId, {roomId, type}> // type = team1 / team2 / owner / viewer
@@ -115,6 +117,42 @@ server.on('request', (req, res) => {
 		});
 		return;
 	}
+	// 静态文件路径映射
+	let filePath = pathname === '/' ? '/index.html' : pathname;
+	const fullPath = path.join(__dirname, 'dist', filePath);
+	
+	// 简单的静态文件服务
+	fs.readFile(fullPath, (err, content) => {
+		if (err) {
+			// 文件不存在，返回 Vue 的 index.html
+			fs.readFile(path.join(__dirname, 'dist', 'index.html'), (err, data) => {
+				if (err) {
+					res.writeHead(404);
+					res.end('Not Found');
+				} else {
+					res.writeHead(200, { 'Content-Type': 'text/html' });
+					res.end(data);
+				}
+			});
+		} else {
+			// 返回文件
+			const ext = path.extname(fullPath);
+			const mimeTypes = {
+				'.html': 'text/html',
+				'.js': 'text/javascript',
+				'.css': 'text/css',
+				'.json': 'application/json',
+				'.png': 'image/png',
+				'.jpg': 'image/jpeg',
+				'.ico': 'image/x-icon',
+			};
+			
+			res.writeHead(200, {
+				'Content-Type': mimeTypes[ext] || 'application/octet-stream'
+			});
+			res.end(content);
+		}
+	});
 });
 
 
@@ -174,5 +212,5 @@ wss.on('connection', (ws, req) => {
 	});
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 80;
 server.listen(PORT, () => console.log(`WS server ready on ws://0.0.0.0:${PORT}`));
