@@ -7,10 +7,11 @@ const store = useMatchStore()
 const { submit, matchOpr } = store
 const { userInfo, match, team1, team2 } = storeToRefs(store)
 const intervalId = ref(null)
-
+const tick = 100; //刷新频率(同时也是时间减少的频率)
+const showTarget = ref()
 // 结算计时
 const showTick = () => {
-  if (match.value.timeStep24 <= 1) {
+  if (match.value.timeStep24 < tick) {
     // 到 0 了，清掉定时器并结束
     stopSettlementTimer()
     if (  match.value.continueMind && (team1.value.betFlag || team2.value.betFlag)  ) {
@@ -22,14 +23,15 @@ const showTick = () => {
     }
     return
   }else{
-    matchOpr.changeShowTime(match.value.timeStep24 - 1)
+    matchOpr.changeShowTime(showTarget.value - new Date().getTime())
   }
 }
 
 // 启动结算定时器
 const startSettlementTimer = () => {
   if (intervalId.value !== null) return        // 防止重复启动
-  intervalId.value = window.setInterval(showTick, 1000)
+  showTarget.value = new Date().getTime() + match.value.timeStep24
+  intervalId.value = window.setInterval(showTick, tick)
 }
 
 // 停止结算定时器
@@ -43,7 +45,7 @@ const stopSettlementTimer = () => {
 
 // 博弈计时
 const mindTick = () => {
-  if (match.value.timeStep21 <= 1) {
+  if (match.value.timeStep21 < tick) {
     // 到 0 了，清掉定时器并结束
     stopMindTimer()
     // 开始结算
@@ -51,7 +53,7 @@ const mindTick = () => {
     startSettlementTimer()
     return
   }else{
-    matchOpr.changeMindTime(match.value.timeStep21 - 1)
+    matchOpr.changeMindTime(showTarget.value - new Date().getTime())
   }
 }
 
@@ -59,7 +61,8 @@ const mindTick = () => {
 // 启动博弈定时器
 const startMindTimer = () => {
   if (intervalId.value !== null) return        // 防止重复启动
-  intervalId.value = window.setInterval(mindTick, 1000)
+  showTarget.value = new Date().getTime() + match.value.timeStep21
+  intervalId.value = window.setInterval(mindTick, tick)
 }
 
 // 停止博弈定时器
@@ -78,7 +81,7 @@ const mindLoop = () => {
 
 // 开局计时
 const settlementTick = () => {
-  if (match.value.timeStep1 <= 1) {
+  if (match.value.timeStep1 < tick) {
     // 到 0 了，清掉定时器并结束
     stopStartTimer()
     // 开始博弈阶段
@@ -86,7 +89,7 @@ const settlementTick = () => {
     mindLoop()
     return
   }else{
-    matchOpr.changeSettlementTime(match.value.timeStep1 - 1)
+    matchOpr.changeSettlementTime(showTarget.value - new Date().getTime())
   }
 }
 
@@ -94,7 +97,8 @@ const settlementTick = () => {
 // 启动开局定时器
 const startStartTimer = () => {
   if (intervalId.value !== null) return        // 防止重复启动
-  intervalId.value = window.setInterval(settlementTick, 1000)
+  showTarget.value = new Date().getTime() + match.value.timeStep1
+  intervalId.value = window.setInterval(settlementTick, tick)
 }
 
 // 停止开局定时器

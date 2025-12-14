@@ -14,9 +14,9 @@ const INIT_CP = 50 // 初始调用点
 const INIT_IP = 1 // 初始情报点
 const REST_INCREASE_CP = 5 // 休息增加调用点
 const REST_INCREASE_IP = 1 // 休息增加情报点
-const SETTLEMENT_TIME = 10 // 开局时间(秒)
-const MIND_TIME = 25 // 思考时间(秒)
-const SHOW_TIME = 5 // 结算时间(秒)
+const SETTLEMENT_TIME = 10000 // 开局时间(毫秒)
+const MIND_TIME = 25000 // 思考时间(毫秒)
+const SHOW_TIME = 5000 // 结算时间(毫秒)
 
 export const useMatchStore = defineStore('match', () => {
 	//用户信息
