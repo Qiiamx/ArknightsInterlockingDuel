@@ -6,30 +6,59 @@ import Team1View from '@/components/team1-view.vue';
 import Team2Control from '@/components/team2-control.vue';
 import Team2View from '@/components/team2-view.vue';
 import { useMatchStore } from '@/stores/match'
-const { userInfo } = useMatchStore()
-
+import { onMounted } from 'vue';
+import { useWebSocket } from '@/composables/websocket';
+import { onUnmounted } from 'vue';
+import { useRoomStore } from '@/stores/room';
+const { links } = useRoomStore()
+const { userInfo, serverOpr } = useMatchStore()
+const { initialize, cleanup, isConnected } = useWebSocket()
+onMounted(() => {
+  init()
+})
+onUnmounted(() => {
+  cleanup()
+})
+const init = () => {
+  initialize((data) => {
+    if (data.type) {
+      switch (data.type) {
+        case 'owner': userInfo.owner = true; break;
+        case 'team1': userInfo.team1 = true; break;
+        case 'team2': userInfo.team2 = true; break;
+        case 'viewer': userInfo.viewer = true; break;
+      }
+    }
+    if (data.data) {
+      serverOpr.render(JSON.parse(data.data))
+    }
+  })
+}
 </script>
 <template>
-    <div class="room">
-        <div class="room-info">
-            <h2 v-if="userInfo.owner">主持人</h2>
-            <h2 v-else-if="userInfo.viewer">观众</h2>
-            <h2 v-else-if="userInfo.team1">TEAM1</h2>
-            <h2 v-else-if="userInfo.team2">TEAM2</h2>
-            <h2 v-else>异常用户</h2>
-            <h2 v-if="userInfo.userId">CLIENT_ID: {{ userInfo.userId }}</h2>
-        </div>
-        <div class="room-view">
-            <Team1View class="team1-view"></Team1View>
-            <MatchView class="match-view"></MatchView>
-            <Team2View class="team2-view"></Team2View>
-        </div>
-        <div class="room-control">
-            <MatchControl class="match-control"></MatchControl>
-            <Team1Control class="team1-control"></Team1Control>
-            <Team2Control class="team2-control"></Team2Control>
-        </div>
+  <div v-if="!isConnected">
+    连接中
+  </div>
+  <div class="room">
+    <div class="room-info">
+      <h2 v-if="userInfo.owner">主持人</h2>
+      <h2 v-else-if="userInfo.viewer">观众</h2>
+      <h2 v-else-if="userInfo.team1">TEAM1</h2>
+      <h2 v-else-if="userInfo.team2">TEAM2</h2>
+      <h2 v-else>异常用户</h2>
+      <h2 v-if="userInfo.userId">CLIENT_ID: {{ userInfo.userId }}</h2>
     </div>
+    <div class="room-view">
+      <Team1View class="team1-view"></Team1View>
+      <MatchView class="match-view"></MatchView>
+      <Team2View class="team2-view"></Team2View>
+    </div>
+    <div class="room-control">
+      <MatchControl class="match-control"></MatchControl>
+      <Team1Control class="team1-control"></Team1Control>
+      <Team2Control class="team2-control"></Team2Control>
+    </div>
+  </div>
 </template>
 <style lang="css" scoped>
 .room {
@@ -70,5 +99,4 @@ const { userInfo } = useMatchStore()
   justify-content: center;
   padding: 8px 0;
 }
-
 </style>
