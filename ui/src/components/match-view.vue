@@ -3,13 +3,12 @@
 import { useMatchStore } from '@/stores/match'
 import OperatorBox from './operator-box.vue';
 import BranchBox from './branch-box.vue';
+import MatchPhase from './match/match-phase.vue';
 const { match } = useMatchStore()
 </script>
-<!-- todo  主持人Log  观众也看不到公共干员3 -->
 <template>
   <div>
-    <div v-if="match.round>0">轮次 {{ match.round }}</div>
-    <div v-if="match.step>0">阶段 {{ ['开局','博弈','终止','攻略'][match.step-1] }}</div>
+    <MatchPhase></MatchPhase>
     <div v-if="match.settling">开局剩余 {{ (match.timeStep1 / 1000.0).toFixed(1) }} 秒</div>
     <div v-if="match.duling">决策剩余 {{ (match.timeStep21 / 1000.0).toFixed(1) }} 秒</div>
     <div v-if="match.showing">公布剩余 {{ (match.timeStep24 / 1000.0).toFixed(1) }} 秒</div>
@@ -39,3 +38,8 @@ const { match } = useMatchStore()
     </div>
   </div>
 </template>
+<style lang="css" scoped>
+.match-content{
+  
+}
+</style>

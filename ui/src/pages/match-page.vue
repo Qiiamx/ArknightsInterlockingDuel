@@ -9,8 +9,7 @@ import { useMatchStore } from '@/stores/match'
 import { onMounted } from 'vue';
 import { useWebSocket } from '@/composables/websocket';
 import { onUnmounted } from 'vue';
-import { useRoomStore } from '@/stores/room';
-const { links } = useRoomStore()
+import { useRoute } from 'vue-router';
 const { userInfo, serverOpr } = useMatchStore()
 const { initialize, cleanup, isConnected } = useWebSocket()
 onMounted(() => {
@@ -20,7 +19,9 @@ onUnmounted(() => {
   cleanup()
 })
 const init = () => {
-  initialize((data) => {
+  userInfo.userId = randomId()
+  let route = useRoute()
+  initialize(userInfo.userId, route.query.shareId, (data) => {
     if (data.type) {
       switch (data.type) {
         case 'owner': userInfo.owner = true; break;
@@ -34,20 +35,26 @@ const init = () => {
     }
   })
 }
+
+const randomId = ()=>{
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
 </script>
 <template>
-  <div v-if="!isConnected">
+  <!-- <div v-if="!isConnected">
     连接中
-  </div>
-  <div class="room">
-    <div class="room-info">
+  </div> -->
+  <div class="match-content">
+    <!-- <div class="room-info">
       <h2 v-if="userInfo.owner">主持人</h2>
       <h2 v-else-if="userInfo.viewer">观众</h2>
       <h2 v-else-if="userInfo.team1">TEAM1</h2>
       <h2 v-else-if="userInfo.team2">TEAM2</h2>
       <h2 v-else>异常用户</h2>
       <h2 v-if="userInfo.userId">CLIENT_ID: {{ userInfo.userId }}</h2>
-    </div>
+    </div> -->
     <div class="room-view">
       <Team1View class="team1-view"></Team1View>
       <MatchView class="match-view"></MatchView>
@@ -60,43 +67,12 @@ const init = () => {
     </div>
   </div>
 </template>
+
 <style lang="css" scoped>
-.room {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.room-info {
-  flex: 0 0 auto;
-  text-align: center;
-  padding: 8px 0;
-}
-
-.room-view {
-  display: flex;
-}
-
-.team1-view,
-.team2-view {
-  flex: 0 0 25%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.match-view {
-  box-sizing: border-box;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.room-control {
-  display: flex;
-  justify-content: center;
-  padding: 8px 0;
+.match-content{
+  width: 100vw;
+  height: 100vh;
+  background-color: #121212;
+  color: #e0e0e0;
 }
 </style>

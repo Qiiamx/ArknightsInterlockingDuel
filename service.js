@@ -85,6 +85,7 @@ server.on('request', (req, res) => {
 		req.on('end', async () => {
 			const { userId, data, force } = JSON.parse(body);
 			if (!userMap.has(userId)) {
+        console.error(`userId ${userId} not exist, 400`)
 				res.writeHead(400, { 'Content-Type': 'application/json' });
 				res.end(JSON.stringify({ ok: false }));
 				return;
@@ -102,10 +103,15 @@ server.on('request', (req, res) => {
 						broadcast(roomId, JSON.stringify(data))
 						res.writeHead(200, { 'Content-Type': 'application/json' });
 						res.end(JSON.stringify({ ok: true }));
-					}
+					}else{
+            console.error(`room version check failed, return false`)
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: false }));
+          }
 				} else {
-					res.writeHead(200, { 'Content-Type': 'application/json' });
-					res.end(JSON.stringify({ ok: false }));
+          console.error(`roomId ${roomId} not exist, 400`)
+					res.writeHead(400, { 'Content-Type': 'application/json' });
+				  res.end(JSON.stringify({ ok: false }));
 				}
 			} catch (e) {
 				console.error(e)
