@@ -1,0 +1,115 @@
+<script setup>
+import { useMatchStore } from '@/stores/match';
+import { onMounted, ref} from 'vue';
+const { match } = useMatchStore()
+const localCountDownLast = ref(0)
+const localCountPercent = ref(100)
+onMounted(()=>{
+    setInterval(() => {
+        if(match.countDownRunning){
+            let now = new Date().getTime();
+            localCountDownLast.value = now > match.countDownTarget?0 : match.countDownTarget- now
+            localCountPercent.value = localCountDownLast.value / match.countDownTotal * 100
+        }
+    }, 100);
+})
+</script>
+<template>
+    <template v-if="match.countDownType">
+        <div :class="`progress-container ${match.countDownRunning?'':'paused'}`">
+            <div class="progress-label">
+                <div class="progress-track">
+                    <div :class="`progress-fill 
+                    ${match.countDownRunning?(
+                        localCountPercent > 60?'bar-blue':localCountPercent>30?'bar-orange':'bar-red'
+                    ):'bar-gray' }`" :style="{ transform: `scaleX(${ localCountPercent + '%' })` }"></div>
+                </div>
+            </div>
+            <!-- <span class="timer-value">{{ (localCountDownLast / 1000).toFixed(1) }}s</span> -->
+        </div>
+    </template>
+
+</template>
+<style lang="css" scoped>
+.progress-container {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%);
+    width: 500px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: auto !important;
+    padding: 10px;
+}
+
+.progress-container.paused {
+    opacity: .6;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+    font-family: Rajdhani, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #ffffffe6;
+    text-shadow: 0 0 10px rgba(0, 200, 255, .5);
+}
+
+.timer-value {
+    color: #00c8ff;
+    font-family: Consolas, monospace;
+}
+
+.progress-track {
+    width: 100%;
+    height: 12px;
+    background: #ffffff1a;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px #0000004d;
+    position: relative;
+    z-index: 1;
+}
+
+.bar-blue {
+    background: #00AEEF;
+    box-shadow: 0 0 15px rgba(0, 174, 239, 0.8);
+}
+
+.bar-orange {
+    background: #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+}
+
+.bar-red {
+    background: #D50000;
+    box-shadow: 0 0 15px rgba(213, 0, 0, 0.8);
+}
+
+.bar-gray {
+    background: #666;
+    box-shadow: 0 0 10px #64646480;
+}
+
+.progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    transform-origin: center center;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    height: 100%;
+    transition: .2s linear;
+}
+</style>

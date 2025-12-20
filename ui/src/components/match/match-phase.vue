@@ -5,9 +5,9 @@ import { computed } from 'vue';
 const { match } = storeToRefs( useMatchStore())
 const phaseText = computed(()=>{
   if(match.value && match.value.round>0){
-    return `ROUND ${match.value.round} // ${['开局阶段','博弈阶段','终止阶段','攻略阶段'][match.value.step-1]}`
+    return `ROUND ${match.value.round} / TURN ${match.value.turn} / ${{1:'开局阶段',21:'博弈阶段',24:'公示阶段',3:'终止阶段',4:'攻略阶段'}[match.value.step]}`
   }else if(match.value){
-    return `${['开局阶段 // Prepare','博弈阶段 // BIDDING','终止阶段 // ENDING','攻略阶段 // STRATEGY'][match.value.step-1]}`
+    return `准备阶段`
   }else{
     return ''
   }
@@ -31,7 +31,6 @@ const phaseText = computed(()=>{
   left: 20px;
   padding: 10px 20px;
   background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-left: 4px solid #fff; /* 左侧粗边框 */
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%); /* 切角 */

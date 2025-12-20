@@ -2,120 +2,99 @@
 
 import { useMatchStore } from '@/stores/match'
 import { storeToRefs } from 'pinia';
-import { nextTick, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 import { useRoomStore } from '@/stores/room';
 const store = useMatchStore()
 const { links } = storeToRefs(useRoomStore())
-const { submit, matchOpr } = store
+const { submit, matchOpr, SETTLEMENT_TIME, MIND_TIME, SHOW_TIME } = store
 const { userInfo, match, team1, team2 } = storeToRefs(store)
+const countDownLast = ref(0)
 const intervalId = ref(null)
-const tick = 1000; //刷新频率(同时也是时间减少的频率)
-const showTarget = ref()
+const tick = 100; //刷新频率(同时也是时间减少的频率)
 const shareVisible = ref(false)
+onMounted(()=>{
+  
+window.setInterval(()=>{
+    matchOpr.flash() // 无论做了什么, 都是每秒钟尝试刷新数据
+  }, 1000)
+})
+
 // 结算计时
 const showTick = () => {
-  if (match.value.timeStep24 < tick) {
+  if (countDownLast.value <= 0) {
     // 到 0 了，清掉定时器并结束
-    stopSettlementTimer()
-    if (  match.value.continueMind && (team1.value.betFlag || team2.value.betFlag)  ) {
-      // 下一轮还有干员可以选择, 且 有一方还在进行, 继续 博弈循环
-      mindLoop()
-    } else {
-      // 进行步骤3, 展示隐藏公共干员, 转进到step4 开始作战
-      matchOpr.step3()
-    }
-    return
+    stopTimer()
   }else{
-    matchOpr.changeShowTime(showTarget.value - new Date().getTime())
+    countDownLast.value = countDownLast.value - tick
+    match.value.countDownLast = countDownLast.value
   }
 }
 
-// 启动结算定时器
-const startSettlementTimer = () => {
-  if (intervalId.value !== null) return        // 防止重复启动
-  showTarget.value = new Date().getTime() + match.value.timeStep24
+// 启动定时器
+const startTimer = () => {
+  nextTick(()=>{
+    countDownLast.value = match.value.countDownLast
+    intervalId.value = window.setInterval(showTick, tick)
+  })
+}
+//暂停
+const pauseTimer = () => {
+  countDownLast.value = match.value.countDownLast
+  matchOpr.pause()
+  if (intervalId.value != null) {
+    clearInterval(intervalId.value)
+  }
+}
+//恢复
+const resumeTimer = () => {
+  countDownLast.value = match.value.countDownLast
+  matchOpr.resume()
+  if (intervalId.value != null) {
+    clearInterval(intervalId.value)
+  }
   intervalId.value = window.setInterval(showTick, tick)
 }
-
-// 停止结算定时器
-const stopSettlementTimer = () => {
-  if (intervalId.value !== null) {
-    window.clearInterval(intervalId.value)
-    intervalId.value = null
+//结束
+const stopTimer = () => {
+  // 停止计时器
+  // 当前是开局阶段 settling, 进入博弈轮 duling
+  // 当前是博弈阶段 duling, 进入结算阶段 showing
+  // 当前是阶段阶段 showing, 判断后进入 博弈轮 duling 或 进入 展示攻略阶段 step3
+  if (intervalId.value != null) {
+    console.log("clear timer")
+    clearInterval(intervalId.value)
   }
-}
-
-
-// 博弈计时
-const mindTick = () => {
-  if (match.value.timeStep21 < tick) {
-    // 到 0 了，清掉定时器并结束
-    stopMindTimer()
-    // 开始结算
+  
+  if(match.value.countDownType == 'settling'){ //开局阶段结束
+    console.log("start duling")
+    matchOpr.step21()
+    startTimer()
+  }else if(match.value.countDownType == 'duling'){ //博弈阶段结束
+    console.log("start showing")
     matchOpr.step24()
-    startSettlementTimer()
-    return
-  }else{
-    matchOpr.changeMindTime(showTarget.value - new Date().getTime())
+    startTimer()
+  }else if(match.value.countDownType == 'showing'){ // 公示阶段结束
+    if (match.value.continueMind && (team1.value.betFlag || team2.value.betFlag)  ) {
+      // 下一轮还有干员可以选择, 且 有一方还在进行, 继续 博弈循环
+      console.log("repeat duling")
+      matchOpr.step21()
+      startTimer()
+    } else {
+      // 进行步骤3, 展示隐藏公共干员, 转进到step4 开始作战
+      console.log("end timer all")
+      matchOpr.step3()
+      intervalId.value = null
+    }
   }
+  matchOpr.flash()
+
 }
 
-
-// 启动博弈定时器
-const startMindTimer = () => {
-  if (intervalId.value !== null) return        // 防止重复启动
-  showTarget.value = new Date().getTime() + match.value.timeStep21
-  intervalId.value = window.setInterval(mindTick, tick)
-}
-
-// 停止博弈定时器
-const stopMindTimer = () => {
-  if (intervalId.value !== null) {
-    window.clearInterval(intervalId.value)
-    intervalId.value = null
-  }
-}
-
-// 开始博弈
-const mindLoop = () => {
-  matchOpr.step21()
-  startMindTimer()
-}
-
-// 开局计时
-const settlementTick = () => {
-  if (match.value.timeStep1 < tick) {
-    // 到 0 了，清掉定时器并结束
-    stopStartTimer()
-    // 开始博弈阶段
-    matchOpr.nextStep()
-    mindLoop()
-    return
-  }else{
-    matchOpr.changeSettlementTime(showTarget.value - new Date().getTime())
-  }
-}
-
-
-// 启动开局定时器
-const startStartTimer = () => {
-  if (intervalId.value !== null) return        // 防止重复启动
-  showTarget.value = new Date().getTime() + match.value.timeStep1
-  intervalId.value = window.setInterval(settlementTick, tick)
-}
-
-// 停止开局定时器
-const stopStartTimer = () => {
-  if (intervalId.value !== null) {
-    window.clearInterval(intervalId.value)
-    intervalId.value = null
-  }
-}
 //开始比赛
 const startMatch = ()=>{
   matchOpr.nextRound()
   matchOpr.step1()
-  startStartTimer()
+  startTimer()
 }
 
 
@@ -192,15 +171,8 @@ const copy = async (text) => {
         <button v-if="match.round == 0" @click="startMatch">▶ 开局 / INITIATE</button>
         <!-- <textarea v-model="data">
         </textarea> -->
-        <!-- 开局 -->
-        <button v-if="match.settling"  @click="stopStartTimer">⏹ 暂停 / PAUSE</button>
-        <button v-if="match.settling" @click="startStartTimer">▶ 恢复 / CONTINUE</button>
-        <!-- 博弈 -->
-        <button v-if="match.duling" @click="stopMindTimer">⏹ 暂停 / PAUSE</button>
-        <button v-if="match.duling" @click="startMindTimer">▶ 恢复 / CONTINUE</button>
-        <!-- 结算 -->
-        <button v-if="match.showing" @click="stopSettlementTimer">⏹ 暂停 / PAUSE</button>
-        <button v-if="match.showing" @click="startSettlementTimer">▶ 恢复 / CONTINUE</button>
+        <button v-if="match.countDownType"  @click="pauseTimer()">⏹ 暂停 / PAUSE</button>
+        <button v-if="match.countDownType" @click="resumeTimer()">▶ 恢复 / CONTINUE</button>
         <!-- <button v-if="match.step == 3" @click="matchOpr.step3">博弈终止</button> -->
         <button v-if="match.step == 4" @click="startMatch">下一轮比赛(会直接开始)</button>
       </div>
@@ -219,7 +191,6 @@ const copy = async (text) => {
   justify-content: center;
   align-items: center;
   background: #14191ee6;
-  backdrop-filter: blur(5px);
   border: 1px solid #444;
   border-bottom: 4px solid #666;
   box-shadow: 0 20px 50px #00000080;
@@ -260,7 +231,6 @@ const copy = async (text) => {
   justify-content: center;
   align-items: center;
   background: #14191ee6;
-  backdrop-filter: blur(5px);
   border: 1px solid #444;
   border-bottom: 4px solid #666;
   box-shadow: 0 20px 50px #00000080;

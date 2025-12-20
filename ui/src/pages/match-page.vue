@@ -59,20 +59,25 @@ const randomId = ()=>{
       <Team1View class="team1-view"></Team1View>
       <MatchView class="match-view"></MatchView>
       <Team2View class="team2-view"></Team2View>
-    </div>
-    <div class="room-control">
       <MatchControl class="match-control"></MatchControl>
       <Team1Control class="team1-control"></Team1Control>
       <Team2Control class="team2-control"></Team2Control>
     </div>
+    <!-- <div class="room-control">
+    </div> -->
   </div>
 </template>
-
-<style lang="css" scoped>
+<style lang="css">
 .match-content{
   width: 100vw;
   height: 100vh;
-  background-color: #121212;
+  background-color: #000;
   color: #e0e0e0;
+}
+.room-view{
+  position: relative;
+  perspective: 1200px;
+  width: 100vw;
+  height: 100vh;
 }
 </style>

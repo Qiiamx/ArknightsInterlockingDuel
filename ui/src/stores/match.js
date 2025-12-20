@@ -30,17 +30,17 @@ export const useMatchStore = defineStore('match', () => {
 	//全局状态
 	const match = ref({
 		round: 0, // 当前轮次
-		step: 1, // 当前阶段  1. 开局阶段 2. 博弈阶段(30秒) 3. 博弈终止阶段 4. 攻略阶段
+		turn: 0, // 当前回合
+		step: 1, // 当前阶段  1. 开局阶段 21. 博弈阶段 24公示阶段 3. 终止阶段 4. 攻略阶段
 		publicOprs: [], // 本轮的公共干员
 		selectOpr: null, // 当前的博弈干员,
 		banOprs: [], // 全局禁用干员
 		banBranches: [], // 全局禁用分支
-		timeStep1: SETTLEMENT_TIME, // 开局倒计时（由OWNER来更新）
-		timeStep21: MIND_TIME, // 博弈倒计时（由OWNER来更新）
-		timeStep24: SHOW_TIME, // 结算倒计时（由OWNER来更新）
-		settling: false, // 开局中 备用:用于动画
-		duling: false, // 博弈中 true选手可以操作 false不可以 备用:用于动画
-		showing: false, // 结算中 备用:用于动画
+		countDownRunning: false,
+		countDownType: '', // settling  duling  showing
+		countDownTarget: 0, //目标时间戳(平滑展示用, 每秒更新这个值, 所有客户端显示的是当前时间->这个值的差距, 而不是countDownLast)
+		countDownTotal: 0, //总时长毫秒
+		countDownLast: 0, //剩余时长毫秒(仅在暂停时显示)
 		continueMind: true, // 还能继续博弈
 		version: null, // 乐观锁（这个参数很重要，不要修改，不要移除，用于避免两个用户同时操作，其中一方的数据被另一方覆盖）
 	});
@@ -177,49 +177,44 @@ export const useMatchStore = defineStore('match', () => {
 	}
 	// 比赛操作
 	const matchOpr = {
-		changeSettlementTime: (time) => {
-			//主持人更新倒计时
-			match.value.timeStep1 = time
-			submit()
+		flash: () => {
+			submit(()=>matchOpr.flash())
 		},
-		changeMindTime: (time) => {
-			//主持人更新倒计时
-			match.value.timeStep21 = time
-			submit()
+		pause: () => {
+			match.value.countDownRunning = false
+			submit(()=>matchOpr.pause())
 		},
-		changeShowTime: (time) => {
-			//主持人更新倒计时
-			match.value.timeStep24 = time
-			submit()
+		resume: () => {
+			match.value.countDownTarget = match.value.countDownLast + new Date().getTime()
+			match.value.countDownRunning = true
+			submit(()=>matchOpr.resume())
 		},
 		end: () => {
 			//结束比赛 （？）
 			alert('没做')
 		},
-		nextStep: () => {
-			// 阶段+1
-			match.value.step = match.value.step + 1
-			// 重置所有时间
-			match.value.timeStep1 = SETTLEMENT_TIME, // 开局倒计时（由OWNER来更新）
-			match.value.timeStep21 = MIND_TIME, // 博弈倒计时（由OWNER来更新）
-			match.value.timeStep24 = SHOW_TIME // 结算倒计时（由OWNER来更新）
-			// submit(() => { matchOpr.nextStep() }) 重复提交
-		},
 		step1: () => {
-			match.value.settling = true
+			match.value.step = 1
+			match.value.countDownRunning = true
+  			match.value.countDownType = 'settling'
+			match.value.countDownTotal = SETTLEMENT_TIME
+			match.value.countDownLast = SETTLEMENT_TIME
+			match.value.countDownTarget = match.value.countDownLast + new Date().getTime()
 			match.value.publicOprs = getOprIdx(3, [match.value.banOprs], match.value.banBranches, "6")
 			// 展示3号公共干员的职业和稀有度
 			addVisibleIdx([team1, team2], ['showClasses', 'showRares'], [match.value.publicOprs[2]])
 			// 展示1和2号公共干员的全部信息
 			addVisibleIdx([team1, team2], ['showClasses', 'showBranches', 'showRares', 'showNames'], [match.value.publicOprs[0], match.value.publicOprs[1]])
-			submit(() => { matchOpr.step1() })
 		},
 		step21: () => {
-			match.value.settling = false
-			match.value.showing = false
-			match.value.duling = true
 			// 博弈阶段，抽取干员，由owner开始倒计时
-			match.value.timeStep21 = MIND_TIME
+			match.value.turn = match.value.turn + 1
+			match.value.step = 21
+			match.value.countDownRunning = true
+  			match.value.countDownType = 'duling'
+			match.value.countDownLast = MIND_TIME
+			match.value.countDownTotal = MIND_TIME
+			match.value.countDownTarget = match.value.countDownLast + new Date().getTime()
 			match.value.selectOpr = getOprIdx(1, [match.value.banOprs, match.value.publicOprs, team1.value.getOprs, team2.value.getOprs], match.value.banBranches)[0]
 			addVisibleIdx([team1, team2], ['showClasses'], [match.value.selectOpr])
 
@@ -246,7 +241,7 @@ export const useMatchStore = defineStore('match', () => {
 			team2.value.showBetCP = null
 			team1.value.showBetIP = null
 			team2.value.showBetIP = null
-			submit(() => { matchOpr.step21() })
+			submit(()=>matchOpr.step21())
 		},
 		step22: () => {
 			//选手消耗情报
@@ -257,10 +252,12 @@ export const useMatchStore = defineStore('match', () => {
 		step24: () => {
 			// owner界面倒计时结束后，调用本功能
 			// 揭开本次博弈结果，扣除调用点，分配干员给队伍，调整可见性
-			// 倒计时5秒进入下一轮(owner调用)
-			match.value.timeStep24 = SHOW_TIME
-			match.value.duling = false
-			match.value.showing = true
+			match.value.step = 24
+			match.value.countDownRunning = true
+  			match.value.countDownType = 'showing'
+			match.value.countDownLast = SHOW_TIME
+			match.value.countDownTotal = SHOW_TIME
+			match.value.countDownTarget = match.value.countDownLast + new Date().getTime()
 			if (team1.value.decision == 1) {
 				// team1下注，扣除CP
 				team1.value.lastCP = team1.value.lastCP - team1.value.betCP
@@ -309,14 +306,14 @@ export const useMatchStore = defineStore('match', () => {
 				// team1休息
 				team1.value.lastCP = team1.value.lastCP + REST_INCREASE_CP
 				if(team1.value.betIP < 1){
-					team1.value.lastIP = team1.value.lastIP + REST_INCREASE_IP
+					team1.value.lastIP = Math.min(1, team1.value.lastIP + REST_INCREASE_IP)
 				}
 			}
 			if (team2.value.decision == 2) {
 				// team2休息
 				team2.value.lastCP = team2.value.lastCP + REST_INCREASE_CP
 				if(team2.value.betIP < 1){
-					team2.value.lastIP = team2.value.lastIP + REST_INCREASE_IP
+					team2.value.lastIP = Math.min(1, team2.value.lastIP + REST_INCREASE_IP)
 				}
 			}
 			if (team1.value.decision == 2 && team2.value.decision == 2) {
@@ -353,15 +350,16 @@ export const useMatchStore = defineStore('match', () => {
 			&& getLastOprCount([match.value.banOprs, match.value.publicOprs, team1.value.getOprs, team2.value.getOprs], match.value.banBranches) > 0
 
 			// 重置博弈干员
-			match.value.selectOpr = null
-			submit(() => { matchOpr.step24() })
+			submit(()=>matchOpr.step24())
 		},
 		step3: () => {
 			// 博弈结束，阶段3
 			// 展示公共区不可见的1名五星干员
+			match.value.step = 3
+			match.value.countDownType = ""
+			match.value.selectOpr = null
 			addVisibleIdx([team1, team2], ['showBranches', 'showRares', 'showNames'], [match.value.publicOprs[2]])
 			match.value.step = 4
-			submit(() => { matchOpr.step3() })
 		},
 		nextRound: () => {
 			// 禁用本轮公用干员
@@ -380,10 +378,8 @@ export const useMatchStore = defineStore('match', () => {
 			match.value.round = match.value.round + 1
 			// 重置阶段
 			match.value.step = 1
-			// 重置时间
-			match.value.timeStep1 = SETTLEMENT_TIME
-			match.value.timeStep21 = MIND_TIME
-			match.value.timeStep24 = SHOW_TIME
+			// 重置阶段
+			match.value.turn = 0
 			// 重置team资源
 			team1.value.betFlag = true
 			team1.value.getOprs = []
@@ -407,5 +403,5 @@ export const useMatchStore = defineStore('match', () => {
 		}
 	}
 
-	return { userInfo, match, team1, team2, teamOpr, matchOpr, serverOpr, submit }
+	return { userInfo, match, team1, team2, teamOpr, matchOpr, serverOpr, submit, SETTLEMENT_TIME, MIND_TIME, SHOW_TIME}
 })

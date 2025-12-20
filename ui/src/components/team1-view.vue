@@ -2,11 +2,41 @@
 
 import { useMatchStore } from '@/stores/match'
 import OperatorBox from './operator-box.vue';
+import TeamIdentity from './team/team-identity.vue';
+import TeamResource from './team/team-resource.vue';
+import { computed } from 'vue';
 const { userInfo, team1 } = useMatchStore()
+const isShow = ()=>{
+  return userInfo.team1 || userInfo.owner || userInfo.viewer;
+}
+const cp = computed(()=>{
+  if(isShow()){
+    return team1.lastCP;
+  }else{
+    return "???"
+  }
+})
+const ip = computed(()=>{
+  if(isShow()){
+    return team1.lastIP;
+  }else{
+    return "???"
+  }
+})
 </script>
 
 <template>
-  <div>
+  <div class="rotate-bordered-pannel left">
+    <TeamIdentity name="A"></TeamIdentity>
+    <TeamResource :cp="cp" :ip="ip"></TeamResource>
+    <div class="team-operator">
+      <div>获得干员</div>
+      <span v-for="idx in team1.getOprs" :key="idx">
+        <OperatorBox :opr-idx="idx" :show-cp="true"></OperatorBox>
+      </span>
+    </div>
+  </div>
+  <!-- <div>
     <div>获得干员</div>
     <div>
       <span v-for="idx in team1.getOprs" :key="idx">
@@ -24,5 +54,21 @@ const { userInfo, team1 } = useMatchStore()
     <div> 向对方展示的调用点 {{ team1.showBetCP }}</div>
     <div> 向对方展示的情报点 {{ team1.showBetIP }}</div>
     <div> 允许博弈 {{ team1.betFlag }}</div>
-  </div>
+  </div> -->
 </template>
+<style lang="css" scoped>
+.rotate-bordered-pannel{
+  width: 20vw;
+  height: 80vh;
+  padding: 15px;
+  background: #0f0f14d9;
+}
+.left{
+  border-left: 4px solid #00AEEF;
+  transform: translate(-50vw, -50%) rotateY(15deg);
+  transform-origin: left center;
+  top: 50vh;
+  left: 50vw;
+  position: absolute;
+}
+</style>
