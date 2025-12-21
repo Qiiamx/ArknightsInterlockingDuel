@@ -1,42 +1,38 @@
 <script setup>
-
-import { useMatchStore } from '@/stores/match'
+import { useMatchStore } from '@/stores/match';
 import OperatorBox from './operator-box.vue';
 import TeamIdentity from './team/team-identity.vue';
 import TeamResource from './team/team-resource.vue';
 import { computed } from 'vue';
-const { userInfo, team2 } = useMatchStore()
-const isShow = ()=>{
-  return userInfo.team2 || userInfo.owner || userInfo.viewer;
-}
-const cp = computed(()=>{
-  if(isShow()){
-    return team2.lastCP;
-  }else{
-    return "???"
-  }
-})
-const ip = computed(()=>{
-  if(isShow()){
-    return team2.lastIP;
-  }else{
-    return "???"
-  }
-})
+import TeamOperator from './team/team-operator.vue';
+const { userInfo, team2 } = useMatchStore();
+const isShow = () => {
+	return userInfo.team2 || userInfo.owner || userInfo.viewer;
+};
+const cp = computed(() => {
+	// if (isShow()) {
+	// 	return team2.lastCP;
+	// } else {
+	// 	return '???';
+	// }
+	return team2.lastCP;
+});
+const ip = computed(() => {
+	if (isShow()) {
+		return team2.lastIP;
+	} else {
+		return '???';
+	}
+});
 </script>
 
 <template>
-  <div class="rotate-bordered-pannel right">
-    <TeamIdentity name="B"></TeamIdentity>
-    <TeamResource :cp="cp" :ip="ip"></TeamResource>
-    <div class="team-operator">
-      <div>获得干员</div>
-      <span v-for="idx in team2.getOprs" :key="idx">
-        <OperatorBox :opr-idx="idx" :show-cp="true"></OperatorBox>
-      </span>
-    </div>
-  </div>
-  <!-- <div>
+	<div class="rotate-bordered-pannel right">
+		<TeamIdentity name="B"></TeamIdentity>
+		<TeamResource :cp="cp" :ip="ip"></TeamResource>
+		<TeamOperator :oprs="team2.getOprs"></TeamOperator>
+	</div>
+	<!-- <div>
     <div>获得干员</div>
     <div>
       <span v-for="idx in team2.getOprs" :key="idx">
@@ -58,18 +54,20 @@ const ip = computed(()=>{
 </template>
 <style lang="css" scoped>
 .rotate-bordered-pannel {
-  width: 20vw;
-  height: 80vh;
-  padding: 15px;
-  background: #0f0f14d9;
+	width: 20vw;
+	height: 80vh;
+	padding: 15px;
+	background: #0f0f14d9;
+	display: flex;
+	flex-direction: column;
 }
 
 .right {
-  border-right: 4px solid #00AEEF;
-  transform: translate(50vw, -50%) rotateY(-15deg);
-  transform-origin: right center;
-  top: 50vh;
-  right: 50vw;
-  position: absolute;
+	border-right: 4px solid #00aeef;
+	transform: translate(50vw, -50%) rotateY(-15deg);
+	transform-origin: right center;
+	top: 50vh;
+	right: 50vw;
+	position: absolute;
 }
 </style>
