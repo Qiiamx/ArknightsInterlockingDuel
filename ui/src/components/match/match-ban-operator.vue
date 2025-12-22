@@ -76,7 +76,9 @@ const banOprs = computed(() => {
 		}
 		tmp.oprs.push(opr);
 	}
-	res.push({ ...tmp });
+  if(last != null){
+	  res.push({ ...tmp });
+  }
 	return res;
 });
 const showClass = ref(false);
@@ -86,16 +88,9 @@ const toggle = () => {
 </script>
 <template>
 	<div :class="`ban-pool-container ${showClass ? 'show' : ''}`">
-		<div class="ban-header-bar" @click="toggle">
-			<div class="stripe-pattern"></div>
-			<div class="header-content">
-				<span class="icon">⚠</span>
-				<span class="label">禁用协议 // BANNED PROTOCOL</span>
-				<span class="count">[{{ banOprs.length }} OPERATORS DETECTED]</span>
-			</div>
-		</div>
+    
 		<div class="ban-content">
-			<div class="ban-grid">
+			<div v-if="banOprs.length > 0" class="ban-grid">
 				<template v-for="branch in banOprs" :key="branch.分支">
 					<div class="ban-group">
 						<div class="group-label">{{ `${branch.职业}-${branch.分支}` }}</div>
@@ -111,6 +106,18 @@ const toggle = () => {
 						</div>
 					</div>
 				</template>
+			</div>
+      <div v-else class="empty-msg">
+        <div>NO BANNED DATA</div>
+        <div class="sub-empty">暂无干员被熔断</div>
+      </div>
+		</div>
+		<div class="ban-header-bar" @click="toggle">
+			<div class="stripe-pattern"></div>
+			<div class="header-content">
+				<span class="icon">⚠</span>
+				<span class="label">禁用协议 / BANNED PROTOCOL</span>
+				<span class="count">[{{ banOprs.length }} OPERATORS DETECTED]</span>
 			</div>
 		</div>
 	</div>
@@ -130,10 +137,11 @@ const toggle = () => {
 	display: flex;
 	flex-direction: column;
 	transition: height 0.4s ease;
+	border: 2px solid #d50000;
 }
 
 .ban-pool-container.show {
-	height: 60vh;
+	height: 90vh;
 }
 
 /* =========================================
@@ -142,8 +150,8 @@ const toggle = () => {
 .ban-header-bar {
 	height: 5vh;
 	background: rgba(17, 17, 17, 0.95);
-	border: 2px solid #d50000;
-	border-bottom: none;
+	/* border: 2px solid #d50000; */
+	/* border-bottom: none; */
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -210,11 +218,9 @@ const toggle = () => {
 	flex: 1;
 	background: rgba(10, 10, 10, 0.95);
 	backdrop-filter: blur(10px);
-	padding: 10px 20px;
 	overflow-x: hidden;
 	overflow-y: auto;
 	/* 支持纵向滚动 */
-	border: 2px solid #d50000;
 	border-top: none;
 }
 
@@ -325,14 +331,18 @@ const toggle = () => {
 
 /* 空状态 */
 .empty-msg {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+	/* position: absolute; */
+	/* top: 50%; */
+	/* left: 50%; */
+	/* transform: translate(-50%, -50%); */
 	text-align: center;
 	color: #444;
 	font-family: 'Rajdhani';
 	width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .empty-msg div:first-child {

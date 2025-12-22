@@ -15,7 +15,7 @@ const phaseText = computed(() => {
 </script>
 <template>
 	<div class="phase-indicator">
-		<div class="phase-label">系统状态 // CURRENT PHASE</div>
+		<div class="phase-label">系统状态 / CURRENT PHASE</div>
 		<div class="phase-value">
 			<span class="icon">💠</span>
 			<span class="text">{{ phaseText }}</span>

@@ -47,7 +47,7 @@ const { userInfo, match, team2, team1, teamOpr } = useMatchStore();
 </template>
 <style scoped>
 .control-panel {
-	top: 75vh;
+	top: 80vh;
 	left: 50vw;
 	width: 38vw;
 	transform: translateX(-19vw) translateY(-10vh);

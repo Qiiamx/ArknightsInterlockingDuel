@@ -55,12 +55,12 @@ const stopTimer = () => {
 		startTimer();
 	} else if (match.value.countDownType == 'duling') {
 		//博弈阶段结束, 获胜动画开始
-		console.debug('start showing');
+		console.debug('start showing animation');
 		matchOpr.step23();
 		startTimer();
 	} else if (match.value.countDownType == 'showingAnimation') {
 		//获胜动画结束, 公示倒计时开始
-		console.debug('start showing animation');
+		console.debug('start showing');
 		matchOpr.step24();
 		startTimer();
 	} else if (match.value.countDownType == 'showing') {
@@ -185,7 +185,7 @@ const copy = async (text) => {
 </template>
 <style scoped>
 .control-panel {
-	top: 75vh;
+	top: 80vh;
 	left: 50vw;
 	width: 38vw;
 	transform: translateX(-19vw) translateY(-10vh);
@@ -232,30 +232,6 @@ const copy = async (text) => {
 	cursor: pointer;
 	font-size: 1.1em;
 	font-weight: 600;
-}
-.btn-group {
-	top: 75vh;
-	left: 50vw;
-	width: 20em;
-	transform: translateX(-10em);
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	background: #14191ee6;
-	border: 1px solid #444;
-	border-bottom: 4px solid #666;
-	box-shadow: 0 20px 50px #00000080;
-	position: absolute;
-}
-.btn-group .btn {
-	clip-path: polygon(
-		10px 0,
-		100% 0,
-		100% calc(100% - 10px),
-		calc(100% - 10px) 100%,
-		0 100%,
-		0 10px
-	);
 }
 .share-mask {
 	z-index: 10;

@@ -24,8 +24,11 @@ watch(
 const startTurnInfo = () => {
 	show.value = 'info';
 	setTimeout(() => {
-		show.value = 'progress';
-		startDrawingEffect(0);
+		show.value = '';
+    setTimeout(() => {
+		  show.value = 'progress';
+      startDrawingEffect(0);
+    }, DULING_TIME * 0.05)
 	}, DULING_TIME * 0.5);
 };
 // 抽取中数据流特效, 以 20 次为目标, 每次落在 jumpCount*2 - (jumpCount+1)*5 区间
@@ -36,7 +39,7 @@ const startDrawingEffect = (jumpCount) => {
 			() => {
 				startDrawingEffect(jumpCount + 1);
 			},
-			DULING_TIME * 0.5 * 0.05
+			DULING_TIME * 0.45 * 0.05
 		);
 	} else {
 		show.value = '';
@@ -45,8 +48,8 @@ const startDrawingEffect = (jumpCount) => {
 };
 </script>
 <template>
-	<Transition name="banner-fold">
-		<div v-show="show == 'info'" class="tactical-banner active">
+	<Transition name="banner-fold" mode="out-in">
+		<div v-if="show == 'info'" class="tactical-banner active">
 			<div class="shine-effect"></div>
 			<div class="hazard-stripes"></div>
 
@@ -63,9 +66,7 @@ const startDrawingEffect = (jumpCount) => {
 			<div class="bracket bracket-left"></div>
 			<div class="bracket bracket-right"></div>
 		</div>
-	</Transition>
-	<Transition name="fade">
-		<div v-show="show == 'progress'" class="drawing-layer">
+    <div v-else-if="show == 'progress'" class="drawing-layer">
 			<div class="data-stream-bg">
 				<div
 					v-for="i in 10"
@@ -91,17 +92,23 @@ const startDrawingEffect = (jumpCount) => {
 </template>
 <style lang="css" scoped>
 .drawing-layer {
-	position: fixed;
+	/* position: fixed;
 	top: 0;
 	left: 0;
 	width: 100vw;
-	height: 100vh;
+	height: 100vh; */
 	background: rgba(0, 0, 0, 0.8);
-	z-index: 9998;
+	z-index: 300;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	overflow: hidden;
+  
+	width: 80vw;
+	height: 10vw;
+	top: 40vh;
+	left: 10vw;
+	position: absolute;
 }
 
 .data-stream-bg {

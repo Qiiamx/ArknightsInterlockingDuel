@@ -5,7 +5,7 @@ const { match } = useMatchStore();
 </script>
 <template>
 	<div data-v-8f1d4fa9="" class="public-pool-container">
-		<div class="pool-label">公共牌区 / PUBLIC POOL</div>
+		<div class="pool-label">公共干员 / PUBLIC POOL</div>
 		<div class="pool-cards">
 			<div v-for="idx in match.publicOprs" :key="idx" class="mini-card">
 				<MatchPublicOperator :opr-idx="idx"></MatchPublicOperator>
@@ -16,7 +16,7 @@ const { match } = useMatchStore();
 <style scoped lang="css">
 .public-pool-container {
 	position: absolute;
-	top: 80px;
+	top: 5%;
 	left: 50%;
 	transform: translate(-50%);
 	z-index: 100;

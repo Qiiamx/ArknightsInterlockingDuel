@@ -4,7 +4,7 @@ import { computed, onMounted, ref } from 'vue';
 import operators from '@/assets/operators.json';
 const { userInfo, match, team1, team2 } = useMatchStore();
 const data = computed(() => {
-	if (match.selectOpr == null || match.selectOpr == '' || match.selectOpr < 0) {
+	if (match.step != 21) {
 		return null;
 	}
 	let obj = { ...operators[match.selectOpr] };
