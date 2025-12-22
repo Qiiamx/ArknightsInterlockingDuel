@@ -1,6 +1,5 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
-import OperatorBox from './operator-box.vue';
 import TeamIdentity from './team/team-identity.vue';
 import TeamResource from './team/team-resource.vue';
 import TeamOperator from './team/team-operator.vue';

@@ -1,7 +1,7 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
 import { computed, onMounted, ref } from 'vue';
-import operators from '@/assets/operators.json';
+import { operators } from '@/utils/operator';
 const { userInfo, match, team1, team2 } = useMatchStore();
 const data = computed(() => {
 	if (match.step != 21) {

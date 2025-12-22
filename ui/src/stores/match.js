@@ -17,8 +17,8 @@ const REST_INCREASE_IP = 1; // 休息增加情报点
 const SETTLEMENT_TIME = 5000; // 开局时间(毫秒)
 const DULING_TIME = 4000; // 抽取动画时间(毫秒) 2秒TURN 2秒抽
 const MIND_TIME = 25000; // 思考时间(毫秒)
-const WINNING_TIME = 3000; // 获胜动画时间(毫秒)
-const SHOW_TIME = 5000; // 结算时间(毫秒)
+const WINNING_TIME = 5000; // 获胜动画时间(毫秒)
+const SHOW_TIME = 4000; // 结算时间(毫秒)
 
 export const useMatchStore = defineStore('match', () => {
 	//用户信息
@@ -64,6 +64,7 @@ export const useMatchStore = defineStore('match', () => {
 		betIP: 0, // 付出情报（单次结算）
 		showBetCP: null, // 拼点展示, null 不展示, 和0做区分
 		showBetIP: null, // 拼点展示, null 不展示, 和0做区分
+		confirm: false, // 确认操作,用于快速结束倒计时
 		betFlag: true, //参与博弈
 	});
 	const team2 = ref({
@@ -84,7 +85,8 @@ export const useMatchStore = defineStore('match', () => {
 		betIP: 0, // 付出情报（单次结算）
 		showBetCP: null, // 拼点展示, null 不展示, 和0做区分
 		showBetIP: null, // 拼点展示, null 不展示, 和0做区分
-		betFlag: true, //参与博弈
+		confirm: false, // 确认操作,用于快速结束倒计时
+		betFlag: true, // 参与博弈
 	});
 	// 对 targets 增加 types 的 indexes
 	const addVisibleIdx = (targets, types, indexes) => {
@@ -165,10 +167,25 @@ export const useMatchStore = defineStore('match', () => {
 			if (userInfo.value.team1) {
 				team1.value.betCP = 0;
 				team1.value.decision = 2;
+				team1.value.confirm = true;
 			} else {
 				team2.value.betCP = 0;
 				team2.value.decision = 2;
+				team2.value.confirm = true;
 			}
+			_reduceTime();
+			submit(() => {
+				teamOpr.rest();
+			});
+		},
+		confirm: () => {
+			// team ALL !
+			if (userInfo.value.team1) {
+				team1.value.confirm = true;
+			} else {
+				team2.value.confirm = true;
+			}
+			_reduceTime();
 			submit(() => {
 				teamOpr.rest();
 			});
@@ -178,14 +195,27 @@ export const useMatchStore = defineStore('match', () => {
 			if (userInfo.value.team1) {
 				team1.value.betCP = 0;
 				team1.value.decision = 3;
+				team1.value.confirm = true;
 			} else {
 				team2.value.betCP = 0;
 				team2.value.decision = 3;
+				team2.value.confirm = true;
 			}
+			_reduceTime();
 			submit(() => {
 				teamOpr.rest();
 			});
 		},
+	};
+	const _reduceTime = () => {
+		if (team1.value.confirm && team2.value.confirm) {
+			// 双方确认, 倒计时重置为5, 小于5忽略
+			let target = Date.now() + 5000;
+			if (target < match.value.countDownTarget) {
+				match.value.countDownTarget = target;
+				match.value.countDownLast = 5000;
+			}
+		}
 	};
 	// 比赛操作
 	const matchOpr = {
@@ -194,6 +224,7 @@ export const useMatchStore = defineStore('match', () => {
 		},
 		pause: () => {
 			match.value.countDownRunning = false;
+			match.value.countDownLast = Math.max(match.value.countDownTarget - Date.now(), 0);
 			submit(() => matchOpr.pause());
 		},
 		resume: () => {
@@ -224,6 +255,9 @@ export const useMatchStore = defineStore('match', () => {
 		},
 		step20: () => {
 			// 抽取动画 (显示回合, 显示抽取进度条)
+			team1.value.confirm = !team1.value.betFlag;
+			team2.value.confirm = !team2.value.betFlag;
+			match.value.turn = match.value.turn + 1;
 			match.value.selectOpr = null;
 			match.value.step = 20;
 			match.value.countDownRunning = true;
@@ -235,7 +269,6 @@ export const useMatchStore = defineStore('match', () => {
 		},
 		step21: () => {
 			// 博弈阶段，25秒
-			match.value.turn = match.value.turn + 1;
 			match.value.step = 21;
 			match.value.countDownRunning = true;
 			match.value.countDownType = 'duling';
@@ -278,23 +311,12 @@ export const useMatchStore = defineStore('match', () => {
 			//选手进行情报获取
 		},
 		step23: () => {
-			//获胜动画
+			//结算
 			match.value.step = 23;
 			match.value.countDownRunning = true;
 			match.value.countDownType = 'showingAnimation';
 			match.value.countDownLast = WINNING_TIME;
 			match.value.countDownTotal = WINNING_TIME;
-			match.value.countDownTarget = match.value.countDownLast + Date.now();
-			submit(() => matchOpr.step23());
-		},
-		step24: () => {
-			// owner界面倒计时结束后，调用本功能
-			// 揭开本次博弈结果，扣除调用点，分配干员给队伍，调整可见性
-			match.value.step = 24;
-			match.value.countDownRunning = true;
-			match.value.countDownType = 'showing';
-			match.value.countDownLast = SHOW_TIME;
-			match.value.countDownTotal = SHOW_TIME;
 			match.value.countDownTarget = match.value.countDownLast + Date.now();
 			if (team1.value.decision == 1) {
 				// team1下注，扣除CP
@@ -317,32 +339,37 @@ export const useMatchStore = defineStore('match', () => {
 						['showClasses', 'showBranches', 'showRares', 'showNames'],
 						[match.value.selectOpr]
 					);
-					// 向team1展示本轮team2消耗的betCP
-					team2.value.showBetCP = team2.value.betCP;
+					// 向team1展示本轮team2消耗的betCP, 现在全局显示了
+					// team2.value.showBetCP = team2.value.betCP;
 				} else if (payTeam > 0) {
 					// team1更多, team2可以看到team1消耗的点数
 					team1.value.getOprs.push(match.value.selectOpr);
 					team1.value.recordCp[match.value.selectOpr] = team1.value.betCP;
-					team2.value.recordCp[match.value.selectOpr] = team2.value.betCP;
+					team2.value.recordCp[match.value.selectOpr] = team1.value.betCP;
 					addVisibleIdx(
 						[team1],
 						['showClasses', 'showBranches', 'showRares', 'showNames'],
 						[match.value.selectOpr]
 					);
-					// 向team2展示本轮team1消耗的betCP
-					team1.value.showBetCP = team1.value.betCP;
+					// 向team2展示本轮team1消耗的betCP, 现在全局显示了
+					// team1.value.showBetCP = team1.value.betCP;
 				} else {
 					// 平局
 					// ban掉分支即可,干员无需上去, 反正后面不会再有了
 					// match.value.banOprs.push(match.value.selectOpr)
 					match.value.banBranches.push(getBranchIdx(match.value.selectOpr));
 					// 显示被ban掉的干员
-					// addVisibleIdx([team1, team2], ['showClasses', 'showBranches', 'showRares', 'showNames'], [match.value.selectOpr])
+					addVisibleIdx(
+						[team1, team2],
+						['showClasses', 'showBranches', 'showRares', 'showNames'],
+						[match.value.selectOpr]
+					);
 				}
 			} else if (team1.value.decision == 1 && team2.value.decision != 1) {
 				// team1下注，team2没有下注
 				team1.value.getOprs.push(match.value.selectOpr);
 				team1.value.recordCp[match.value.selectOpr] = team1.value.betCP;
+				team2.value.recordCp[match.value.selectOpr] = team1.value.betCP; // 现在共享CP情报
 				addVisibleIdx(
 					[team1],
 					['showClasses', 'showBranches', 'showRares', 'showNames'],
@@ -352,6 +379,7 @@ export const useMatchStore = defineStore('match', () => {
 				// team2下注，team1没有下注
 				team2.value.getOprs.push(match.value.selectOpr);
 				team2.value.recordCp[match.value.selectOpr] = team2.value.betCP;
+				team1.value.recordCp[match.value.selectOpr] = team2.value.betCP; // 现在共享CP情报
 				addVisibleIdx(
 					[team2],
 					['showClasses', 'showBranches', 'showRares', 'showNames'],
@@ -378,7 +406,11 @@ export const useMatchStore = defineStore('match', () => {
 				// match.value.banOprs.push(match.value.selectOpr)
 				match.value.banBranches.push(getBranchIdx(match.value.selectOpr));
 				// 显示被ban掉的干员
-				// addVisibleIdx([team1, team2], ['showClasses', 'showBranches', 'showRares', 'showNames'], [match.value.selectOpr])
+				addVisibleIdx(
+					[team1, team2],
+					['showClasses', 'showBranches', 'showRares', 'showNames'],
+					[match.value.selectOpr]
+				);
 			}
 			if (team1.value.decision == 3) {
 				// 结束博弈, 标记false, 禁止所有操作到下一轮
@@ -388,9 +420,13 @@ export const useMatchStore = defineStore('match', () => {
 				// 结束博弈, 标记false, 禁止所有操作到下一轮
 				team2.value.betFlag = false;
 			}
+			// 双方都是3(结束), 不做处理,也不ban分支
+
 			// 展示本轮消耗情报点
 			team1.value.showBetIP = team1.value.betIP;
+			team1.value.showBetCP = team1.value.betCP;
 			team2.value.showBetIP = team2.value.betIP;
+			team2.value.showBetCP = team2.value.betCP;
 			// 如果还有剩余干员且TEAM还能博弈, 允许继续博弈, 否则不允许(owner应该调用step3)
 			match.value.continueMind =
 				// TEAM还能博弈
@@ -405,6 +441,16 @@ export const useMatchStore = defineStore('match', () => {
 					[match.value.banOprs, match.value.publicOprs, team1.value.getOprs, team2.value.getOprs],
 					match.value.banBranches
 				) > 0;
+			submit(() => matchOpr.step23());
+		},
+		step24: () => {
+			// 公示
+			match.value.step = 24;
+			match.value.countDownRunning = true;
+			match.value.countDownType = 'showing';
+			match.value.countDownLast = SHOW_TIME;
+			match.value.countDownTotal = SHOW_TIME;
+			match.value.countDownTarget = match.value.countDownLast + Date.now();
 			submit(() => matchOpr.step24());
 		},
 		step3: () => {
@@ -420,11 +466,14 @@ export const useMatchStore = defineStore('match', () => {
 			);
 			submit(() => matchOpr.step3());
 		},
-		step4: () => {
-			// 博弈结束，阶段3
-			// 展示公共区不可见的1名五星干员
-			match.value.step = 4;
-			submit(() => matchOpr.step4());
+		step4: () => {},
+		canNextRound: () => {
+			return (
+				getLastOprCount(
+					[match.value.banOprs, match.value.publicOprs, team1.value.getOprs, team2.value.getOprs],
+					match.value.banBranches
+				) >= 3
+			);
 		},
 		nextRound: () => {
 			// 禁用本轮公用干员

@@ -5,7 +5,7 @@ import { computed } from 'vue';
 const { match } = storeToRefs(useMatchStore());
 const phaseText = computed(() => {
 	if (match.value && match.value.round > 0) {
-		return `ROUND ${match.value.round} / TURN ${match.value.turn} / ${{ 1: '开局阶段', 20: '博弈准备', 21: '博弈阶段', 23: '结算阶段', 24: '公示阶段', 3: '终止阶段', 4: '攻略阶段' }[match.value.step]}`;
+		return `ROUND ${match.value.round}${[1, 3, 4].indexOf(match.value.step) < 0 ? ' / TURN ' + match.value.turn : ''} / ${{ 1: '开局阶段', 20: '博弈准备', 21: '博弈阶段', 23: '结算阶段', 24: '公示阶段', 3: '终止阶段', 4: '攻略阶段' }[match.value.step]}`;
 	} else if (match.value) {
 		return `准备阶段`;
 	} else {

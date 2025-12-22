@@ -1,19 +1,11 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
-import { ref, computed, onMounted } from 'vue';
+import { computed } from 'vue';
+import { operators } from '@/utils/operator';
 const { userInfo, team1, team2 } = useMatchStore();
-
-const operators = ref([]);
-onMounted(async () => {
-	try {
-		operators.value = await fetch('/data/operators.json').then((r) => r.json());
-	} catch (e) {
-		alert('干员信息加载失败');
-	}
-});
 const props = defineProps(['oprIdx', 'showCp']); // 干员索引, 是否显示调用点
 const data = computed(() => {
-	let obj = { ...operators.value[props.oprIdx] };
+	let obj = { ...operators[props.oprIdx] };
 	if (userInfo.team1) {
 		if (team1.showNames.indexOf(props.oprIdx) < 0) {
 			delete obj.干员;

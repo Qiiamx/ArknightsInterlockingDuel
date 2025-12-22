@@ -4,7 +4,7 @@ import MatchPublicOperator from './match-public-operator-box.vue';
 const { match } = useMatchStore();
 </script>
 <template>
-	<div data-v-8f1d4fa9="" class="public-pool-container">
+	<div class="public-pool-container">
 		<div class="pool-label">公共干员 / PUBLIC POOL</div>
 		<div class="pool-cards">
 			<div v-for="idx in match.publicOprs" :key="idx" class="mini-card">

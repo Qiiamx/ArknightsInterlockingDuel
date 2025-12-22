@@ -25,10 +25,10 @@ const startTurnInfo = () => {
 	show.value = 'info';
 	setTimeout(() => {
 		show.value = '';
-    setTimeout(() => {
-		  show.value = 'progress';
-      startDrawingEffect(0);
-    }, DULING_TIME * 0.05)
+		setTimeout(() => {
+			show.value = 'progress';
+			startDrawingEffect(0);
+		}, DULING_TIME * 0.05);
 	}, DULING_TIME * 0.5);
 };
 // 抽取中数据流特效, 以 20 次为目标, 每次落在 jumpCount*2 - (jumpCount+1)*5 区间
@@ -66,7 +66,7 @@ const startDrawingEffect = (jumpCount) => {
 			<div class="bracket bracket-left"></div>
 			<div class="bracket bracket-right"></div>
 		</div>
-    <div v-else-if="show == 'progress'" class="drawing-layer">
+		<div v-else-if="show == 'progress'" class="drawing-layer">
 			<div class="data-stream-bg">
 				<div
 					v-for="i in 10"
@@ -103,7 +103,7 @@ const startDrawingEffect = (jumpCount) => {
 	align-items: center;
 	justify-content: center;
 	overflow: hidden;
-  
+
 	width: 80vw;
 	height: 10vw;
 	top: 40vh;

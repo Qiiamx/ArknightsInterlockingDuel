@@ -1,96 +1,115 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
-import OperatorBox from '@/components/operator-box.vue';
-import BranchBox from '@/components/branch-box.vue';
-import { computed, onMounted, ref } from 'vue';
-import MatchBanOperatorBox from './match-ban-operator-box.vue';
-const operators = ref([]);
-const branches = ref([]);
-const oprNameIdx = ref({}); // 干员:索引
-const branchNameIdx = ref({}); // 分支:索引
-const classWeight = {};
-const branchWeight = {};
-onMounted(async () => {
-	try {
-		branches.value = await fetch('/data/branches.json').then((r) => r.json());
-	} catch (e) {
-		alert('职业信息加载失败');
-	}
-
-	let profIdx = 0,
-		branchIdx = 0;
-
-	branches.value.forEach(({ 所属职业, 分支 }, index) => {
-		// 职业首次出现 → 递增序号
-		if (classWeight[所属职业] == null) {
-			classWeight[所属职业] = ++profIdx;
-		}
-		// 分支首次出现 → 递增序号
-		if (branchWeight[分支] == null) {
-			branchWeight[分支] = ++branchIdx;
-		}
-		branchNameIdx.value[分支] = index;
-	});
-	try {
-		operators.value = await fetch('/data/operators.json').then((r) => r.json());
-		operators.value.forEach(({ 干员 }, index) => {
-			oprNameIdx.value[干员] = index;
-		});
-		operators.value.sort((a, b) => {
-			let d1 = (classWeight[a.职业] || 999) - (classWeight[b.职业] || 999);
-			if (d1 != 0) {
-				return d1;
-			}
-			let d2 = (branchWeight[a.分支] || 999) - (branchWeight[b.分支] || 999);
-			if (d2 != 0) {
-				return d2;
-			}
-			return Number(b.稀有度) - Number(a.稀有度);
-		});
-	} catch (e) {
-		alert('干员信息加载失败');
-	}
-});
-const { match } = useMatchStore();
-const banOprs = computed(() => {
-	let arr = operators.value.filter(
-		(item) =>
-			match.banOprs.includes(oprNameIdx.value[item.干员]) ||
-			match.banBranches.includes(branchNameIdx.value[item.分支])
-		// 干员被ban或分支被ban
-	);
-	let res = [];
-	let tmp = {};
-	let last = null;
-	for (let opr of arr) {
-		if (last == null || last != opr.分支) {
-			if (last != null) {
-				res.push({ ...tmp });
-			}
-			last = opr.分支;
-			tmp = {
-				职业: opr.职业,
-				分支: opr.分支,
-				oprs: [],
-			};
-		}
-		tmp.oprs.push(opr);
-	}
-  if(last != null){
-	  res.push({ ...tmp });
-  }
-	return res;
-});
+import { computed, ref } from 'vue';
+import { operators } from '@/utils/operator';
+import { branches } from '@/utils/operator';
+import { storeToRefs } from 'pinia';
+const { match } = storeToRefs(useMatchStore());
+const classes = [...new Set(operators.map((t) => t.职业))];
 const showClass = ref(false);
 const toggle = () => {
 	showClass.value = !showClass.value;
 };
+const calOprs = computed(() => {
+	let data = [];
+	let banBrancheNames = [];
+	for (let idx of match.value.banBranches) {
+		banBrancheNames.push(branches[idx].分支);
+	}
+	for (let i = 0; i < operators.length; i++) {
+		let item = operators[i];
+		let ban = banBrancheNames.indexOf(item.分支) >= 0 || match.value.banOprs.indexOf(i) >= 0;
+		data.push({ ...item, idx: i, ban: ban });
+	}
+	return data;
+});
+const clsLast = (clsName) => {
+	return (
+		operators.filter((t) => t.职业 == clsName).length -
+		calOprs.value.filter((b) => b.职业 == clsName && b.ban).length
+	);
+};
+const branchLast = (branchName) => {
+	return (
+		operators.filter((t) => t.分支 == branchName).length -
+		calOprs.value.filter((b) => b.分支 == branchName && b.ban).length
+	);
+};
+const showDetail = ref({});
 </script>
 <template>
 	<div :class="`ban-pool-container ${showClass ? 'show' : ''}`">
-    
 		<div class="ban-content">
-			<div v-if="banOprs.length > 0" class="ban-grid">
+			<div class="ban-grid">
+				<template v-for="className in classes" :key="className">
+					<div class="ban-group">
+						<a-tooltip placement="bottom" v-model:open="showDetail[className]" trigger="click">
+							<div
+								class="group-title"
+								style="cursor: pointer"
+								@click="() => (showDetail[className] = true)"
+							>
+								<span>{{ className }} ({{ clsLast(className) }})</span>
+							</div>
+							<template #title>
+								<div class="group-avatars">
+									<template
+										v-for="item in calOprs.filter((t) => t.职业 == className)"
+										:key="item.干员"
+									>
+										<div class="banned-avatar" :title="`${item.干员}`">
+											<img
+												:src="`/icon/头像_${item.干员}.png`"
+												:class="item.ban ? 'banned-img' : 'not-banned-img'"
+											/>
+											<div :class="item.ban ? 'ban-overlay' : ''"></div>
+										</div>
+									</template>
+								</div>
+							</template>
+						</a-tooltip>
+						<div
+							class="group-label"
+							v-for="(branch, bid) in branches.filter((t) => t.所属职业 == className)"
+							:key="bid"
+						>
+							<a-tooltip placement="bottom" v-model:open="showDetail[branch.分支]" trigger="click">
+								<span style="cursor: pointer" @click="() => (showDetail[branch.分支] = true)">
+									{{ branch.分支 }}
+									({{ branchLast(branch.分支) }})
+								</span>
+								<template #title>
+									<div class="group-avatars">
+										<template
+											v-for="item in calOprs.filter((t) => t.分支 == branch.分支)"
+											:key="item.干员"
+										>
+											<div class="banned-avatar" :title="`${item.干员}`">
+												<img
+													:src="`/icon/头像_${item.干员}.png`"
+													:class="item.ban ? 'banned-img' : 'not-banned-img'"
+												/>
+												<div :class="item.ban ? 'ban-overlay' : ''"></div>
+											</div>
+										</template>
+									</div>
+								</template>
+							</a-tooltip>
+						</div>
+						<!-- <div class="group-avatars">
+							<template v-for="item in branch.oprs" :key="item.干员">
+								<div class="banned-avatar" :title="`${item.干员}`">
+									<img :src="`/icon/头像_${item.干员}.png`" class="banned-img" />
+									<div class="ban-overlay"></div>
+								</div>
+							</template>
+						</div> -->
+					</div>
+				</template>
+			</div>
+		</div>
+		<!-- <div class="ban-content">
+			<div class="ban-grid">
 				<template v-for="branch in banOprs" :key="branch.分支">
 					<div class="ban-group">
 						<div class="group-label">{{ `${branch.职业}-${branch.分支}` }}</div>
@@ -98,26 +117,20 @@ const toggle = () => {
 							<template v-for="item in branch.oprs" :key="item.干员">
 								<div class="banned-avatar" :title="`${item.干员}`">
 									<img :src="`/icon/头像_${item.干员}.png`" class="banned-img" />
-									<div class="ban-overlay">
-										<!-- <span class="cross">✕</span> -->
-									</div>
+									<div class="ban-overlay"></div>
 								</div>
 							</template>
 						</div>
 					</div>
 				</template>
 			</div>
-      <div v-else class="empty-msg">
-        <div>NO BANNED DATA</div>
-        <div class="sub-empty">暂无干员被熔断</div>
-      </div>
-		</div>
+		</div> -->
 		<div class="ban-header-bar" @click="toggle">
 			<div class="stripe-pattern"></div>
 			<div class="header-content">
 				<span class="icon">⚠</span>
 				<span class="label">禁用协议 / BANNED PROTOCOL</span>
-				<span class="count">[{{ banOprs.length }} OPERATORS DETECTED]</span>
+				<span class="count">[{{ calOprs.filter((t) => t.ban).length }} OPERATORS DETECTED]</span>
 			</div>
 		</div>
 	</div>
@@ -130,7 +143,7 @@ const toggle = () => {
 	height: 5vh;
 	transform: translateX(-50%);
 	transform-origin: bottom center;
-	width: 90%;
+	width: 80%;
 	z-index: 200;
 	font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
@@ -141,7 +154,7 @@ const toggle = () => {
 }
 
 .ban-pool-container.show {
-	height: 90vh;
+	height: auto;
 }
 
 /* =========================================
@@ -243,11 +256,13 @@ const toggle = () => {
 	flex-wrap: wrap;
 	gap: 15px;
 	align-items: start;
-	justify-content: start;
+	justify-content: center;
+	padding: 0 15px;
 }
 
 /* 分支组 - 支持换行布局 */
 .ban-group {
+	flex: 1;
 	background: rgba(255, 0, 0, 0.05);
 	border: 1px solid #444;
 	padding: 8px 12px;
@@ -257,12 +272,22 @@ const toggle = () => {
 	/* 纵向布局：标签在上，头像在下 */
 	align-items: start;
 	gap: 6px;
-	border-left: 2px solid #d50000;
 	min-width: 120px;
 	max-width: 500px;
 	/* 增加最大宽度，容纳更多头像 */
 	width: fit-content;
 	/* 根据内容自适应宽度 */
+}
+
+.group-title {
+	font-size: 11px;
+	color: #aaa;
+	font-weight: 800;
+	letter-spacing: 1px;
+	text-align: center;
+	width: 100%;
+	margin-bottom: 4px;
+	border-bottom: 1px solid;
 }
 
 .group-label {
@@ -306,8 +331,12 @@ const toggle = () => {
 	height: 100%;
 	object-fit: cover;
 	filter: grayscale(100%) contrast(1.2);
-	/* 黑白高对比 */
 	opacity: 0.6;
+}
+.not-banned-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
 .ban-overlay {
@@ -339,10 +368,10 @@ const toggle = () => {
 	color: #444;
 	font-family: 'Rajdhani';
 	width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }
 
 .empty-msg div:first-child {

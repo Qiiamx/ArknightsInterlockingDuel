@@ -1,7 +1,7 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
 import { computed } from 'vue';
-import operators from '@/assets/operators.json';
+import { operators } from '@/utils/operator';
 const { userInfo, team1, team2 } = useMatchStore();
 const props = defineProps(['oprIdx', 'showCp']); // 干员索引, 是否显示调用点
 const data = computed(() => {

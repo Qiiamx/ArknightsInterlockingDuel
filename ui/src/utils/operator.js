@@ -1,5 +1,6 @@
-import branches from '@/assets/branches.json';
-import operators from '@/assets/operators.json';
+export const branches = await fetch('/data/branches.json').then((r) => r.json());
+export const operators = await fetch('/data/operators.json').then((r) => r.json());
+
 // 根据ban掉的干员索引， ban掉的分支索引, ban掉的稀有度，随机获得num个符合要求的干员索引
 export const getOprIdx = (num, excludeOprSequence, banBranches, banRare) => {
 	// 1. 被禁分支名集合
@@ -30,7 +31,7 @@ export const getOprIdx = (num, excludeOprSequence, banBranches, banRare) => {
 	return pool.slice(0, num);
 };
 
-export const getLastOprCount = (excludeOprSequence, banBranches) => {
+export const getLastOprCount = (excludeOprSequence, banBranches, banRare) => {
 	// 1. 被禁分支名集合
 	const banBranchesNames = new Set(banBranches.map((i) => branches[i]?.分支).filter(Boolean));
 
@@ -39,10 +40,14 @@ export const getLastOprCount = (excludeOprSequence, banBranches) => {
 
 	// 3. 所有可用下标
 	const pool = operators
-		.map((op, idx) => (!banSet.has(idx) && !banBranchesNames.has(op.分支) ? idx : -1))
+		.map((op, idx) =>
+			!banSet.has(idx) &&
+			!banBranchesNames.has(op.分支) &&
+			(banRare == null || banRare != op.稀有度)
+				? idx
+				: -1
+		)
 		.filter((idx) => idx !== -1);
-
-	// 4. 不够就全返回
 	return pool.length;
 };
 

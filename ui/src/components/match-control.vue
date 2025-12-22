@@ -1,7 +1,7 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
 import { storeToRefs } from 'pinia';
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoomStore } from '@/stores/room';
 import CountdownWorker from '@/utils/countdown.js?worker';
 const store = useMatchStore();
@@ -10,6 +10,14 @@ const { submit, matchOpr } = store;
 const { userInfo, match, team1, team2 } = storeToRefs(store);
 const shareVisible = ref(false);
 const worker = new CountdownWorker();
+watch(
+	() => match.value.countDownTarget,
+	(val) => {
+		if (userInfo.value.owner && match.value.countDownRunning) {
+			startTimer();
+		}
+	}
+);
 worker.onmessage = (e) => {
 	console.log('onmessage', e.data);
 	if (e.data.cmd === 'fire') {
@@ -23,7 +31,7 @@ onBeforeUnmount(() => {
 
 // 启动定时器
 const startTimer = () => {
-	if (match.value.countDownTarget > 0) {
+	if (match.value.countDownTarget > Date.now()) {
 		worker.postMessage({ cmd: 'start', remain: match.value.countDownTarget - Date.now() });
 	} else {
 		stopTimer();
@@ -32,13 +40,12 @@ const startTimer = () => {
 //暂停
 const pauseTimer = () => {
 	worker.postMessage({ cmd: 'clear' });
-	match.value.countDownLast = Math.max(match.value.countDownTarget - Date.now(), 0);
 	matchOpr.pause();
 };
 //恢复
 const resumeTimer = () => {
 	matchOpr.resume();
-	startTimer();
+	// startTimer();
 };
 //结束
 const stopTimer = () => {
@@ -47,29 +54,29 @@ const stopTimer = () => {
 		//开局阶段结束, 抽取动画开始
 		console.debug('start duling animation');
 		matchOpr.step20();
-		startTimer();
+		// startTimer();
 	} else if (match.value.countDownType == 'dulingAnimation') {
 		// 抽取动画结束, 博弈倒计时开始
 		console.debug('start duling');
 		matchOpr.step21();
-		startTimer();
+		// startTimer();
 	} else if (match.value.countDownType == 'duling') {
 		//博弈阶段结束, 获胜动画开始
 		console.debug('start showing animation');
 		matchOpr.step23();
-		startTimer();
+		// startTimer();
 	} else if (match.value.countDownType == 'showingAnimation') {
 		//获胜动画结束, 公示倒计时开始
 		console.debug('start showing');
 		matchOpr.step24();
-		startTimer();
+		// startTimer();
 	} else if (match.value.countDownType == 'showing') {
 		// 公示阶段结束
 		if (match.value.continueMind && (team1.value.betFlag || team2.value.betFlag)) {
 			// 下一轮还有干员可以选择, 且 有一方还在进行, 继续 博弈循环
 			console.debug('repeat duling');
 			matchOpr.step20();
-			startTimer();
+			// startTimer();
 		} else {
 			// 进行步骤3, 展示隐藏公共干员, 转进到step4 开始作战
 			console.debug('end timer all');
@@ -81,9 +88,13 @@ const stopTimer = () => {
 
 //开始比赛
 const startRound = () => {
+	if (!matchOpr.canNextRound()) {
+		alert('池子不够了');
+		return;
+	}
 	matchOpr.nextRound();
 	matchOpr.step1();
-	startTimer();
+	// startTimer();
 };
 //开始攻略
 const endRound = () => {
@@ -177,8 +188,7 @@ const copy = async (text) => {
 				<button v-if="match.countDownType" @click="pauseTimer()">⏹ 暂停 / PAUSE</button>
 				<button v-if="match.countDownType" @click="resumeTimer()">▶ 恢复 / CONTINUE</button>
 				<!-- <button v-if="match.step == 3" @click="matchOpr.step3">博弈终止</button> -->
-				<button v-if="match.step == 3" @click="endRound">开始攻略</button>
-				<button v-if="match.step == 4" @click="startRound">下一轮比赛(会直接开始)</button>
+				<button v-if="match.step == 3" @click="startRound">下一轮比赛(会直接开始)</button>
 			</div>
 		</div>
 	</div>
