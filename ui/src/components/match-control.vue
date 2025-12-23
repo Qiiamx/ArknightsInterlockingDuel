@@ -9,6 +9,8 @@ const { links } = storeToRefs(useRoomStore());
 const { submit, matchOpr } = store;
 const { userInfo, match, team1, team2 } = storeToRefs(store);
 const shareVisible = ref(false);
+const snapshotVisible = ref(false);
+const snapshotData = ref("")
 const worker = new CountdownWorker();
 watch(
 	() => match.value.countDownTarget,
@@ -103,15 +105,7 @@ const endRound = () => {
 
 // 复现对局
 const setData = async () => {
-	let str = null;
-	try {
-		str = await navigator.clipboard.readText();
-		submit(null, JSON.parse(str));
-		alert('读取成功, 请刷新页面后继续');
-	} catch (e) {
-		alert('读取失败，对局无咯');
-		return;
-	}
+  submit(()=>{snapshotVisible.value = false}, JSON.parse(snapshotData.value));
 };
 const getData = async () => {
 	let str = JSON.stringify({
@@ -119,20 +113,8 @@ const getData = async () => {
 		team1: team1.value,
 		team2: team2.value,
 	});
-	try {
-		await navigator.clipboard.writeText(str);
-		alert('复制成功');
-	} catch (e) {
-		alert('复制失败，对局无咯');
-	}
-};
-const copy = async (text) => {
-	try {
-		await navigator.clipboard.writeText(text);
-		alert('复制成功');
-	} catch (e) {
-		alert('复制失败，请手动复制');
-	}
+  snapshotVisible.value = true;
+  snapshotData.value = str;
 };
 </script>
 
@@ -149,38 +131,51 @@ const copy = async (text) => {
 						<div class="share-link-label" style="color: rgb(255, 205, 0)">主持人 / OWNER</div>
 						<div class="share-link-item">
 							<div>{{ links.owner }}</div>
-							<button @click="() => copy(links.owner)">复制</button>
+							<!-- <button @click="() => copy(links.owner)">复制</button> -->
 						</div>
 					</div>
 					<div>
 						<div class="share-link-label" style="color: rgb(0, 200, 255)">队伍A / TEAM A</div>
 						<div class="share-link-item">
 							<div>{{ links.team1 }}</div>
-							<button @click="() => copy(links.team1)">复制</button>
+							<!-- <button @click="() => copy(links.team1)">复制</button> -->
 						</div>
 					</div>
 					<div>
 						<div class="share-link-label" style="color: rgb(255, 51, 51)">队伍B / TEAM B</div>
 						<div class="share-link-item">
 							<div>{{ links.team2 }}</div>
-							<button @click="() => copy(links.team2)">复制</button>
+							<!-- <button @click="() => copy(links.team2)">复制</button> -->
 						</div>
 					</div>
 					<div>
 						<div class="share-link-label" style="color: rgb(50, 255, 100)">观众 / VIEWER</div>
 						<div class="share-link-item">
 							<div>{{ links.viewer }}</div>
-							<button @click="() => copy(links.viewer)">复制</button>
+							<!-- <button @click="() => copy(links.viewer)">复制</button> -->
 						</div>
 					</div>
 				</div>
+			</div>
+		</div>
+    <div v-if="snapshotVisible" class="share-mask">
+			<div class="share-content">
+				<div class="share-header">
+					<div>系统快照 / SNAPSHOT</div>
+					<button @click="snapshotVisible = false">✕</button>
+				</div>
+				<div>
+          <textarea v-model="snapshotData" class="snapshot-board"></textarea>
+        </div>
+        <div>
+          <button @click="setData" class="snapshot-btn">复原</button>
+        </div>
 			</div>
 		</div>
 		<div class="control-panel">
 			<div class="control-info">HOST 指令 / CONSOLE</div>
 			<div class="control-btn-group">
 				<button @click="getData">👇 快照 / SNAP</button>
-				<button @click="setData">👆 复原 / REC</button>
 				<button @click="() => (shareVisible = true)">👉 分享 / SHARE</button>
 				<button v-if="match.round == 0" @click="startRound">▶ 开局 / INITIATE</button>
 				<!-- <textarea v-model="data">
@@ -312,5 +307,22 @@ const copy = async (text) => {
 	cursor: pointer;
 	transition: all 0.3s ease;
 	white-space: nowrap;
+}
+.snapshot-board{
+  width: 100%;
+  height: 20vh;
+  background: transparent;
+  color: #f0f0f0;
+}
+.snapshot-btn {
+	padding: 6px 12px;
+	background: #00c8ff1a;
+	border: 1px solid rgba(0, 200, 255, 0.3);
+	color: #00c8ff;
+	font-size: 0.6em;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	white-space: nowrap;
+  width: 100%;
 }
 </style>

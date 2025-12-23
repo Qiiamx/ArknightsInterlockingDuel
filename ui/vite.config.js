@@ -17,11 +17,11 @@ export default defineConfig({
 		// 本地
 		proxy: {
 			'/api': {
-				target: 'http://127.0.0.1:8080',
+				target: 'http://121.89.169.157:8080',
 				changeOrigin: true, // 允许跨域
 			},
 			'/ws': {
-				target: 'http://127.0.0.1:8080',
+				target: 'http://121.89.169.157:8080',
 				changeOrigin: true,
 				ws: true
 			}
