@@ -17,27 +17,15 @@ export default defineConfig({
 		// 本地
 		proxy: {
 			'/api': {
-				target: 'http://127.0.0.1',
+				target: 'http://127.0.0.1:8080',
 				changeOrigin: true, // 允许跨域
 			},
 			'/ws': {
-				target: 'http://127.0.0.1',
+				target: 'http://127.0.0.1:8080',
 				changeOrigin: true,
 				ws: true
 			}
 		},
-		// 服务器
-		// proxy: {
-		// 	'/api': {
-		// 		target: 'http://121.89.169.157',
-		// 		changeOrigin: true, // 允许跨域
-		// 	},
-		// 	'/ws': {
-		// 		target: 'http://121.89.169.157',
-		// 		changeOrigin: true,
-		// 		ws: true
-		// 	}
-		// }
 	},
 	resolve: {
 		alias: {
