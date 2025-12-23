@@ -5,7 +5,7 @@ import { operators } from '@/utils/operator';
 import { branches } from '@/utils/operator';
 import { storeToRefs } from 'pinia';
 const { match } = storeToRefs(useMatchStore());
-const classes = [...new Set(operators.map((t) => t.职业))];
+const classes = [...new Set(branches.map((t) => t.所属职业))];
 const showClass = ref(false);
 const toggle = () => {
 	showClass.value = !showClass.value;
@@ -154,7 +154,7 @@ const showDetail = ref({});
 }
 
 .ban-pool-container.show {
-	height: auto;
+	height: 50vh;
 }
 
 /* =========================================
@@ -232,7 +232,7 @@ const showDetail = ref({});
 	background: rgba(10, 10, 10, 0.95);
 	backdrop-filter: blur(10px);
 	overflow-x: hidden;
-	overflow-y: auto;
+  overflow: hidden;
 	/* 支持纵向滚动 */
 	border-top: none;
 }
@@ -289,6 +289,9 @@ const showDetail = ref({});
 	margin-bottom: 4px;
 	border-bottom: 1px solid;
 }
+.group-title:hover {
+  color: #ffd700;
+}
 
 .group-label {
 	font-size: 11px;
@@ -298,6 +301,9 @@ const showDetail = ref({});
 	text-align: center;
 	width: 100%;
 	margin-bottom: 4px;
+}
+.group-label:hover {
+  color: #ffd700;
 }
 
 .group-avatars {

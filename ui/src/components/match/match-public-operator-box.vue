@@ -82,8 +82,6 @@ const data = computed(() => {
 </template>
 <style scoped>
 .card-inner {
-	width: 100%;
-	height: 100%;
 	background: #000000b3;
 	border: 1px solid rgba(0, 255, 255, 0.3);
 	border-radius: 4px;
@@ -98,8 +96,8 @@ const data = computed(() => {
 	transition: all 0.3s;
 }
 .card-avatar {
-	width: 48px;
-	height: 48px;
+	width: 3vw;
+	height: 3vw;
 	object-fit: cover;
 	border-radius: 2px;
 	border: 1px solid rgba(255, 255, 255, 0.1);
@@ -112,7 +110,7 @@ const data = computed(() => {
 	width: 100%;
 }
 .card-name {
-	font-size: 10px;
+	font-size: 1em;
 	font-weight: 700;
 	color: #fff;
 	text-align: center;
@@ -123,12 +121,12 @@ const data = computed(() => {
 	line-height: 1.2;
 }
 .card-stars {
-	font-size: 8px;
+	font-size: 0.8em;
 	color: gold;
 	line-height: 1;
 }
 .card-profession {
-	font-size: 8px;
+	font-size: 0.8em;
 	color: #fff9;
 	line-height: 1;
 }

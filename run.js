@@ -125,11 +125,12 @@ server.on('request', (req, res) => {
 	}
 	// 静态文件路径映射
 	let filePath = pathname === '/' ? '/index.html' : pathname;
-	const fullPath = path.join(__dirname, 'dist', filePath);
-	
+	const fullPath = path.join(__dirname, 'dist', decodeURIComponent(filePath));
+	console.log(fullPath)
 	// 简单的静态文件服务
 	fs.readFile(fullPath, (err, content) => {
 		if (err) {
+      console.log('file not exist')
 			// 文件不存在，返回 Vue 的 index.html
 			fs.readFile(path.join(__dirname, 'dist', 'index.html'), (err, data) => {
 				if (err) {
@@ -141,6 +142,7 @@ server.on('request', (req, res) => {
 				}
 			});
 		} else {
+      console.log('file exist')
 			// 返回文件
 			const ext = path.extname(fullPath);
 			const mimeTypes = {
@@ -218,5 +220,5 @@ wss.on('connection', (ws, req) => {
 	});
 });
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 81;
 server.listen(PORT, () => console.log(`WS server ready on ws://0.0.0.0:${PORT}`));

@@ -223,7 +223,7 @@ const copy = async (text) => {
 .control-btn-group {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr); /* 显式 3 列 */
-	padding-bottom: 1em;
+	padding: 1vh;
 	gap: 12px;
 	max-height: 40vh;
 	overflow-y: auto;
@@ -308,7 +308,7 @@ const copy = async (text) => {
 	background: #00c8ff1a;
 	border: 1px solid rgba(0, 200, 255, 0.3);
 	color: #00c8ff;
-	font-size: 11px;
+	font-size: 0.6em;
 	cursor: pointer;
 	transition: all 0.3s ease;
 	white-space: nowrap;

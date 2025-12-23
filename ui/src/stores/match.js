@@ -33,7 +33,7 @@ export const useMatchStore = defineStore('match', () => {
 	const match = ref({
 		round: 0, // 当前轮次
 		turn: 0, // 当前回合
-		step: 1, // 当前阶段  1. 开局阶段 20. 抽卡动画 21. 博弈阶段 23公示动画 24公示阶段 3. 终止阶段 4. 攻略阶段
+		step: 0, // 当前阶段  1. 开局阶段 20. 抽卡动画 21. 博弈阶段 23公示动画 24公示阶段 3. 终止阶段 4. 攻略阶段
 		publicOprs: [], // 本轮的公共干员
 		selectOpr: null, // 当前的博弈干员,
 		banOprs: [], // 全局禁用干员

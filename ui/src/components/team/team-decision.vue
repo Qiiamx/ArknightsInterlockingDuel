@@ -5,31 +5,55 @@ const props = defineProps(['data', 'side']);
 const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 </script>
 <template>
+	<div v-if="match.step == 21 && !userInfo.team2 && team1.betIP" :class="`action-bubble high left`">
+		<div class="bubble-content">
+			<div class="bubble-header">
+				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
+			</div>
+			<div class="bubble-body">
+				队伍A使用了情报点！
+			</div>
+			<div class="scan-line"></div>
+		</div>
+		<div class="bubble-connector"></div>
+	</div>
 	<div v-if="match.step == 21 && !userInfo.team2 && team1.confirm" :class="`action-bubble left`">
 		<div class="bubble-content">
 			<div class="bubble-header">
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
 			<div class="bubble-body" v-if="team1.decision == 1">
-				队伍A选择消耗{{ team1.betCP }}调用点进行博弈抓取！
+				队伍A消耗{{ team1.betCP }}调用点！
 			</div>
 			<div class="bubble-body" v-if="team1.decision == 2">队伍A选择休息！</div>
-			<div class="bubble-body" v-if="team1.decision == 3">队伍A已经结束博弈！</div>
+			<div class="bubble-body" v-if="team1.decision == 3">队伍A已经结束！</div>
 			<div class="scan-line"></div>
 		</div>
 		<div class="bubble-connector"></div>
 	</div>
 
+	<div v-if="match.step == 21 && !userInfo.team1 && team2.betIP" :class="`action-bubble high right`">
+		<div class="bubble-content">
+			<div class="bubble-header">
+				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
+			</div>
+			<div class="bubble-body">
+				队伍B使用了情报点！
+			</div>
+			<div class="scan-line"></div>
+		</div>
+		<div class="bubble-connector"></div>
+	</div>
 	<div v-if="match.step == 21 && !userInfo.team1 && team2.confirm" :class="`action-bubble right`">
 		<div class="bubble-content">
 			<div class="bubble-header">
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
 			<div class="bubble-body" v-if="team2.decision == 1">
-				队伍B选择消耗{{ team2.betCP }}调用点进行博弈抓取！
+				队伍B消耗{{ team2.betCP }}调用点！
 			</div>
 			<div class="bubble-body" v-if="team2.decision == 2">队伍B选择休息！</div>
-			<div class="bubble-body" v-if="team2.decision == 3">队伍B已经结束博弈！</div>
+			<div class="bubble-body" v-if="team2.decision == 3">队伍B已经结束！</div>
 			<div class="scan-line"></div>
 		</div>
 		<div class="bubble-connector"></div>
@@ -39,22 +63,26 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 <style scoped>
 .action-bubble {
 	position: absolute;
-	top: 120px; /* 位于公共牌区下方一点，或者与公共牌区平行 */
+  bottom: 35vh;
 	z-index: 90;
-	width: 320px; /* 稍微加宽一点 */
+	width: 320px;
 	pointer-events: none;
+  width: 20vw;
 }
+
+.action-bubble.high {
+  bottom: 50vh;
+}
+
 
 /* A队气泡：位于屏幕中心偏左 */
 .action-bubble.left {
-	left: 50%;
-	transform: translateX(-550px); /* 向左偏移，避开公共牌区 */
+  left: 22vw;
 }
 
 /* B队气泡：位于屏幕中心偏右 */
 .action-bubble.right {
-	right: 50%;
-	transform: translateX(550px); /* 向右偏移，避开公共牌区 */
+  right: 22vw;
 }
 
 .bubble-content {
@@ -105,7 +133,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 
 .bubble-body {
 	color: #fff;
-	font-size: 14px;
+	font-size: 2em;
 	line-height: 1.5;
 	font-family: 'Noto Sans SC', sans-serif;
 	text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);

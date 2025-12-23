@@ -35,7 +35,6 @@ const lockedGrab = computed(() => {
 				</button>
 				<div class="bid-wrapper">
 					<div class="bid-amount-selector">
-						<span class="label">CP:</span>
 						<div class="bid-buttons-grid">
 							<button
 								:class="`bid-amount-btn ${calLockedCp(n) ? 'locked-amount' : ''} ${team1.decision == 1 && team1.betCP == n ? 'active' : ''}`"
@@ -50,6 +49,9 @@ const lockedGrab = computed(() => {
 					</div>
 					<button class="ak-btn btn-capture" @click="teamOpr.confirm" :disabled="lockedGrab">
 						<div class="glitch-text">确认</div>
+					</button>
+					<button class="ak-btn btn-ip" @click="teamOpr.useIP" :disabled="lockedGrab">
+						<div class="glitch-text">调查</div>
 					</button>
 				</div>
 				<button class="ak-btn btn-terminate" @click="teamOpr.quit" :disabled="lockedTerminate">
@@ -111,8 +113,8 @@ const lockedGrab = computed(() => {
 	transform-style: preserve-3d;
 	transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); /* 缓慢过渡动画 */
 
-	width: 600px;
-	padding: 20px;
+	width: 40vw;
+	padding: 1vh;
 
 	/* 背景样式 (操作台底座) */
 	background: rgba(20, 25, 30, 0.9);
@@ -251,7 +253,7 @@ const lockedGrab = computed(() => {
 	font-weight: 600;
 }
 .control-btn-group button.active {
-	background: yellow;
+	background: #ffd700;
 }
 
 .player-actions {
@@ -259,7 +261,6 @@ const lockedGrab = computed(() => {
 	align-items: stretch;
 	justify-content: center;
 	gap: 15px;
-	height: 90px;
 }
 
 /* 1. 休息按钮 (绿色, 左侧) */
@@ -300,14 +301,12 @@ const lockedGrab = computed(() => {
 	background: #000;
 	border: 1px solid #444;
 	border-bottom: 4px solid #444; /* 添加底部边框，与按钮保持一致 */
-	padding: 8px;
-	padding-bottom: 4px; /* 调整底部padding，考虑边框 */
+	padding: 1vh;
 	display: flex;
 	flex-direction: column;
 	gap: 0; /* 移除gap，改用margin控制间距 */
 	position: relative;
 	min-width: 200px; /* 设置最小宽度 */
-	height: 90px; /* 明确设置高度为90px，与按钮一致 */
 	box-sizing: border-box; /* 确保padding和border包含在高度内 */
 	justify-content: flex-end; /* 内容靠底部对齐 */
 }
@@ -386,40 +385,6 @@ const lockedGrab = computed(() => {
 	color: #666;
 }
 
-/* 单边模式下强制锁定的 10 按钮样式 */
-.bid-amount-btn.forced-active {
-	background: #d50000;
-	color: #fff;
-	border-color: #ffd700;
-	cursor: not-allowed; /* 虽然是选中的，但不能取消，所以给个禁止手势 */
-	box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); /* 金色光晕，表示强制锁定 */
-	position: relative;
-}
-
-.bid-amount-btn.forced-active::after {
-	content: '🔒';
-	position: absolute;
-	top: 2px;
-	right: 2px;
-	font-size: 10px;
-	opacity: 0.8;
-}
-
-.bid-amount-btn.forced-active.active {
-	background: #ff1744;
-	box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
-}
-
-.lock-icon {
-	position: absolute;
-	top: 8px;
-	right: 8px;
-	font-size: 12px;
-	color: #d50000;
-}
-
-/* .label 样式已在 .bid-amount-selector .label 中定义 */
-
 .btn-capture {
 	flex: 1; /* 占据剩余空间 */
 	min-width: 120px; /* 设置最小宽度，确保按钮不会太小 */
@@ -437,6 +402,22 @@ const lockedGrab = computed(() => {
 	box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
+.btn-ip {
+	flex: 0 0 100px;
+	width: 100px; /* 明确设置宽度，避免在 column 布局中被拉伸 */
+	background: #00aeef;
+	border-bottom: 4px solid #39c9ff;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	color: #fff;
+}
+.btn-ip:hover {
+  background: #55bce3;
+	box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
 .glitch-text {
 	font-size: 20px;
 	font-weight: 900;
@@ -447,7 +428,6 @@ const lockedGrab = computed(() => {
 .btn-terminate {
 	flex: 0 0 100px;
 	width: 100px; /* 明确设置宽度，避免在 column 布局中被拉伸 */
-	height: 90px; /* 明确设置高度，与休息按钮一致 */
 	background: #d50000;
 	border-bottom: 4px solid #b71c1c;
 	display: flex;

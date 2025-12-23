@@ -108,6 +108,7 @@ const team = computed(() => {
 </template>
 <style lang="css" scoped>
 .bidding-scene {
+  overflow: hidden;
 	position: absolute;
 	top: 0;
 	left: 0;

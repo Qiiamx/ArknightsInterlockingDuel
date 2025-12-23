@@ -29,7 +29,7 @@ const ip = computed(() => {
 	<div class="rotate-bordered-pannel right">
 		<TeamIdentity name="B"></TeamIdentity>
 		<TeamResource :cp="cp" :ip="ip"></TeamResource>
-		<TeamOperator :oprs="team2.getOprs"></TeamOperator>
+		<TeamOperator :oprs="team2.getOprs" side="right"></TeamOperator>
 	</div>
 	<!-- <div>
     <div>获得干员</div>
