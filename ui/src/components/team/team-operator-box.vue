@@ -1,8 +1,9 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
 import { ref, computed, onMounted } from 'vue';
-const { userInfo, team1, team2 } = useMatchStore();
+const { userInfo, team1, team2, WINNING_TIME } = useMatchStore();
 import { operators } from '@/utils/operator';
+const winningTimeCssVal = WINNING_TIME/1000 + 's'
 const props = defineProps(['oprIdx', 'showCp']); // 干员索引, 是否显示调用点
 const data = computed(() => {
 	let obj = { ...operators[props.oprIdx] };
@@ -65,13 +66,9 @@ const data = computed(() => {
 </script>
 
 <template>
-	<div class="op-card rarity-6">
+	<div :class="`op-card rarity-${data.稀有度||'unknown'}`">
 		<div class="op-media">
-			<img
-				:src="data.干员 ? `/icon/头像_${data.干员}.png` : `/images/${data.职业}.png`"
-				class="op-avatar"
-				alt="佩佩"
-			/>
+			<img :src="data.干员 ? `/icon/头像_${data.干员}.png` : `/images/${data.职业}.png`" class="op-avatar" />
 		</div>
 		<div class="op-details">
 			<div class="op-name">{{ data.干员 || '???' }}</div>
@@ -103,9 +100,6 @@ const data = computed(() => {
 	</div> -->
 </template>
 <style scoped>
-.operator {
-	border: 1px solid #000;
-}
 
 /* 干员卡片 */
 .op-card {
@@ -113,10 +107,17 @@ const data = computed(() => {
 	align-items: center;
 	gap: 10px;
 	background: #1a1a1a;
-	border: 1px solid #333;
-	padding: 6px;
+	padding: 0em;
+	margin-bottom: 0em;
 	transition: all 0.2s;
 	position: relative;
+	animation: slideIn 0.5s ease v-bind(winningTimeCssVal) forwards;
+	overflow: hidden;
+	height: 0vh;
+}
+@keyframes slideIn {
+  from { height: 0; padding:0; opacity: 0; }
+  to   { height: 4vh; padding: 0.5em; opacity: 1; margin-bottom: 0.5em; }
 }
 
 /* 选中态/交互态 */
@@ -149,8 +150,8 @@ const data = computed(() => {
 
 /* 干员媒体（头像/图标） */
 .op-media {
-	width: 40px;
-	height: 40px;
+	width: 4vh;
+	height: 4vh;
 	background: #000;
 	flex-shrink: 0;
 	display: flex;
@@ -179,7 +180,7 @@ const data = computed(() => {
 }
 
 .op-name {
-	font-size: 13px;
+	font-size: 1em;
 	font-weight: bold;
 	color: #eee;
 	white-space: nowrap;
@@ -189,7 +190,7 @@ const data = computed(() => {
 }
 
 .op-sub {
-	font-size: 10px;
+	font-size: 0.5em;
 	color: #777;
 }
 
@@ -204,7 +205,7 @@ const data = computed(() => {
 }
 
 .op-stars {
-	font-size: 10px;
+	font-size: 0.8em;
 	color: #ffd700;
 	letter-spacing: -1px;
 }
@@ -231,7 +232,7 @@ const data = computed(() => {
 }
 
 .op-cost .unit {
-	font-size: 8px;
+	font-size: 0.5em;
 	color: #555;
 	margin-left: 1px;
 }

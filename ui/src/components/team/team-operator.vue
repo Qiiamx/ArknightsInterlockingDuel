@@ -123,7 +123,7 @@ const clsList = computed(()=>{
   flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: 0.5em;
+	/* gap: 0.5em; */
   order: 2;
 }
 .filter-bar {
