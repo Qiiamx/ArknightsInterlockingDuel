@@ -103,21 +103,13 @@ const team = computed(() => {
 					: '';
 });
 
-const battleVisible = ref(false)
-watch(()=>match.step, (step)=>{
-	if (step != 23) {
-		battleVisible.value = false;
-	}else{
-		battleVisible.value = true;
-  }
-})
 const worker = new CountDownWorker()
 worker.onmessage = (e) => {
 	if (e.data.cmd === 'fire') {
     if(currentDuiboCount.value < duiboCount-1 && currentDuiboCount.value != -1){
       // 对波过程
       console.debug('battle')
-      random.value = Math.ceil(Math.random()*80 - 40)
+      random.value = Math.ceil(Math.random()*80 - 50)
       currentDuiboCount.value = currentDuiboCount.value + 1;
       worker.postMessage({ cmd: 'start', remain: duiboRate });
     }else if(currentDuiboCount.value == -1){
@@ -139,23 +131,32 @@ worker.onmessage = (e) => {
     }
 	}
 }
-// watch(()=>team.value, (t)=>{
-//   if(team.value == 'win-left' || team.value == 'win-right'){
-//     duiboCls.value = 'duibo-show'
-//     console.debug('show')
-//     worker.postMessage({ cmd: 'start', remain: 0 });
-//   }
-// }, {immediate: true})
+watch(()=>team.value, (t)=>{
+  if(t == 'win-left' || t == 'win-right'){
+    duiboCls.value = 'duibo-show'
+    console.debug('show')
+    worker.postMessage({ cmd: 'start', remain: 0 });
+  }
+}, {immediate: true})
+
+const battleVisible = ref(false)
+watch(()=>match.step, (step)=>{
+	if (step != 23) {
+		battleVisible.value = false;
+	}else{
+		battleVisible.value = true;
+  }
+})
 </script>
 <template>
 	<div v-if="data" class="bidding-scene">
-    <!-- <div :class="duiboCls">
+    <div v-if="match.battle2" :class="duiboCls">
       <div class="duibo left" :style="{flex: 50 + random }">
       </div>
       <div class="duibo right" :style="{flex: 50 - random }">
       </div>
-    </div> -->
-    <BattleNumer v-if="battleVisible" :val-a="team1.betCP" :val-b="team2.betCP"></BattleNumer>
+    </div>
+    <BattleNumer v-if="battleVisible && match.battle1" :val-a="team1.betCP" :val-b="team2.betCP"></BattleNumer>
 		<div :class="`operator-card ${team}`">
 			<div v-if="ban" class="stamp-mark">OUT</div>
 			<div :class="`mystery-content ${ban ? 'ban' : ''}`">
@@ -336,6 +337,7 @@ worker.onmessage = (e) => {
   display: flex;
   z-index: 500;
   opacity: 1;
+  /* transition: opacity v-bind(duiboWinTimeCssVal) v-bind(duiboWinTimeCssVal) linear; */
   transition: opacity v-bind(duiboWinTimeCssVal) linear;
 }
 .duibo-show.hide{
