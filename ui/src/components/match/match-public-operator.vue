@@ -25,13 +25,12 @@ watch(() => match.value.step, (step) => {
 		showCrt.value = true
 		decodeEffect()
 	} else {
-		className.value = 'public-pool-container'
+		className.value = 'public-pool-container existing'
 	}
 })
 const decodeEffect = () => {
 	decodedText.value = ''
 	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
-	worker.postMessage({ cmd: 'start', remain: textTime })
 	decodedText.value = fullOpeningText.split('').map((letter, index) => {
 		if (index < iteration.value) {
 			return fullOpeningText[index]
@@ -40,10 +39,12 @@ const decodeEffect = () => {
 	})
 		.join('')
 	iteration.value = iteration.value + 1
-	if (iteration.value >= fullOpeningText.length) {
+	if (iteration.value > fullOpeningText.length+1) {
 		showCrt.value = false
-		iteration.value = 9
-    }
+		iteration.value = 0
+    }else{
+		worker.postMessage({ cmd: 'start', remain: textTime })
+	}
 }
 </script>
 <template>
@@ -245,17 +246,15 @@ const decodeEffect = () => {
 
 .public-pool-container {
 	position: absolute;
-	top: 5%;
-	left: 50%;
+	top: 1em;
+	left: calc(50vw - 12vw - 12px);
 	z-index: 100;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 8px;
 	pointer-events: none;
-
-	/* 默认就是缩小状态（动画结束态） */
-	transform: translate(-50%, -25%) scale(1);
+	transform: translate(0, calc(30vh)) scale(0);
 	transform-origin: center center;
 }
 
@@ -263,39 +262,31 @@ const decodeEffect = () => {
 .public-pool-container.playing {
 	animation: drawing v-bind(totalTime) ease-in forwards;
 }
+.public-pool-container.existing {
+	transform: translate(0, 0) scale(1);
+}
 
 @keyframes drawing {
 	0% {
 		/* 动画开始先缩到最小 */
-		transform: translate(-50%, calc(50vh - 75%)) scale(0);
+		transform: translate(0, calc(30vh)) scale(0);
 	}
-	19% {
-		/* 动画然后放大到中间 */
-		transform: translate(-50%, calc(50vh - 75%)) scale(2.1);
+	15% {
+		transform: translate(0, calc(30vh)) scale(2);
 	}
 	20% {
 		/* 动画然后放大到中间 */
-		transform: translate(-50%, calc(50vh - 75%)) scale(2);
+		transform: translate(0, calc(30vh)) scale(1.8);
 	}
 
-	79% {
+	75% {
 		/* 动画保持在中间 */
-		transform: translate(-50%, calc(50vh - 75%)) scale(2);
-	}
-
-	80% {
-		/* 动画保持在中间 */
-		transform: translate(-50%, calc(50vh - 75%)) scale(2.1);
-	}
-
-	95% {
-		/* 最终缩小到上方 */
-		transform: translate(-50%, -25%) scale(0.9);
+		transform: translate(0, calc(30vh)) scale(1.8);
 	}
 
 	100% {
 		/* 最终缩小到上方 */
-		transform: translate(-50%, -25%) scale(1);
+		transform: translate(0, 0) scale(1);
 	}
 }
 
