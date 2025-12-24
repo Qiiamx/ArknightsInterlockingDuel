@@ -1,14 +1,30 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { operators } from '@/utils/operator';
+import CountDownWorker from '@/utils/countdown.js?worker';
 const { userInfo, match, team1, team2, WINNING_TIME } = useMatchStore();
-const delayTime = (WINNING_TIME - 1000) / 1000 + 's';
-const playingTime = '1s';
+// 1S 的时间用于干员动画，前面的时间用于对波
+const playingTime = 1000; //干员动画时长
+const spacingTime = 500; // 切换间隔时长
+const playingTimeCssVal = playingTime/1000 + 's'
+const delayTime = (WINNING_TIME - playingTime); //干员动画延迟播放时长
+const delayTimeCssVal = delayTime / 1000 + 's';
+const duiboTime = WINNING_TIME - playingTime - spacingTime; //对波总时长（还要留下间隔）
+const duiboWinTime = 1500; //对波胜利动画时长
+const duiboWinTimeCssVal = duiboWinTime/1000 + 's'
+const duiboBattleTime = duiboTime - duiboWinTime; //对波过程动画时长
+const duiboRate = 100; //对波变化频率，太小了的话，硬件播放会出BUG，卡顿到干员走了也不回来
+const duiboRateCssVal = duiboRate/1000 + 's'
+const duiboCount = duiboBattleTime / duiboRate; //  过程动画时长 / 对波浮动间隔 = 对波浮动次数
+const currentDuiboCount = ref(0); // 已经浮动的次数
+const random = ref(0); // 对波浮动数
+const duiboCls = ref('duibo hide')
 const data = computed(() => {
 	if (match.step != 23) {
 		return null;
 	}
+  startDuibo()
 	let obj = { ...operators[match.selectOpr] };
 	if (userInfo.team1) {
 		if (team1.showNames.indexOf(match.selectOpr) < 0) {
@@ -86,9 +102,51 @@ const team = computed(() => {
 					? 'win-back'
 					: '';
 });
+const worker = new CountDownWorker()
+worker.onmessage = (e) => {
+	if (e.data.cmd === 'fire') {
+    if(currentDuiboCount.value < duiboCount-1 && currentDuiboCount.value != -1){
+      // 对波过程
+      console.debug('battle')
+      random.value = Math.ceil(Math.random()*80 - 40)
+      currentDuiboCount.value = currentDuiboCount.value + 1;
+      worker.postMessage({ cmd: 'start', remain: duiboRate });
+    }else if(currentDuiboCount.value == -1){
+      // 对波结果
+      duiboCls.value = 'duibo-show hide'
+      currentDuiboCount.value = 0;
+      if(team.value == 'win-left'){
+        console.debug('win-left')
+        random.value = 50
+      }else if(team.value == 'win-right'){
+        console.debug('win-right')
+        random.value = -50
+      }
+    }else{
+      console.debug('rest')
+      currentDuiboCount.value = -1
+      random.value = 0
+      worker.postMessage({ cmd: 'start', remain: duiboWinTime-duiboRate*4 });
+    }
+	}
+}
+const startDuibo = () => {
+  if(team.value == 'win-left' || team.value == 'win-right'){
+    duiboCls.value = 'duibo-show'
+    console.debug('show')
+    worker.postMessage({ cmd: 'start', remain: 0 });
+  }
+}
 </script>
 <template>
 	<div v-if="data" class="bidding-scene">
+    <div :class="duiboCls">
+      <div class="duibo left" :style="{flex: 50 + random }">
+        {{ 50+random }}
+      </div>
+      <div class="duibo right" :style="{flex: 50 - random }">
+        {{ 50-random }}</div>
+    </div>
 		<div :class="`operator-card ${team}`">
 			<div v-if="ban" class="stamp-mark">OUT</div>
 			<div :class="`mystery-content ${ban ? 'ban' : ''}`">
@@ -125,6 +183,7 @@ const team = computed(() => {
 }
 
 .operator-card {
+  z-index: 510;
 	width: 200px;
 	height: 280px;
 	background: #000c;
@@ -217,16 +276,12 @@ const team = computed(() => {
 }
 
 .win-left {
-	animation: slideLeft v-bind(playingTime) v-bind(delayTime) cubic-bezier(0.6, 0, 0.4, 1) forwards;
-	transform-origin: left center;
-	position: relative;
-	overflow: hidden;
+	animation: slideLeft v-bind(playingTimeCssVal) v-bind(delayTimeCssVal) ease-out forwards;
+	transform-origin: center center;
 }
 
 @keyframes slideLeft {
 	0% {
-		transform: translateX(0) scale(1);
-		opacity: 1;
 	}
 
 	100% {
@@ -236,16 +291,12 @@ const team = computed(() => {
 }
 
 .win-right {
-	animation: slideRight v-bind(playingTime) v-bind(delayTime) cubic-bezier(0.6, 0, 0.4, 1) forwards;
-	transform-origin: right center;
-	position: relative;
-	overflow: hidden;
+	animation: slideRight v-bind(playingTimeCssVal) v-bind(delayTimeCssVal) ease-out forwards;
+	transform-origin: center center ;
 }
 
 @keyframes slideRight {
 	0% {
-		transform: translateX(0) scale(1);
-		opacity: 1;
 	}
 
 	100% {
@@ -254,7 +305,7 @@ const team = computed(() => {
 	}
 }
 .win-back {
-	animation: smoke v-bind(playingTime) v-bind(delayTime) ease-out forwards;
+	animation: smoke v-bind(playingTimeCssVal) v-bind(delayTimeCssVal) ease-out forwards;
 }
 
 @keyframes smoke {
@@ -268,5 +319,32 @@ const team = computed(() => {
 		filter: blur(8px);
 		transform: translateY(-60px) scale(1.15) rotate(-5deg);
 	}
+}
+.duibo-show{
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  z-index: 500;
+  opacity: 1;
+  transition: opacity v-bind(duiboWinTimeCssVal) linear;
+}
+.duibo-show.hide{
+  opacity: 0;
+}
+.duibo-show .duibo{
+  transition: flex v-bind(duiboRateCssVal) linear;
+  flex: 100 1 0%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 48em;
+  overflow: hidden;
+}
+.duibo-show .left{
+  background-color: #00aeef;
+}
+.duibo-show .right{
+  background-color: #d50000;
 }
 </style>

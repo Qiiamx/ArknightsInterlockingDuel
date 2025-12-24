@@ -21,7 +21,6 @@ watch(
 	}
 );
 worker.onmessage = (e) => {
-	console.log('onmessage', e.data);
 	if (e.data.cmd === 'fire') {
 		stopTimer();
 	}

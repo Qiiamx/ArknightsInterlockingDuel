@@ -4,7 +4,10 @@ import TeamIdentity from './team/team-identity.vue';
 import TeamResource from './team/team-resource.vue';
 import { computed } from 'vue';
 import TeamOperator from './team/team-operator.vue';
-const { userInfo, team2 } = useMatchStore();
+const { match, userInfo, team2 } = useMatchStore();
+const deg = computed(()=>{
+  return "-15deg"
+})
 const isShow = () => {
 	return userInfo.team2 || userInfo.owner || userInfo.viewer;
 };
@@ -63,7 +66,7 @@ const ip = computed(() => {
 
 .right {
 	border-right: 4px solid #00aeef;
-	transform: translate(50vw, -50%) rotateY(-15deg);
+	transform: translate(50vw, -50%) rotateY(v-bind(deg));
 	transform-origin: right center;
 	top: 50vh;
 	right: 50vw;

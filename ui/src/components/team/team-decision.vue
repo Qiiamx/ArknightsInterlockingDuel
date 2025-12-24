@@ -23,7 +23,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
 			<div class="bubble-body" v-if="team1.decision == 1">
-				队伍A消耗{{ team1.betCP }}调用点！
+				队伍A消耗{{ userInfo.team1?team1.betCP:'???' }}调用点！
 			</div>
 			<div class="bubble-body" v-if="team1.decision == 2">队伍A选择休息！</div>
 			<div class="bubble-body" v-if="team1.decision == 3">队伍A已经结束！</div>
@@ -50,7 +50,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
 			<div class="bubble-body" v-if="team2.decision == 1">
-				队伍B消耗{{ team2.betCP }}调用点！
+				队伍B消耗{{ userInfo.team2?team2.betCP:'???' }}调用点！
 			</div>
 			<div class="bubble-body" v-if="team2.decision == 2">队伍B选择休息！</div>
 			<div class="bubble-body" v-if="team2.decision == 3">队伍B已经结束！</div>

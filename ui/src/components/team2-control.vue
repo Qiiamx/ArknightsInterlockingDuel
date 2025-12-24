@@ -150,16 +150,9 @@ const lockedGrab = computed(() => {
 /* 队伍A选手：蓝色 */
 .control-deck-area.role-PLAYER::before {
 	opacity: 1;
-	border-color: #00aeef; /* 队伍A：蓝色 */
+	border-color: #D50000; /* 队伍A：蓝色 */
 	filter: drop-shadow(0 0 10px rgba(0, 174, 239, 0.6)) drop-shadow(0 0 20px rgba(0, 174, 239, 0.4))
 		drop-shadow(0 0 30px rgba(0, 174, 239, 0.3));
-}
-
-.control-deck-area.role-SPECTATOR::before {
-	opacity: 1;
-	border-color: #32ff64; /* 观众：绿色 */
-	filter: drop-shadow(0 0 10px rgba(50, 255, 100, 0.6))
-		drop-shadow(0 0 20px rgba(50, 255, 100, 0.4)) drop-shadow(0 0 30px rgba(50, 255, 100, 0.3));
 }
 
 .deck-label {
