@@ -189,7 +189,7 @@ export const useMatchStore = defineStore('match', () => {
 			}
 			_reduceTime();
 			submit(() => {
-				teamOpr.rest();
+				teamOpr.confirm();
 			});
 		},
 		quit: () => {
@@ -197,15 +197,12 @@ export const useMatchStore = defineStore('match', () => {
 			if (userInfo.value.team1) {
 				team1.value.betCP = 0;
 				team1.value.decision = 3;
-				team1.value.confirm = true;
 			} else {
 				team2.value.betCP = 0;
 				team2.value.decision = 3;
-				team2.value.confirm = true;
 			}
-			_reduceTime();
 			submit(() => {
-				teamOpr.rest();
+				teamOpr.quit();
 			});
 		},
 	};
@@ -250,6 +247,33 @@ export const useMatchStore = defineStore('match', () => {
 			alert('没做');
 		},
 		step1: () => {
+			// 禁用本轮公用干员
+			match.value.banOprs.push(...match.value.publicOprs);
+			// 禁用TEAM1获得的干员
+			match.value.banOprs.push(...team1.value.getOprs);
+			// 禁用TEAM2获得的干员
+			match.value.banOprs.push(...team2.value.getOprs);
+			// 展示TEAM1获得的干员
+			addVisibleIdx([team2], ['showBranches', 'showRares', 'showNames'], team1.value.getOprs);
+			// 展示TEAM2获得的干员
+			addVisibleIdx([team1], ['showBranches', 'showRares', 'showNames'], team2.value.getOprs);
+			// 重置公用干员
+			match.value.publicOprs = [];
+			// 新轮次
+			match.value.round = match.value.round + 1;
+			// 重置阶段
+			match.value.step = 1;
+			// 重置阶段
+			match.value.turn = 0;
+			// 重置team资源
+			team1.value.betFlag = true;
+			team1.value.getOprs = [];
+			team1.value.lastCP = INIT_CP;
+			team1.value.lastIP = INIT_IP;
+			team2.value.betFlag = true;
+			team2.value.getOprs = [];
+			team2.value.lastCP = INIT_CP;
+			team2.value.lastIP = INIT_IP;
 			match.value.step = 1;
 			match.value.countDownRunning = true;
 			match.value.countDownType = 'settling';
@@ -265,6 +289,7 @@ export const useMatchStore = defineStore('match', () => {
 				['showClasses', 'showBranches', 'showRares', 'showNames'],
 				[match.value.publicOprs[0], match.value.publicOprs[1]]
 			);
+			submit(()=>matchOpr.step1())
 		},
 		step20: () => {
 			// 抽取动画 (显示回合, 显示抽取进度条)
@@ -275,8 +300,8 @@ export const useMatchStore = defineStore('match', () => {
 			match.value.step = 20;
 			match.value.countDownRunning = true;
 			match.value.countDownType = 'dulingAnimation';
-			match.value.countDownLast = DULING_TIME;
-			match.value.countDownTotal = DULING_TIME;
+			match.value.countDownLast = DULING_TIME-100; //为了播放流畅
+			match.value.countDownTotal = DULING_TIME-100; //为了播放流畅
 			match.value.countDownTarget = match.value.countDownLast + Date.now();
 			submit(() => matchOpr.step20());
 		},
@@ -412,6 +437,7 @@ export const useMatchStore = defineStore('match', () => {
 					[match.value.selectOpr]
 				);
 			}
+			
 			if (team1.value.decision == 2) {
 				// team1休息
 				team1.value.lastCP = team1.value.lastCP + REST_INCREASE_CP;
@@ -480,33 +506,6 @@ export const useMatchStore = defineStore('match', () => {
 			);
 		},
 		nextRound: () => {
-			// 禁用本轮公用干员
-			match.value.banOprs.push(...match.value.publicOprs);
-			// 禁用TEAM1获得的干员
-			match.value.banOprs.push(...team1.value.getOprs);
-			// 禁用TEAM2获得的干员
-			match.value.banOprs.push(...team2.value.getOprs);
-			// 展示TEAM1获得的干员
-			addVisibleIdx([team2], ['showBranches', 'showRares', 'showNames'], team1.value.getOprs);
-			// 展示TEAM2获得的干员
-			addVisibleIdx([team1], ['showBranches', 'showRares', 'showNames'], team2.value.getOprs);
-			// 重置公用干员
-			match.value.publicOprs = [];
-			// 新轮次
-			match.value.round = match.value.round + 1;
-			// 重置阶段
-			match.value.step = 1;
-			// 重置阶段
-			match.value.turn = 0;
-			// 重置team资源
-			team1.value.betFlag = true;
-			team1.value.getOprs = [];
-			team1.value.lastCP = INIT_CP;
-			team1.value.lastIP = INIT_IP;
-			team2.value.betFlag = true;
-			team2.value.getOprs = [];
-			team2.value.lastCP = INIT_CP;
-			team2.value.lastIP = INIT_IP;
 		},
 	};
 
