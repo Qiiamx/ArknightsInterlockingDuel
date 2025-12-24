@@ -19,7 +19,9 @@ const clsList = computed(() => {
 		}
 	}
 	for (let key in map) {
-		map[key].sort((t1, t2) => t2.稀有度 - t1.稀有度);
+		if(key != '全部'){
+			map[key].sort((t1, t2) => t2.稀有度 - t1.稀有度);
+		}
 	}
 	return map;
 });

@@ -45,7 +45,7 @@ const showDetail = ref({});
 					<div class="ban-group">
 						<a-tooltip placement="bottom" v-model:open="showDetail[className]" trigger="click">
 							<div
-								class="group-title"
+								:class="`group-title ${clsLast(className)==0?'all-ban':''}`"
 								style="cursor: pointer"
 								@click="() => (showDetail[className] = true)"
 							>
@@ -68,8 +68,7 @@ const showDetail = ref({});
 								</div>
 							</template>
 						</a-tooltip>
-						<div
-							class="group-label"
+						<div :class="`group-label ${branchLast(branch.分支)==0?'all-ban':''}`"
 							v-for="(branch, bid) in branches.filter((t) => t.所属职业 == className)"
 							:key="bid"
 						>
@@ -381,5 +380,9 @@ const showDetail = ref({});
 	font-size: 12px;
 	margin-top: 5px;
 	opacity: 0.5;
+}
+
+.all-ban {
+	color: #d50000;
 }
 </style>

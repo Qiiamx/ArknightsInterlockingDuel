@@ -21,7 +21,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
 			<div class="bubble-body" v-if="team1.decision == 1">
-				队伍A消耗{{ userInfo.team1 ? team1.betCP : '???' }}调用点！
+				队伍A消耗{{ team1.betCP }}调用点！
 			</div>
 			<div class="bubble-body" v-if="team1.decision == 2">队伍A选择休息！</div>
 			<div class="bubble-body" v-if="team1.decision == 3">队伍A已经结束！</div>
@@ -49,7 +49,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
 			<div class="bubble-body" v-if="team2.decision == 1">
-				队伍B消耗{{ userInfo.team2 ? team2.betCP : '???' }}调用点！
+				队伍B消耗{{ team2.betCP }}调用点！
 			</div>
 			<div class="bubble-body" v-if="team2.decision == 2">队伍B选择休息！</div>
 			<div class="bubble-body" v-if="team2.decision == 3">队伍B已经结束！</div>
@@ -62,7 +62,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 <style scoped>
 .action-bubble {
 	position: absolute;
-	bottom: 35vh;
+	top: 45vh;
 	z-index: 90;
 	width: 320px;
 	pointer-events: none;
@@ -70,7 +70,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 }
 
 .action-bubble.high {
-	bottom: 50vh;
+	top: 35vh;
 }
 
 /* A队气泡：位于屏幕中心偏左 */
@@ -131,7 +131,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 
 .bubble-body {
 	color: #fff;
-	font-size: 2em;
+	font-size: 1.2em;
 	line-height: 1.5;
 	font-family: 'Noto Sans SC', sans-serif;
 	text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);

@@ -1,10 +1,9 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
 import { ref, computed, onMounted } from 'vue';
-const { userInfo, team1, team2, WINNING_TIME } = useMatchStore();
+const { userInfo, team1, team2 } = useMatchStore();
 import { operators } from '@/utils/operator';
-const winningTimeCssVal = WINNING_TIME / 1000 + 's';
-const props = defineProps(['oprIdx', 'showCp']); // 干员索引, 是否显示调用点
+const props = defineProps(['oprIdx']); // 干员索引, 是否显示调用点
 const data = computed(() => {
 	let obj = { ...operators[props.oprIdx] };
 	if (userInfo.team1) {
@@ -21,9 +20,7 @@ const data = computed(() => {
 			delete obj.稀有度;
 		}
 		obj.cp = team1.recordCp[props.oprIdx];
-	}
-
-	if (userInfo.team2) {
+	}else if (userInfo.team2) {
 		if (team2.showNames.indexOf(props.oprIdx) < 0) {
 			delete obj.干员;
 		}
@@ -37,9 +34,7 @@ const data = computed(() => {
 			delete obj.稀有度;
 		}
 		obj.cp = team2.recordCp[props.oprIdx];
-	}
-
-	if (userInfo.viewer) {
+	}else if (userInfo.viewer) {
 		// 双方选手都不可见时, 观众也不可见
 		if (team1.showNames.indexOf(props.oprIdx) < 0 && team2.showNames.indexOf(props.oprIdx) < 0) {
 			delete obj.干员;
@@ -59,6 +54,8 @@ const data = computed(() => {
 		if (team1.showRares.indexOf(props.oprIdx) < 0 && team2.showRares.indexOf(props.oprIdx) < 0) {
 			delete obj.稀有度;
 		}
+		obj.cp = team1.recordCp[props.oprIdx] || team2.recordCp[props.oprIdx];
+	}else if(userInfo.owner){
 		obj.cp = team1.recordCp[props.oprIdx] || team2.recordCp[props.oprIdx];
 	}
 	return obj;
@@ -81,7 +78,6 @@ const data = computed(() => {
 			<div class="op-stars">
 				<span v-if="data.稀有度" class="stars-text">
 					<template v-for="i in data.稀有度 - 0" :key="i">★</template>
-					[{{ data.稀有度 }}]
 				</span>
 				<span v-else class="stars-text"> ??? </span>
 			</div>
@@ -107,15 +103,16 @@ const data = computed(() => {
 .op-card {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 0.5em;
 	background: #1a1a1a;
 	padding: 0em;
 	margin-bottom: 0em;
 	transition: all 0.2s;
 	position: relative;
-	animation: slideIn 0.5s ease v-bind(winningTimeCssVal) forwards;
+	animation: slideIn 0.5s ease forwards;
 	overflow: hidden;
 	height: 0vh;
+	padding-left: 0em !important;
 }
 @keyframes slideIn {
 	from {
@@ -191,7 +188,7 @@ const data = computed(() => {
 }
 
 .op-name {
-	font-size: 1em;
+	font-size: 0.8em;
 	font-weight: bold;
 	color: #eee;
 	white-space: nowrap;
