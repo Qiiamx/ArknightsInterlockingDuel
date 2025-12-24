@@ -131,14 +131,6 @@ worker.onmessage = (e) => {
     }
 	}
 }
-watch(()=>team.value, (t)=>{
-  if(t == 'win-left' || t == 'win-right'){
-    duiboCls.value = 'duibo-show'
-    console.debug('show')
-    worker.postMessage({ cmd: 'start', remain: 0 });
-  }
-}, {immediate: true})
-
 const battleVisible = ref(false)
 watch(()=>match.step, (step)=>{
 	if (step != 23) {
@@ -147,10 +139,17 @@ watch(()=>match.step, (step)=>{
 		battleVisible.value = true;
   }
 })
+watch(battleVisible, (v)=>{
+  if(v && (team.value == 'win-left' || team.value == 'win-right')){
+    duiboCls.value = 'duibo-show'
+    console.debug('show')
+    worker.postMessage({ cmd: 'start', remain: 0 });
+  }
+})
 </script>
 <template>
 	<div v-if="data" class="bidding-scene">
-    <div v-if="match.battle2" :class="duiboCls">
+    <div v-if="battleVisible && match.battle2" :class="duiboCls">
       <div class="duibo left" :style="{flex: 50 + random }">
       </div>
       <div class="duibo right" :style="{flex: 50 - random }">

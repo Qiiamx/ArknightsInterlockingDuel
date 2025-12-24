@@ -182,8 +182,8 @@ const getData = async () => {
 				<button v-if="match.countDownType && match.countDownRunning" @click="pauseTimer()">⏹ 暂停 / PAUSE</button>
 				<button v-if="match.countDownType && !match.countDownRunning" @click="resumeTimer()">▶ 恢复 / CONTINUE</button>
 				<!-- <button v-if="match.step == 3" @click="matchOpr.step3">博弈终止</button> -->
-         <button v-if="match.step!=23 && match.battle1" @click="()=>matchOpr.battleAniChange(2)">切换动画2</button>
-         <button v-if="match.step!=23 && match.battle2" @click="()=>matchOpr.battleAniChange(1)">切换动画1</button>
+         <button v-if="match.step!=23 && match.battle1" @click="()=>matchOpr.battleAniChange(2)">拼点（当前）</button>
+         <button v-if="match.step!=23 && match.battle2" @click="()=>matchOpr.battleAniChange(1)">对波（当前）</button>
 				<button v-if="match.step == 3" @click="startRound">下一轮比赛(会直接开始)</button>
 			</div>
 		</div>

@@ -102,7 +102,7 @@ const data = computed(() => {
 				<div class="separator">---------------- 本回合角色获取情况 ----------------</div>
 
 				<div
-					v-if="team1.decision == 2 || team2.decision == 2"
+					v-if="team1.decision == 1 || team2.decision == 1"
 					:class="
 						team1.betCP > team2.betCP
 							? 'outcome-row text-blue'
