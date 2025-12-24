@@ -31,8 +31,8 @@ export const useMatchStore = defineStore('match', () => {
 	});
 	//全局状态
 	const match = ref({
-    battle1: true, //拼点动画1开关
-    battle2: false, // 拼点动画2开关
+		battle1: true, //拼点动画1开关
+		battle2: false, // 拼点动画2开关
 		round: 0, // 当前轮次
 		turn: 0, // 当前回合
 		step: 0, // 当前阶段  1. 开局阶段 20. 抽卡动画 21. 博弈阶段 23公示动画 24公示阶段 3. 终止阶段 4. 攻略阶段
@@ -221,17 +221,17 @@ export const useMatchStore = defineStore('match', () => {
 	};
 	// 比赛操作
 	const matchOpr = {
-    battleAniChange: (type) => {
-      console.log('chi', type)
-      if(type == 1){
-        match.value.battle1 = true
-        match.value.battle2 = false
-      }else{
-        match.value.battle1 = false
-        match.value.battle2 = true
-      }
+		battleAniChange: (type) => {
+			console.log('chi', type);
+			if (type == 1) {
+				match.value.battle1 = true;
+				match.value.battle2 = false;
+			} else {
+				match.value.battle1 = false;
+				match.value.battle2 = true;
+			}
 			submit(() => matchOpr.battleAniChange(type));
-    },
+		},
 		flash: () => {
 			submit(() => matchOpr.flash());
 		},
@@ -328,7 +328,7 @@ export const useMatchStore = defineStore('match', () => {
 			match.value.step = 23;
 			match.value.countDownRunning = true;
 			match.value.countDownType = 'showingAnimation';
-      // 如果不拼点的话，这个倒计时会在后面的代码里被设为 1 秒
+			// 如果不拼点的话，这个倒计时会在后面的代码里被设为 1 秒
 			match.value.countDownLast = WINNING_TIME;
 			match.value.countDownTotal = WINNING_TIME;
 			match.value.countDownTarget = match.value.countDownLast + Date.now();
@@ -399,9 +399,9 @@ export const useMatchStore = defineStore('match', () => {
 					['showClasses', 'showBranches', 'showRares', 'showNames'],
 					[match.value.selectOpr]
 				);
-			}else{
-        // 都没有下注
-      }
+			} else {
+				// 都没有下注
+			}
 			if (team1.value.decision == 2) {
 				// team1休息
 				team1.value.lastCP = team1.value.lastCP + REST_INCREASE_CP;

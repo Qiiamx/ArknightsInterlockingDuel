@@ -226,13 +226,13 @@ const showDetail = ref({});
 	background: rgba(10, 10, 10, 0.95);
 	backdrop-filter: blur(10px);
 	overflow-x: hidden;
-  	overflow: hidden;
+	overflow: hidden;
 	/* 支持纵向滚动 */
 	border-top: none;
 	max-height: 0vh;
 	transition: max-height 0.4s ease;
 }
-.ban-content.show{
+.ban-content.show {
 	max-height: 80vh;
 }
 /* 纵向滚动条美化 */
@@ -281,7 +281,7 @@ const showDetail = ref({});
 	border-bottom: 1px solid;
 }
 .group-title:hover {
-  color: #ffd700;
+	color: #ffd700;
 }
 
 .group-label {
@@ -294,16 +294,16 @@ const showDetail = ref({});
 	margin-bottom: 4px;
 }
 .group-label:hover {
-  color: #ffd700;
+	color: #ffd700;
 }
 
 .group-avatars {
 	display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    align-items: start;
-    justify-content: start;
-    width: calc(15vw + 8px);
+	flex-wrap: wrap;
+	gap: 2px;
+	align-items: start;
+	justify-content: start;
+	width: calc(15vw + 8px);
 }
 
 /* 被禁用的头像 - 缩小尺寸 */

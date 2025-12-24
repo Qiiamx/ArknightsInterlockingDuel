@@ -10,17 +10,17 @@ const playingTime = 1000; //干员动画时长
 const spacingTime = 500; // 切换间隔时长
 const duiboRate = 200; //对波变化频率
 const duiboWinTime = 1000; //对波胜利动画时长
-const playingTimeCssVal = playingTime / 1000 + 's'
-const delayTime = (WINNING_TIME - playingTime); //干员动画延迟播放时长
+const playingTimeCssVal = playingTime / 1000 + 's';
+const delayTime = WINNING_TIME - playingTime; //干员动画延迟播放时长
 const delayTimeCssVal = delayTime / 1000 + 's';
 const duiboTime = WINNING_TIME - playingTime - spacingTime; //对波总时长（还要留下间隔）
-const duiboWinTimeCssVal = duiboWinTime / 1000 + 's'
+const duiboWinTimeCssVal = duiboWinTime / 1000 + 's';
 const duiboBattleTime = duiboTime - duiboWinTime; //对波过程动画时长
-const duiboRateCssVal = duiboRate / 1000 + 's'
+const duiboRateCssVal = duiboRate / 1000 + 's';
 const duiboCount = duiboBattleTime / duiboRate; //  过程动画时长 / 对波浮动间隔 = 对波浮动次数
 const currentDuiboCount = ref(0); // 已经浮动的次数
 const random = ref(0); // 对波浮动数
-const duiboCls = ref('duibo-show')
+const duiboCls = ref('duibo-show');
 const data = computed(() => {
 	if (match.step != 23) {
 		return null;
@@ -103,59 +103,64 @@ const team = computed(() => {
 					: '';
 });
 
-const worker = new CountDownWorker()
+const worker = new CountDownWorker();
 worker.onmessage = (e) => {
 	if (e.data.cmd === 'fire') {
 		if (currentDuiboCount.value < duiboCount - 1 && currentDuiboCount.value != -1) {
 			// 对波过程
-			console.debug('battle')
-			random.value = Math.ceil(Math.random() * 80 - 50)
+			console.debug('battle');
+			random.value = Math.ceil(Math.random() * 80 - 50);
 			currentDuiboCount.value = currentDuiboCount.value + 1;
 			worker.postMessage({ cmd: 'start', remain: duiboRate });
 		} else if (currentDuiboCount.value == -1) {
 			// 对波结果
-			duiboCls.value = 'duibo-show hide'
+			duiboCls.value = 'duibo-show hide';
 			currentDuiboCount.value = 0;
 			if (team.value == 'win-left') {
-				console.debug('win-left')
-				random.value = 50
+				console.debug('win-left');
+				random.value = 50;
 			} else if (team.value == 'win-right') {
-				console.debug('win-right')
-				random.value = -50
+				console.debug('win-right');
+				random.value = -50;
 			}
 		} else {
-			console.debug('rest')
-			currentDuiboCount.value = -1
-			random.value = 0
+			console.debug('rest');
+			currentDuiboCount.value = -1;
+			random.value = 0;
 			worker.postMessage({ cmd: 'start', remain: duiboWinTime - duiboRate });
 		}
 	}
-}
-const battleVisible = ref(false)
-watch(() => match.step, (step) => {
-	if (step != 23) {
-		battleVisible.value = false;
-	} else {
-		battleVisible.value = true;
+};
+const battleVisible = ref(false);
+watch(
+	() => match.step,
+	(step) => {
+		if (step != 23) {
+			battleVisible.value = false;
+		} else {
+			battleVisible.value = true;
+		}
 	}
-})
+);
 watch(battleVisible, (v) => {
 	if (v && (team.value == 'win-left' || team.value == 'win-right')) {
-		duiboCls.value = 'duibo-show'
-		console.debug('show')
+		duiboCls.value = 'duibo-show';
+		console.debug('show');
 		worker.postMessage({ cmd: 'start', remain: 0 });
 	}
-})
+});
 </script>
 <template>
 	<div v-if="data" class="bidding-scene">
 		<div v-if="battleVisible && match.battle2" :class="duiboCls">
-			<div class="duibo left" :style="{ flex: 50 + random }">
-			</div>
-			<div class="duibo right" :style="{ flex: 50 - random }">
-			</div>
+			<div class="duibo left" :style="{ flex: 50 + random }"></div>
+			<div class="duibo right" :style="{ flex: 50 - random }"></div>
 		</div>
-		<BattleNumer v-if="battleVisible && match.battle1" :val-a="team1.betCP" :val-b="team2.betCP"></BattleNumer>
+		<BattleNumer
+			v-if="battleVisible && match.battle1"
+			:val-a="team1.betCP"
+			:val-b="team2.betCP"
+		></BattleNumer>
 		<div :class="`operator-card ${team}`">
 			<div v-if="ban" class="stamp-mark">OUT</div>
 			<div :class="`mystery-content ${ban ? 'ban' : ''}`">
@@ -290,7 +295,8 @@ watch(battleVisible, (v) => {
 }
 
 @keyframes slideLeft {
-	0% {}
+	0% {
+	}
 
 	100% {
 		transform: translateX(-50vw) scaleX(0.01) scaleY(0.01);
@@ -304,7 +310,8 @@ watch(battleVisible, (v) => {
 }
 
 @keyframes slideRight {
-	0% {}
+	0% {
+	}
 
 	100% {
 		transform: translateX(50vw) scaleX(0.01) scaleY(0.01);

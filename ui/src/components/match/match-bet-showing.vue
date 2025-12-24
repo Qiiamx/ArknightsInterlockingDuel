@@ -118,18 +118,14 @@ const data = computed(() => {
 						{{ `干员"${data && data.干员 ? data.干员 : '???'}"被队伍B抓取` }}
 					</template>
 					<template v-else>
-						{{
-							`干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！`
-						}}
+						{{ `干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！` }}
 					</template>
 				</div>
 				<div class="outcome-row text-yellow" v-else-if="team1.decision == 3 && team2.decision == 3">
 					{{ `干员已重返有效干员池！` }}
 				</div>
 				<div class="outcome-row text-yellow" v-else>
-					{{
-						`干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！`
-					}}
+					{{ `干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！` }}
 				</div>
 			</div>
 

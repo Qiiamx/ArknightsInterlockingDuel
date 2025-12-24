@@ -10,9 +10,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 			<div class="bubble-header">
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
-			<div class="bubble-body">
-				队伍A使用了情报点！
-			</div>
+			<div class="bubble-body">队伍A使用了情报点！</div>
 			<div class="scan-line"></div>
 		</div>
 		<div class="bubble-connector"></div>
@@ -23,7 +21,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
 			<div class="bubble-body" v-if="team1.decision == 1">
-				队伍A消耗{{ userInfo.team1?team1.betCP:'???' }}调用点！
+				队伍A消耗{{ userInfo.team1 ? team1.betCP : '???' }}调用点！
 			</div>
 			<div class="bubble-body" v-if="team1.decision == 2">队伍A选择休息！</div>
 			<div class="bubble-body" v-if="team1.decision == 3">队伍A已经结束！</div>
@@ -32,14 +30,15 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 		<div class="bubble-connector"></div>
 	</div>
 
-	<div v-if="match.step == 21 && !userInfo.team1 && team2.betIP" :class="`action-bubble high right`">
+	<div
+		v-if="match.step == 21 && !userInfo.team1 && team2.betIP"
+		:class="`action-bubble high right`"
+	>
 		<div class="bubble-content">
 			<div class="bubble-header">
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
-			<div class="bubble-body">
-				队伍B使用了情报点！
-			</div>
+			<div class="bubble-body">队伍B使用了情报点！</div>
 			<div class="scan-line"></div>
 		</div>
 		<div class="bubble-connector"></div>
@@ -50,7 +49,7 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 				<span class="warning-icon">⚠</span><span class="header-text">ACTION DETECTED</span>
 			</div>
 			<div class="bubble-body" v-if="team2.decision == 1">
-				队伍B消耗{{ userInfo.team2?team2.betCP:'???' }}调用点！
+				队伍B消耗{{ userInfo.team2 ? team2.betCP : '???' }}调用点！
 			</div>
 			<div class="bubble-body" v-if="team2.decision == 2">队伍B选择休息！</div>
 			<div class="bubble-body" v-if="team2.decision == 3">队伍B已经结束！</div>
@@ -63,26 +62,25 @@ const { match, userInfo, team1, team2 } = storeToRefs(useMatchStore());
 <style scoped>
 .action-bubble {
 	position: absolute;
-  bottom: 35vh;
+	bottom: 35vh;
 	z-index: 90;
 	width: 320px;
 	pointer-events: none;
-  width: 20vw;
+	width: 20vw;
 }
 
 .action-bubble.high {
-  bottom: 50vh;
+	bottom: 50vh;
 }
-
 
 /* A队气泡：位于屏幕中心偏左 */
 .action-bubble.left {
-  left: 22vw;
+	left: 22vw;
 }
 
 /* B队气泡：位于屏幕中心偏右 */
 .action-bubble.right {
-  right: 22vw;
+	right: 22vw;
 }
 
 .bubble-content {

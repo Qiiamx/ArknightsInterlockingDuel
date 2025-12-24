@@ -1,26 +1,28 @@
 <script setup>
 import { computed, ref } from 'vue';
 import TeamOperatorBox from './team-operator-box.vue';
-import {operators, branches} from '@/utils/operator'
+import { operators, branches } from '@/utils/operator';
 const props = defineProps(['oprs', 'side']);
 const classes = ['全部', ...new Set(branches.map((t) => t.所属职业))];
-const activeClasses = ref(classes[0])
-const clsList = computed(()=>{
-  let map = {'全部':[]}
-  let detailOperators = props.oprs.map(i=>{return {idx:i,...operators[i]}})
-  for(let opr of detailOperators){
-    map['全部'].push(opr)
-    if(!map[opr.职业]){
-      map[opr.职业] = [opr]
-    }else{
-      map[opr.职业].push(opr)
-    }
-  }
-  for(let key in map){
-    map[key].sort((t1,t2)=>t2.稀有度-t1.稀有度)
-  }
-  return map
-})
+const activeClasses = ref(classes[0]);
+const clsList = computed(() => {
+	let map = { 全部: [] };
+	let detailOperators = props.oprs.map((i) => {
+		return { idx: i, ...operators[i] };
+	});
+	for (let opr of detailOperators) {
+		map['全部'].push(opr);
+		if (!map[opr.职业]) {
+			map[opr.职业] = [opr];
+		} else {
+			map[opr.职业].push(opr);
+		}
+	}
+	for (let key in map) {
+		map[key].sort((t1, t2) => t2.稀有度 - t1.稀有度);
+	}
+	return map;
+});
 </script>
 <template>
 	<div class="separator">
@@ -33,20 +35,25 @@ const clsList = computed(()=>{
 		<div class="sub">暂无干员调入</div>
 	</div>
 	<div v-else class="roster-container">
-    <div :class="`filter-bar ${props.side}`">
-      <div v-for="cls in classes" :key="cls" :class="activeClasses==cls?'filter-bar-item active':'filter-bar-item'" @click="()=>activeClasses=cls">
-        {{ cls }}({{ clsList[cls]?clsList[cls].length:0 }})
-      </div>
-    </div>
-    <div class="operator-list">
-      <TeamOperatorBox
-        v-for="opr in clsList[activeClasses]"
-        :key="opr.idx"
-        :opr-idx="opr.idx"
-        :show-cp="true"
-      ></TeamOperatorBox>
-    </div>
-    <!-- <a-tabs v-model:activeKey="activeClasses" :tabBarStyle="{color:'#f0f0f0', marginLeft: 0}" tabBarGutter="0.3em">
+		<div :class="`filter-bar ${props.side}`">
+			<div
+				v-for="cls in classes"
+				:key="cls"
+				:class="activeClasses == cls ? 'filter-bar-item active' : 'filter-bar-item'"
+				@click="() => (activeClasses = cls)"
+			>
+				{{ cls }}({{ clsList[cls] ? clsList[cls].length : 0 }})
+			</div>
+		</div>
+		<div class="operator-list">
+			<TeamOperatorBox
+				v-for="opr in clsList[activeClasses]"
+				:key="opr.idx"
+				:opr-idx="opr.idx"
+				:show-cp="true"
+			></TeamOperatorBox>
+		</div>
+		<!-- <a-tabs v-model:activeKey="activeClasses" :tabBarStyle="{color:'#f0f0f0', marginLeft: 0}" tabBarGutter="0.3em">
       <a-tab-pane v-for="cls in classes" :key="cls" :tab="`${cls}${clsList[cls]?.length || 0}`">
         <div class="operator-list">
           <TeamOperatorBox
@@ -90,7 +97,7 @@ const clsList = computed(()=>{
 	overflow-y: auto;
 	overflow-x: hidden;
 	padding: 0 10px 10px 10px;
-  display: flex;
+	display: flex;
 }
 
 .roster-container::-webkit-scrollbar {
@@ -120,29 +127,30 @@ const clsList = computed(()=>{
 }
 
 .operator-list {
-  flex: 1;
+	flex: 1;
 	display: flex;
 	flex-direction: column;
 	/* gap: 0.5em; */
-  order: 2;
+	order: 2;
 }
 .filter-bar {
-  cursor: pointer;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
+	cursor: pointer;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
 }
 .filter-bar.left {
-  order: 1;
-  padding-right: 1em;
+	order: 1;
+	padding-right: 1em;
 }
 .filter-bar.right {
-  order: 3;
-  padding-left: 1em;
+	order: 3;
+	padding-left: 1em;
 }
 
-.filter-bar-item:hover,.active {
-  color: #ffd700;
+.filter-bar-item:hover,
+.active {
+	color: #ffd700;
 }
 </style>

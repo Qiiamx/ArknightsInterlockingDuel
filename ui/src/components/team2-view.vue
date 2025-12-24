@@ -5,9 +5,9 @@ import TeamResource from './team/team-resource.vue';
 import { computed } from 'vue';
 import TeamOperator from './team/team-operator.vue';
 const { match, userInfo, team2 } = useMatchStore();
-const deg = computed(()=>{
-  return "-15deg"
-})
+const deg = computed(() => {
+	return '-15deg';
+});
 const isShow = () => {
 	return userInfo.team2 || userInfo.owner || userInfo.viewer;
 };

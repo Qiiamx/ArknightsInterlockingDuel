@@ -3,66 +3,65 @@ import { useMatchStore } from '@/stores/match';
 import MatchPublicOperator from './match-public-operator-box.vue';
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import CountDownWorker from '@/utils/countdown.js?worker'
-const worker = new CountDownWorker()
+import CountDownWorker from '@/utils/countdown.js?worker';
+const worker = new CountDownWorker();
 const { SETTLEMENT_TIME } = useMatchStore();
 const { match } = storeToRefs(useMatchStore());
-const fullOpeningText = "正在建立神经连接... 检测到干员信号..."
-const decodedText = ref('')
-const iteration = ref(0)
-const textTime = (SETTLEMENT_TIME / 2) / fullOpeningText.length; //每个字符的时间
-const totalTime = (SETTLEMENT_TIME / 2 / 1000) + 's'
-const className = ref('public-pool-container')
-const showCrt = ref(false)
-worker.onmessage = (e)=>{
+const fullOpeningText = '正在建立神经连接... 检测到干员信号...';
+const decodedText = ref('');
+const iteration = ref(0);
+const textTime = SETTLEMENT_TIME / 2 / fullOpeningText.length; //每个字符的时间
+const totalTime = SETTLEMENT_TIME / 2 / 1000 + 's';
+const className = ref('public-pool-container');
+const showCrt = ref(false);
+worker.onmessage = (e) => {
 	if (e.data.cmd === 'fire') {
-		decodeEffect()
+		decodeEffect();
 	}
-}
-watch(() => match.value.step, (step) => {
-	if (step == 1) {
-		className.value = 'public-pool-container playing'
-		showCrt.value = true
-		decodeEffect()
-	} else {
-		className.value = 'public-pool-container existing'
-	}
-})
-const decodeEffect = () => {
-	decodedText.value = ''
-	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
-	decodedText.value = fullOpeningText.split('').map((letter, index) => {
-		if (index < iteration.value) {
-			return fullOpeningText[index]
+};
+watch(
+	() => match.value.step,
+	(step) => {
+		if (step == 1) {
+			className.value = 'public-pool-container playing';
+			showCrt.value = true;
+			decodeEffect();
+		} else {
+			className.value = 'public-pool-container existing';
 		}
-		return characters[Math.floor(Math.random() * characters.length)]
-	})
-		.join('')
-	iteration.value = iteration.value + 1
-	if (iteration.value > fullOpeningText.length+1) {
-		showCrt.value = false
-		iteration.value = 0
-    }else{
-		worker.postMessage({ cmd: 'start', remain: textTime })
 	}
-}
+);
+const decodeEffect = () => {
+	decodedText.value = '';
+	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+	decodedText.value = fullOpeningText
+		.split('')
+		.map((letter, index) => {
+			if (index < iteration.value) {
+				return fullOpeningText[index];
+			}
+			return characters[Math.floor(Math.random() * characters.length)];
+		})
+		.join('');
+	iteration.value = iteration.value + 1;
+	if (iteration.value > fullOpeningText.length + 1) {
+		showCrt.value = false;
+		iteration.value = 0;
+	} else {
+		worker.postMessage({ cmd: 'start', remain: textTime });
+	}
+};
 </script>
 <template>
 	<Transition name="crt">
 		<div v-if="match.step != 0 && showCrt" class="terminal-layer">
 			<div class="terminal-grid"></div>
 			<div class="terminal-container">
-				<div class="terminal-header">
-					<span class="status-dot"></span> SYSTEM_ACCESS // ROOT
-				</div>
+				<div class="terminal-header"><span class="status-dot"></span> SYSTEM_ACCESS // ROOT</div>
 				<div class="terminal-body">
-					<div class="decode-text">
-						{{ decodedText }}<span class="cursor">_</span>
-					</div>
+					<div class="decode-text">{{ decodedText }}<span class="cursor">_</span></div>
 				</div>
-				<div class="terminal-footer">
-					[ CONNECTIONS: SECURE ] [ DATA: ENCRYPTED ]
-				</div>
+				<div class="terminal-footer">[ CONNECTIONS: SECURE ] [ DATA: ENCRYPTED ]</div>
 			</div>
 		</div>
 	</Transition>
@@ -221,7 +220,6 @@ const decodeEffect = () => {
 }
 
 @keyframes blink-dot {
-
 	0%,
 	100% {
 		opacity: 1;
@@ -233,7 +231,6 @@ const decodeEffect = () => {
 }
 
 @keyframes blink-cursor {
-
 	0%,
 	100% {
 		opacity: 1;

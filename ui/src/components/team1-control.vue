@@ -9,11 +9,17 @@ const calLockedCp = (n) => {
 		(n !== 10 && team2.betFlag == false) ||
 		team1.betFlag == false ||
 		team1.confirm ||
-    !match.countDownRunning
+		!match.countDownRunning
 	);
 };
 const lockedRest = computed(() => {
-	return !(match.step == 21) || team2.betFlag == false || team1.betFlag == false || team1.confirm || !match.countDownRunning;
+	return (
+		!(match.step == 21) ||
+		team2.betFlag == false ||
+		team1.betFlag == false ||
+		team1.confirm ||
+		!match.countDownRunning
+	);
 });
 const lockedTerminate = computed(() => {
 	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning;
@@ -408,7 +414,7 @@ const lockedGrab = computed(() => {
 	color: #fff;
 }
 .btn-ip:hover {
-  background: #55bce3;
+	background: #55bce3;
 	box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 

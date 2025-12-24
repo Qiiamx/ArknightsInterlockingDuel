@@ -3,7 +3,7 @@ import { useMatchStore } from '@/stores/match';
 import { ref, computed, onMounted } from 'vue';
 const { userInfo, team1, team2, WINNING_TIME } = useMatchStore();
 import { operators } from '@/utils/operator';
-const winningTimeCssVal = WINNING_TIME/1000 + 's'
+const winningTimeCssVal = WINNING_TIME / 1000 + 's';
 const props = defineProps(['oprIdx', 'showCp']); // 干员索引, 是否显示调用点
 const data = computed(() => {
 	let obj = { ...operators[props.oprIdx] };
@@ -66,9 +66,12 @@ const data = computed(() => {
 </script>
 
 <template>
-	<div :class="`op-card rarity-${data.稀有度||'unknown'}`">
+	<div :class="`op-card rarity-${data.稀有度 || 'unknown'}`">
 		<div class="op-media">
-			<img :src="data.干员 ? `/icon/头像_${data.干员}.png` : `/images/${data.职业}.png`" class="op-avatar" />
+			<img
+				:src="data.干员 ? `/icon/头像_${data.干员}.png` : `/images/${data.职业}.png`"
+				class="op-avatar"
+			/>
 		</div>
 		<div class="op-details">
 			<div class="op-name">{{ data.干员 || '???' }}</div>
@@ -100,7 +103,6 @@ const data = computed(() => {
 	</div> -->
 </template>
 <style scoped>
-
 /* 干员卡片 */
 .op-card {
 	display: flex;
@@ -116,8 +118,17 @@ const data = computed(() => {
 	height: 0vh;
 }
 @keyframes slideIn {
-  from { height: 0; padding:0; opacity: 0; }
-  to   { height: 4vh; padding: 0.5em; opacity: 1; margin-bottom: 0.5em; }
+	from {
+		height: 0;
+		padding: 0;
+		opacity: 0;
+	}
+	to {
+		height: 4vh;
+		padding: 0.5em;
+		opacity: 1;
+		margin-bottom: 0.5em;
+	}
 }
 
 /* 选中态/交互态 */

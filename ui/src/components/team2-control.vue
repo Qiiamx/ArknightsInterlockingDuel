@@ -9,11 +9,17 @@ const calLockedCp = (n) => {
 		(n !== 10 && team1.betFlag == false) ||
 		team2.betFlag == false ||
 		team2.confirm ||
-    !match.countDownRunning
+		!match.countDownRunning
 	);
 };
 const lockedRest = computed(() => {
-	return !(match.step == 21) || team1.betFlag == false || team2.betFlag == false || team2.confirm || !match.countDownRunning;
+	return (
+		!(match.step == 21) ||
+		team1.betFlag == false ||
+		team2.betFlag == false ||
+		team2.confirm ||
+		!match.countDownRunning
+	);
 });
 const lockedTerminate = computed(() => {
 	return !(match.step == 21) || team2.betFlag == false || team2.confirm || !match.countDownRunning;
@@ -150,7 +156,7 @@ const lockedGrab = computed(() => {
 /* 队伍A选手：蓝色 */
 .control-deck-area.role-PLAYER::before {
 	opacity: 1;
-	border-color: #D50000; /* 队伍A：蓝色 */
+	border-color: #d50000; /* 队伍A：蓝色 */
 	filter: drop-shadow(0 0 10px rgba(0, 174, 239, 0.6)) drop-shadow(0 0 20px rgba(0, 174, 239, 0.4))
 		drop-shadow(0 0 30px rgba(0, 174, 239, 0.3));
 }
@@ -409,7 +415,7 @@ const lockedGrab = computed(() => {
 	color: #fff;
 }
 .btn-ip:hover {
-  background: #55bce3;
+	background: #55bce3;
 	box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 

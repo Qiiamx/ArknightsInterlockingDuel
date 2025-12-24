@@ -85,7 +85,7 @@ server.on('request', (req, res) => {
 		req.on('end', async () => {
 			const { userId, data, force } = JSON.parse(body);
 			if (!userMap.has(userId)) {
-        console.error(`userId ${userId} not exist, 400`)
+				console.error(`userId ${userId} not exist, 400`)
 				res.writeHead(400, { 'Content-Type': 'application/json' });
 				res.end(JSON.stringify({ ok: false }));
 				return;
@@ -103,15 +103,15 @@ server.on('request', (req, res) => {
 						broadcast(roomId, JSON.stringify(data))
 						res.writeHead(200, { 'Content-Type': 'application/json' });
 						res.end(JSON.stringify({ ok: true }));
-					}else{
-            console.error(`room version check failed, return false`)
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ ok: false }));
-          }
+					} else {
+						console.error(`room version check failed, return false`)
+						res.writeHead(200, { 'Content-Type': 'application/json' });
+						res.end(JSON.stringify({ ok: false }));
+					}
 				} else {
-          console.error(`roomId ${roomId} not exist, 400`)
+					console.error(`roomId ${roomId} not exist, 400`)
 					res.writeHead(400, { 'Content-Type': 'application/json' });
-				  res.end(JSON.stringify({ ok: false }));
+					res.end(JSON.stringify({ ok: false }));
 				}
 			} catch (e) {
 				console.error(e)
@@ -126,11 +126,9 @@ server.on('request', (req, res) => {
 	// 静态文件路径映射
 	let filePath = pathname === '/' ? '/index.html' : pathname;
 	const fullPath = path.join(__dirname, 'dist', decodeURIComponent(filePath));
-	console.log(fullPath)
 	// 简单的静态文件服务
 	fs.readFile(fullPath, (err, content) => {
 		if (err) {
-      console.log('file not exist')
 			// 文件不存在，返回 Vue 的 index.html
 			fs.readFile(path.join(__dirname, 'dist', 'index.html'), (err, data) => {
 				if (err) {
@@ -142,7 +140,6 @@ server.on('request', (req, res) => {
 				}
 			});
 		} else {
-      console.log('file exist')
 			// 返回文件
 			const ext = path.extname(fullPath);
 			const mimeTypes = {
@@ -154,7 +151,7 @@ server.on('request', (req, res) => {
 				'.jpg': 'image/jpeg',
 				'.ico': 'image/x-icon',
 			};
-			
+
 			res.writeHead(200, {
 				'Content-Type': mimeTypes[ext] || 'application/octet-stream'
 			});
@@ -221,4 +218,4 @@ wss.on('connection', (ws, req) => {
 });
 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`WS server ready on ws://0.0.0.0:${PORT}`));
+server.listen(PORT, () => console.log(`server ready on ws://0.0.0.0:${PORT}`));

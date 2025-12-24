@@ -10,7 +10,7 @@ const { submit, matchOpr } = store;
 const { userInfo, match, team1, team2 } = storeToRefs(store);
 const shareVisible = ref(false);
 const snapshotVisible = ref(false);
-const snapshotData = ref("")
+const snapshotData = ref('');
 const worker = new CountdownWorker();
 watch(
 	() => match.value.countDownTarget,
@@ -104,7 +104,9 @@ const endRound = () => {
 
 // 复现对局
 const setData = async () => {
-  submit(()=>{snapshotVisible.value = false}, JSON.parse(snapshotData.value));
+	submit(() => {
+		snapshotVisible.value = false;
+	}, JSON.parse(snapshotData.value));
 };
 const getData = async () => {
 	let str = JSON.stringify({
@@ -112,8 +114,8 @@ const getData = async () => {
 		team1: team1.value,
 		team2: team2.value,
 	});
-  snapshotVisible.value = true;
-  snapshotData.value = str;
+	snapshotVisible.value = true;
+	snapshotData.value = str;
 };
 </script>
 
@@ -157,18 +159,18 @@ const getData = async () => {
 				</div>
 			</div>
 		</div>
-    <div v-if="snapshotVisible" class="share-mask">
+		<div v-if="snapshotVisible" class="share-mask">
 			<div class="share-content">
 				<div class="share-header">
 					<div>系统快照 / SNAPSHOT</div>
 					<button @click="snapshotVisible = false">✕</button>
 				</div>
 				<div>
-          <textarea v-model="snapshotData" class="snapshot-board"></textarea>
-        </div>
-        <div>
-          <button @click="setData" class="snapshot-btn">复原</button>
-        </div>
+					<textarea v-model="snapshotData" class="snapshot-board"></textarea>
+				</div>
+				<div>
+					<button @click="setData" class="snapshot-btn">复原</button>
+				</div>
 			</div>
 		</div>
 		<div class="control-panel">
@@ -179,11 +181,19 @@ const getData = async () => {
 				<button v-if="match.round == 0" @click="startRound">▶ 开局 / INITIATE</button>
 				<!-- <textarea v-model="data">
         </textarea> -->
-				<button v-if="match.countDownType && match.countDownRunning" @click="pauseTimer()">⏹ 暂停 / PAUSE</button>
-				<button v-if="match.countDownType && !match.countDownRunning" @click="resumeTimer()">▶ 恢复 / CONTINUE</button>
+				<button v-if="match.countDownType && match.countDownRunning" @click="pauseTimer()">
+					⏹ 暂停 / PAUSE
+				</button>
+				<button v-if="match.countDownType && !match.countDownRunning" @click="resumeTimer()">
+					▶ 恢复 / CONTINUE
+				</button>
 				<!-- <button v-if="match.step == 3" @click="matchOpr.step3">博弈终止</button> -->
-         <button v-if="match.step!=23 && match.battle1" @click="()=>matchOpr.battleAniChange(2)">拼点（当前）</button>
-         <button v-if="match.step!=23 && match.battle2" @click="()=>matchOpr.battleAniChange(1)">对波（当前）</button>
+				<button v-if="match.step != 23 && match.battle1" @click="() => matchOpr.battleAniChange(2)">
+					拼点（当前）
+				</button>
+				<button v-if="match.step != 23 && match.battle2" @click="() => matchOpr.battleAniChange(1)">
+					对波（当前）
+				</button>
 				<button v-if="match.step == 3" @click="startRound">下一轮比赛(会直接开始)</button>
 			</div>
 		</div>
@@ -309,11 +319,11 @@ const getData = async () => {
 	transition: all 0.3s ease;
 	white-space: nowrap;
 }
-.snapshot-board{
-  width: 100%;
-  height: 20vh;
-  background: transparent;
-  color: #f0f0f0;
+.snapshot-board {
+	width: 100%;
+	height: 20vh;
+	background: transparent;
+	color: #f0f0f0;
 }
 .snapshot-btn {
 	padding: 6px 12px;
@@ -324,6 +334,6 @@ const getData = async () => {
 	cursor: pointer;
 	transition: all 0.3s ease;
 	white-space: nowrap;
-  width: 100%;
+	width: 100%;
 }
 </style>
