@@ -8,17 +8,18 @@ const calLockedCp = (n) => {
 		team1.lastCP < n ||
 		(n !== 10 && team2.betFlag == false) ||
 		team1.betFlag == false ||
-		team1.confirm
+		team1.confirm ||
+    !match.countDownRunning
 	);
 };
 const lockedRest = computed(() => {
-	return !(match.step == 21) || team2.betFlag == false || team1.betFlag == false || team1.confirm;
+	return !(match.step == 21) || team2.betFlag == false || team1.betFlag == false || team1.confirm || !match.countDownRunning;
 });
 const lockedTerminate = computed(() => {
-	return !(match.step == 21) || team1.betFlag == false || team1.confirm;
+	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning;
 });
 const lockedGrab = computed(() => {
-	return !(match.step == 21) || team1.betFlag == false || team1.confirm;
+	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning;
 });
 </script>
 <template>

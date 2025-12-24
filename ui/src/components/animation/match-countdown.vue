@@ -42,7 +42,7 @@ const draw = () => {
 };
 </script>
 <template>
-  <template v-if="match.countDownType">
+  <template v-if="match.step == 21 && match.countDownType">
     <div :class="`progress-container ${match.countDownRunning ? '' : 'paused'}`">
       <div class="progress-label">
         <div class="progress-track">

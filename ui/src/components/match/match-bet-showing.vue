@@ -83,7 +83,7 @@ const data = computed(() => {
 					<div class="team-tag">队伍A</div>
 					<div class="action-text">
 						{{ `消耗 ${team1.showBetIP} 情报点 ` }}
-						{{ team1.decision == 1 ? `博弈抓取(消耗 ${team1.showBetCP} CP)` : '' }}
+						{{ team1.decision == 1 ? `抓取(${team1.showBetCP} CP)` : '' }}
 						{{ team1.decision == 2 ? `休息` : '' }}
 						{{ team1.decision == 3 ? `已终止` : '' }}
 					</div>
@@ -93,7 +93,7 @@ const data = computed(() => {
 					<div class="team-tag">队伍B</div>
 					<div class="action-text">
 						{{ `消耗 ${team2.showBetIP} 情报点 ` }}
-						{{ team2.decision == 1 ? `博弈抓取(消耗 ${team2.showBetCP} CP)` : '' }}
+						{{ team2.decision == 1 ? `抓取(${team2.showBetCP} CP)` : '' }}
 						{{ team2.decision == 2 ? `休息` : '' }}
 						{{ team1.decision == 3 ? `已终止` : '' }}
 					</div>
@@ -113,23 +113,23 @@ const data = computed(() => {
 					"
 				>
 					<template v-if="team1.betCP > team2.betCP">
-						{{ `本博弈回合干员"${data && data.干员 ? data.干员 : '???'}"被队伍A抓取` }}
+						{{ `干员"${data && data.干员 ? data.干员 : '???'}"被队伍A抓取` }}
 					</template>
 					<template v-else-if="team1.betCP < team2.betCP">
-						{{ `本博弈回合干员"${data && data.干员 ? data.干员 : '???'}"被队伍B抓取` }}
+						{{ `干员"${data && data.干员 ? data.干员 : '???'}"被队伍B抓取` }}
 					</template>
 					<template v-else>
 						{{
-							`由于双方出价一致/均选择休息，本博弈回合干员"${data && data.干员 ? data.干员 : '???'}"及其分支被完纳入全局禁用池！`
+							`干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！`
 						}}
 					</template>
 				</div>
 				<div v-else-if="team1.decision == 3 && team2.decision == 3">
-					{{ `由于本回合双方均已进入终止状态，所以本回合干员已重返有效干员池！` }}
+					{{ `干员已重返有效干员池！` }}
 				</div>
 				<div v-else>
 					{{
-						`由于双方出价一致/均选择休息，本博弈回合干员"${data && data.干员 ? data.干员 : '???'}"及其分支被完纳入全局禁用池！`
+						`干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！`
 					}}
 				</div>
 			</div>
