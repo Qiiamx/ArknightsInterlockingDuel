@@ -93,7 +93,6 @@ const startRound = () => {
 		alert('池子不够了');
 		return;
 	}
-	matchOpr.nextRound();
 	matchOpr.step1();
 	// startTimer();
 };

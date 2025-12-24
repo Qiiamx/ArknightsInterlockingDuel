@@ -25,7 +25,10 @@ const lockedTerminate = computed(() => {
 	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning;
 });
 const lockedGrab = computed(() => {
-	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning;
+	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning || team1.betCP < 1;
+});
+const lockedCheck = computed(() => {
+	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning
 });
 </script>
 <template>
@@ -55,14 +58,17 @@ const lockedGrab = computed(() => {
 						</div>
 					</div>
 					<button class="ak-btn btn-capture" @click="teamOpr.confirm" :disabled="lockedGrab">
-						<div class="glitch-text">确认</div>
+						<div class="glitch-text">抓取</div>
 					</button>
-					<button class="ak-btn btn-ip" @click="teamOpr.useIP" :disabled="lockedGrab">
+					<button class="ak-btn btn-ip" @click="teamOpr.useIP" :disabled="lockedCheck">
 						<div class="glitch-text">调查</div>
 					</button>
 				</div>
-				<button class="ak-btn btn-terminate" @click="teamOpr.quit" :disabled="lockedTerminate">
+				<button v-if="team1.decision != 3" class="ak-btn btn-terminate" @click="teamOpr.quit" :disabled="lockedTerminate">
 					<div class="main-text">终止</div>
+				</button>
+				<button v-else class="ak-btn btn-terminate" @click="teamOpr.confirm" :disabled="lockedTerminate">
+					<div class="main-text">确认</div>
 				</button>
 				<div class="choice-hint">
 					当前选项: {{ team1.betCP > 0 ? '抓取' : team1.decision == 2 ? '休息' : '终止' }}

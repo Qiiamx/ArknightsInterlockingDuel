@@ -95,7 +95,7 @@ const data = computed(() => {
 						{{ `消耗 ${team2.showBetIP} 情报点 ` }}
 						{{ team2.decision == 1 ? `抓取(${team2.showBetCP} CP)` : '' }}
 						{{ team2.decision == 2 ? `休息` : '' }}
-						{{ team1.decision == 3 ? `已终止` : '' }}
+						{{ team2.decision == 3 ? `已终止` : '' }}
 					</div>
 				</div>
 
@@ -121,11 +121,11 @@ const data = computed(() => {
 						{{ `干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！` }}
 					</template>
 				</div>
-				<div class="outcome-row text-yellow" v-else-if="team1.decision == 3 && team2.decision == 3">
-					{{ `干员已重返有效干员池！` }}
-				</div>
-				<div class="outcome-row text-yellow" v-else>
+				<div v-else-if="team1.decision == 2 && team2.decision == 2" class="outcome-row text-yellow">
 					{{ `干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！` }}
+				</div>
+				<div v-else class="outcome-row text-yellow">
+					{{ `干员已重返有效干员池！` }}
 				</div>
 			</div>
 
