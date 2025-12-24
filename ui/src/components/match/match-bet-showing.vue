@@ -103,13 +103,12 @@ const data = computed(() => {
 
 				<div
 					v-if="team1.decision == 2 || team2.decision == 2"
-					class="outcome-row"
 					:class="
 						team1.betCP > team2.betCP
-							? 'text-blue'
+							? 'outcome-row text-blue'
 							: team1.betCP < team2.betCP
-								? 'text-red'
-								: 'text-yellow'
+								? 'outcome-row text-red'
+								: 'outcome-row text-yellow'
 					"
 				>
 					<template v-if="team1.betCP > team2.betCP">
@@ -124,10 +123,10 @@ const data = computed(() => {
 						}}
 					</template>
 				</div>
-				<div v-else-if="team1.decision == 3 && team2.decision == 3">
+				<div class="outcome-row text-yellow" v-else-if="team1.decision == 3 && team2.decision == 3">
 					{{ `干员已重返有效干员池！` }}
 				</div>
-				<div v-else>
+				<div class="outcome-row text-yellow" v-else>
 					{{
 						`干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！`
 					}}

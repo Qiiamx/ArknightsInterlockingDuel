@@ -179,8 +179,8 @@ const getData = async () => {
 				<button v-if="match.round == 0" @click="startRound">▶ 开局 / INITIATE</button>
 				<!-- <textarea v-model="data">
         </textarea> -->
-				<button v-if="match.countDownType" @click="pauseTimer()">⏹ 暂停 / PAUSE</button>
-				<button v-if="match.countDownType" @click="resumeTimer()">▶ 恢复 / CONTINUE</button>
+				<button v-if="match.countDownType && match.countDownRunning" @click="pauseTimer()">⏹ 暂停 / PAUSE</button>
+				<button v-if="match.countDownType && !match.countDownRunning" @click="resumeTimer()">▶ 恢复 / CONTINUE</button>
 				<!-- <button v-if="match.step == 3" @click="matchOpr.step3">博弈终止</button> -->
 				<button v-if="match.step == 3" @click="startRound">下一轮比赛(会直接开始)</button>
 			</div>

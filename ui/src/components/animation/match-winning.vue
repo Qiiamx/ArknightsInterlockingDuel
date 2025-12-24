@@ -3,28 +3,28 @@ import { useMatchStore } from '@/stores/match';
 import { computed, onMounted, ref, watch } from 'vue';
 import { operators } from '@/utils/operator';
 import CountDownWorker from '@/utils/countdown.js?worker';
+import BattleNumer from './battle-number.vue';
 const { userInfo, match, team1, team2, WINNING_TIME } = useMatchStore();
 // 1S 的时间用于干员动画，前面的时间用于对波
 const playingTime = 1000; //干员动画时长
 const spacingTime = 500; // 切换间隔时长
+const duiboRate = 200; //对波变化频率
+const duiboWinTime = 1000; //对波胜利动画时长
 const playingTimeCssVal = playingTime/1000 + 's'
 const delayTime = (WINNING_TIME - playingTime); //干员动画延迟播放时长
 const delayTimeCssVal = delayTime / 1000 + 's';
 const duiboTime = WINNING_TIME - playingTime - spacingTime; //对波总时长（还要留下间隔）
-const duiboWinTime = 1500; //对波胜利动画时长
 const duiboWinTimeCssVal = duiboWinTime/1000 + 's'
 const duiboBattleTime = duiboTime - duiboWinTime; //对波过程动画时长
-const duiboRate = 100; //对波变化频率，太小了的话，硬件播放会出BUG，卡顿到干员走了也不回来
 const duiboRateCssVal = duiboRate/1000 + 's'
 const duiboCount = duiboBattleTime / duiboRate; //  过程动画时长 / 对波浮动间隔 = 对波浮动次数
 const currentDuiboCount = ref(0); // 已经浮动的次数
 const random = ref(0); // 对波浮动数
-const duiboCls = ref('duibo hide')
+const duiboCls = ref('duibo-show')
 const data = computed(() => {
 	if (match.step != 23) {
 		return null;
 	}
-  startDuibo()
 	let obj = { ...operators[match.selectOpr] };
 	if (userInfo.team1) {
 		if (team1.showNames.indexOf(match.selectOpr) < 0) {
@@ -102,6 +102,15 @@ const team = computed(() => {
 					? 'win-back'
 					: '';
 });
+
+const battleVisible = ref(false)
+watch(()=>match.step, (step)=>{
+	if (step != 23) {
+		battleVisible.value = false;
+	}else{
+		battleVisible.value = true;
+  }
+})
 const worker = new CountDownWorker()
 worker.onmessage = (e) => {
 	if (e.data.cmd === 'fire') {
@@ -126,27 +135,27 @@ worker.onmessage = (e) => {
       console.debug('rest')
       currentDuiboCount.value = -1
       random.value = 0
-      worker.postMessage({ cmd: 'start', remain: duiboWinTime-duiboRate*4 });
+      worker.postMessage({ cmd: 'start', remain: duiboWinTime-duiboRate });
     }
 	}
 }
-const startDuibo = () => {
-  if(team.value == 'win-left' || team.value == 'win-right'){
-    duiboCls.value = 'duibo-show'
-    console.debug('show')
-    worker.postMessage({ cmd: 'start', remain: 0 });
-  }
-}
+// watch(()=>team.value, (t)=>{
+//   if(team.value == 'win-left' || team.value == 'win-right'){
+//     duiboCls.value = 'duibo-show'
+//     console.debug('show')
+//     worker.postMessage({ cmd: 'start', remain: 0 });
+//   }
+// }, {immediate: true})
 </script>
 <template>
 	<div v-if="data" class="bidding-scene">
-    <div :class="duiboCls">
+    <!-- <div :class="duiboCls">
       <div class="duibo left" :style="{flex: 50 + random }">
-        {{ 50+random }}
       </div>
       <div class="duibo right" :style="{flex: 50 - random }">
-        {{ 50-random }}</div>
-    </div>
+      </div>
+    </div> -->
+    <BattleNumer v-if="battleVisible" :val-a="team1.betCP" :val-b="team2.betCP"></BattleNumer>
 		<div :class="`operator-card ${team}`">
 			<div v-if="ban" class="stamp-mark">OUT</div>
 			<div :class="`mystery-content ${ban ? 'ban' : ''}`">

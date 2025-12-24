@@ -17,7 +17,7 @@ const REST_INCREASE_IP = 1; // 休息增加情报点
 const SETTLEMENT_TIME = 5000; // 开局时间(毫秒)
 const DULING_TIME = 5000; // 抽取动画时间(毫秒) 2秒TURN 2秒抽
 const MIND_TIME = 25000; // 思考时间(毫秒)
-const WINNING_TIME = 5000; // 获胜动画时间(毫秒)
+const WINNING_TIME = 4000; // 获胜动画时间(毫秒)
 const SHOW_TIME = 4000; // 结算时间(毫秒)
 
 export const useMatchStore = defineStore('match', () => {
@@ -315,6 +315,7 @@ export const useMatchStore = defineStore('match', () => {
 			match.value.step = 23;
 			match.value.countDownRunning = true;
 			match.value.countDownType = 'showingAnimation';
+      // 如果不拼点的话，这个倒计时会在后面的代码里被设为 1 秒
 			match.value.countDownLast = WINNING_TIME;
 			match.value.countDownTotal = WINNING_TIME;
 			match.value.countDownTarget = match.value.countDownLast + Date.now();
@@ -385,7 +386,9 @@ export const useMatchStore = defineStore('match', () => {
 					['showClasses', 'showBranches', 'showRares', 'showNames'],
 					[match.value.selectOpr]
 				);
-			}
+			}else{
+        // 都没有下注
+      }
 			if (team1.value.decision == 2) {
 				// team1休息
 				team1.value.lastCP = team1.value.lastCP + REST_INCREASE_CP;
