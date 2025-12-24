@@ -10,13 +10,13 @@ const playingTime = 1000; //干员动画时长
 const spacingTime = 500; // 切换间隔时长
 const duiboRate = 200; //对波变化频率
 const duiboWinTime = 1000; //对波胜利动画时长
-const playingTimeCssVal = playingTime/1000 + 's'
+const playingTimeCssVal = playingTime / 1000 + 's'
 const delayTime = (WINNING_TIME - playingTime); //干员动画延迟播放时长
 const delayTimeCssVal = delayTime / 1000 + 's';
 const duiboTime = WINNING_TIME - playingTime - spacingTime; //对波总时长（还要留下间隔）
-const duiboWinTimeCssVal = duiboWinTime/1000 + 's'
+const duiboWinTimeCssVal = duiboWinTime / 1000 + 's'
 const duiboBattleTime = duiboTime - duiboWinTime; //对波过程动画时长
-const duiboRateCssVal = duiboRate/1000 + 's'
+const duiboRateCssVal = duiboRate / 1000 + 's'
 const duiboCount = duiboBattleTime / duiboRate; //  过程动画时长 / 对波浮动间隔 = 对波浮动次数
 const currentDuiboCount = ref(0); // 已经浮动的次数
 const random = ref(0); // 对波浮动数
@@ -106,56 +106,56 @@ const team = computed(() => {
 const worker = new CountDownWorker()
 worker.onmessage = (e) => {
 	if (e.data.cmd === 'fire') {
-    if(currentDuiboCount.value < duiboCount-1 && currentDuiboCount.value != -1){
-      // 对波过程
-      console.debug('battle')
-      random.value = Math.ceil(Math.random()*80 - 50)
-      currentDuiboCount.value = currentDuiboCount.value + 1;
-      worker.postMessage({ cmd: 'start', remain: duiboRate });
-    }else if(currentDuiboCount.value == -1){
-      // 对波结果
-      duiboCls.value = 'duibo-show hide'
-      currentDuiboCount.value = 0;
-      if(team.value == 'win-left'){
-        console.debug('win-left')
-        random.value = 50
-      }else if(team.value == 'win-right'){
-        console.debug('win-right')
-        random.value = -50
-      }
-    }else{
-      console.debug('rest')
-      currentDuiboCount.value = -1
-      random.value = 0
-      worker.postMessage({ cmd: 'start', remain: duiboWinTime-duiboRate });
-    }
+		if (currentDuiboCount.value < duiboCount - 1 && currentDuiboCount.value != -1) {
+			// 对波过程
+			console.debug('battle')
+			random.value = Math.ceil(Math.random() * 80 - 50)
+			currentDuiboCount.value = currentDuiboCount.value + 1;
+			worker.postMessage({ cmd: 'start', remain: duiboRate });
+		} else if (currentDuiboCount.value == -1) {
+			// 对波结果
+			duiboCls.value = 'duibo-show hide'
+			currentDuiboCount.value = 0;
+			if (team.value == 'win-left') {
+				console.debug('win-left')
+				random.value = 50
+			} else if (team.value == 'win-right') {
+				console.debug('win-right')
+				random.value = -50
+			}
+		} else {
+			console.debug('rest')
+			currentDuiboCount.value = -1
+			random.value = 0
+			worker.postMessage({ cmd: 'start', remain: duiboWinTime - duiboRate });
+		}
 	}
 }
 const battleVisible = ref(false)
-watch(()=>match.step, (step)=>{
+watch(() => match.step, (step) => {
 	if (step != 23) {
 		battleVisible.value = false;
-	}else{
+	} else {
 		battleVisible.value = true;
-  }
+	}
 })
-watch(battleVisible, (v)=>{
-  if(v && (team.value == 'win-left' || team.value == 'win-right')){
-    duiboCls.value = 'duibo-show'
-    console.debug('show')
-    worker.postMessage({ cmd: 'start', remain: 0 });
-  }
+watch(battleVisible, (v) => {
+	if (v && (team.value == 'win-left' || team.value == 'win-right')) {
+		duiboCls.value = 'duibo-show'
+		console.debug('show')
+		worker.postMessage({ cmd: 'start', remain: 0 });
+	}
 })
 </script>
 <template>
 	<div v-if="data" class="bidding-scene">
-    <div v-if="battleVisible && match.battle2" :class="duiboCls">
-      <div class="duibo left" :style="{flex: 50 + random }">
-      </div>
-      <div class="duibo right" :style="{flex: 50 - random }">
-      </div>
-    </div>
-    <BattleNumer v-if="battleVisible && match.battle1" :val-a="team1.betCP" :val-b="team2.betCP"></BattleNumer>
+		<div v-if="battleVisible && match.battle2" :class="duiboCls">
+			<div class="duibo left" :style="{ flex: 50 + random }">
+			</div>
+			<div class="duibo right" :style="{ flex: 50 - random }">
+			</div>
+		</div>
+		<BattleNumer v-if="battleVisible && match.battle1" :val-a="team1.betCP" :val-b="team2.betCP"></BattleNumer>
 		<div :class="`operator-card ${team}`">
 			<div v-if="ban" class="stamp-mark">OUT</div>
 			<div :class="`mystery-content ${ban ? 'ban' : ''}`">
@@ -175,7 +175,7 @@ watch(battleVisible, (v)=>{
 </template>
 <style lang="css" scoped>
 .bidding-scene {
-  overflow: hidden;
+	overflow: hidden;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -192,7 +192,7 @@ watch(battleVisible, (v)=>{
 }
 
 .operator-card {
-  z-index: 510;
+	z-index: 510;
 	width: 200px;
 	height: 280px;
 	background: #000c;
@@ -290,8 +290,7 @@ watch(battleVisible, (v)=>{
 }
 
 @keyframes slideLeft {
-	0% {
-	}
+	0% {}
 
 	100% {
 		transform: translateX(-50vw) scaleX(0.01) scaleY(0.01);
@@ -301,18 +300,18 @@ watch(battleVisible, (v)=>{
 
 .win-right {
 	animation: slideRight v-bind(playingTimeCssVal) v-bind(delayTimeCssVal) ease-out forwards;
-	transform-origin: center center ;
+	transform-origin: center center;
 }
 
 @keyframes slideRight {
-	0% {
-	}
+	0% {}
 
 	100% {
 		transform: translateX(50vw) scaleX(0.01) scaleY(0.01);
 		opacity: 0;
 	}
 }
+
 .win-back {
 	animation: smoke v-bind(playingTimeCssVal) v-bind(delayTimeCssVal) ease-out forwards;
 }
@@ -323,38 +322,44 @@ watch(battleVisible, (v)=>{
 		filter: blur(0);
 		transform: translateY(0) scale(1) rotate(0);
 	}
+
 	100% {
 		opacity: 0;
 		filter: blur(8px);
 		transform: translateY(-60px) scale(1.15) rotate(-5deg);
 	}
 }
-.duibo-show{
-  position: absolute;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  z-index: 500;
-  opacity: 1;
-  /* transition: opacity v-bind(duiboWinTimeCssVal) v-bind(duiboWinTimeCssVal) linear; */
-  transition: opacity v-bind(duiboWinTimeCssVal) linear;
+
+.duibo-show {
+	position: absolute;
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	z-index: 500;
+	opacity: 1;
+	/* transition: opacity v-bind(duiboWinTimeCssVal) v-bind(duiboWinTimeCssVal) linear; */
+	transition: opacity v-bind(duiboWinTimeCssVal) linear;
 }
-.duibo-show.hide{
-  opacity: 0;
+
+.duibo-show.hide {
+	opacity: 0;
 }
-.duibo-show .duibo{
-  transition: flex v-bind(duiboRateCssVal) linear;
-  flex: 100 1 0%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 48em;
-  overflow: hidden;
+
+.duibo-show .duibo {
+	transition: flex v-bind(duiboRateCssVal) linear;
+	flex: 100 1 0%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 48em;
+	overflow: hidden;
 }
-.duibo-show .left{
-  background-color: #00aeef;
+
+.duibo-show .left {
+	background-color: #00aeef;
 }
-.duibo-show .right{
-  background-color: #d50000;
+
+.duibo-show .right {
+	background-color: #d50000;
 }
 </style>

@@ -7,6 +7,7 @@ const worker = new CountdownWorker();
 const { match, DULING_TIME } = useMatchStore();
 const TURN_TIME = 500;
 const FADE_TIME = 500;
+const ROLL_TIME_CSS_VAL = (DULING_TIME-TURN_TIME) / 1000 + 's'
 const TURN_TIME_CSS_VAL = (TURN_TIME / 1000) + 's'
 const FADE_TIME_CSS_VAL = (FADE_TIME / 1000) + 's'
 const randomPercent = ref(0);
@@ -85,7 +86,7 @@ const startDrawingEffect = () => {
             v-for="i in 10"
             :key="i"
             class="stream-column"
-            :style="{ animationDelay: `${Math.random() * -2}s`, left: `${(i - 1) * 10}%` }">
+            :style="{ left: `${(i - 1) * 10}%` }">
             {{ generateRandomDataString() }}
           </div>
         </div>
@@ -105,22 +106,17 @@ const startDrawingEffect = () => {
 </template>
 <style lang="css" scoped>
 .drawing-layer {
-  /* position: fixed;
+  position: fixed;
 	top: 0;
 	left: 0;
 	width: 100vw;
-	height: 100vh; */
+	height: 100vh;
   background: rgba(0, 0, 0, 0.8);
   z-index: 300;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-
-  width: 80vw;
-  height: 10vw;
-  top: 40vh;
-  left: 10vw;
   position: absolute;
 }
 
@@ -128,8 +124,7 @@ const startDrawingEffect = () => {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  opacity: 0.05;
-  /* 调整为20%不透明度 */
+  opacity: 0.2;
   z-index: 0;
 }
 
@@ -139,11 +134,11 @@ const startDrawingEffect = () => {
   width: 10%;
   /* 10列 */
   font-family: 'Consolas', monospace;
-  font-size: 12px;
+  font-size: 5em;
   color: #fff;
   word-break: break-all;
   text-align: center;
-  animation: waterfall 4s linear infinite;
+  animation: waterfall v-bind(ROLL_TIME_CSS_VAL) linear infinite;
   /* 减缓50%：从2s变为4s */
   text-shadow: 0 0 5px #fff;
 }

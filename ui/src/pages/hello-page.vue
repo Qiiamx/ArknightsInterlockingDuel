@@ -37,6 +37,7 @@ const create = () => {
 		.then((response) => {
 			if (!response || !response.ok) {
 				alert('创建失败');
+				throw "创建失败"
 			} else {
 				return response.json();
 			}

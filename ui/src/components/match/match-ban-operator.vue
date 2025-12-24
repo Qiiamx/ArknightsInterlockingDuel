@@ -38,8 +38,8 @@ const branchLast = (branchName) => {
 const showDetail = ref({});
 </script>
 <template>
-	<div :class="`ban-pool-container ${showClass ? 'show' : ''}`">
-		<div class="ban-content">
+	<div :class="`ban-pool-container`">
+		<div :class="`ban-content ${showClass ? 'show' : ''}`">
 			<div class="ban-grid">
 				<template v-for="className in classes" :key="className">
 					<div class="ban-group">
@@ -140,7 +140,6 @@ const showDetail = ref({});
 	position: absolute;
 	left: 50%;
 	bottom: 10px;
-	height: 5vh;
 	transform: translateX(-50%);
 	transform-origin: bottom center;
 	width: 80%;
@@ -149,12 +148,7 @@ const showDetail = ref({});
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
 	display: flex;
 	flex-direction: column;
-	transition: height 0.4s ease;
 	border: 2px solid #d50000;
-}
-
-.ban-pool-container.show {
-	height: 50vh;
 }
 
 /* =========================================
@@ -232,11 +226,15 @@ const showDetail = ref({});
 	background: rgba(10, 10, 10, 0.95);
 	backdrop-filter: blur(10px);
 	overflow-x: hidden;
-  overflow: hidden;
+  	overflow: hidden;
 	/* 支持纵向滚动 */
 	border-top: none;
+	max-height: 0vh;
+	transition: max-height 0.4s ease;
 }
-
+.ban-content.show{
+	max-height: 80vh;
+}
 /* 纵向滚动条美化 */
 .ban-content::-webkit-scrollbar {
 	width: 6px;
@@ -269,18 +267,11 @@ const showDetail = ref({});
 	border-radius: 4px;
 	display: flex;
 	flex-direction: column;
-	/* 纵向布局：标签在上，头像在下 */
 	align-items: start;
-	gap: 6px;
-	min-width: 120px;
-	max-width: 500px;
-	/* 增加最大宽度，容纳更多头像 */
-	width: fit-content;
-	/* 根据内容自适应宽度 */
 }
 
 .group-title {
-	font-size: 11px;
+	font-size: 1.5em;
 	color: #aaa;
 	font-weight: 800;
 	letter-spacing: 1px;
@@ -294,7 +285,7 @@ const showDetail = ref({});
 }
 
 .group-label {
-	font-size: 11px;
+	font-size: 1em;
 	color: #aaa;
 	font-weight: bold;
 	letter-spacing: 1px;
@@ -308,17 +299,17 @@ const showDetail = ref({});
 
 .group-avatars {
 	display: flex;
-	flex-wrap: wrap;
-	/* 允许头像换行 */
-	gap: 4px;
-	align-items: start;
-	justify-content: start;
+    flex-wrap: wrap;
+    gap: 2px;
+    align-items: start;
+    justify-content: start;
+    width: calc(15vw + 8px);
 }
 
 /* 被禁用的头像 - 缩小尺寸 */
 .banned-avatar {
-	width: 40px;
-	height: 40px;
+	width: 3vw;
+	height: 1.5vw;
 	position: relative;
 	background: #000;
 	border: 1px solid #555;
