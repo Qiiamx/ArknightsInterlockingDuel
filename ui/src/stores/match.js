@@ -325,20 +325,36 @@ export const useMatchStore = defineStore('match', () => {
 			team2.value.betCP = 0;
 			team1.value.betIP = 0;
 			team2.value.betIP = 0;
+			// 初始化默认选择
 			if (team1.value.betFlag) {
-				// team1还在博弈中
 				if (team2.value.betFlag) {
-					//team1和2都在博弈
 					team1.value.decision = 2;
+				} else {
+					if(team1.value.lastCP >= 10){
+						team1.value.decision = 1
+						team1.value.betCP = 10
+					}else{
+						team1.value.decision = 3;
+					}
+				}
+			}else{
+				team1.value.decision = 3
+			}
+			if(team2.value.betFlag){
+				if (team1.value.betFlag) {
 					team2.value.decision = 2;
 				} else {
-					//team2结束了
-					team1.value.decision = 3;
+					if(team2.value.lastCP >= 10){
+						team2.value.decision = 1
+						team2.value.betCP = 10
+					}else{
+						team2.value.decision = 3;
+					}
 				}
-			} else {
-				// team1不在博弈中, 则team2一定在博弈, 否则进不了step21, 会直接去step3
-				team2.value.decision = 3;
+			}else{
+				team2.value.decision = 3
 			}
+			// 初始化展示IP
 			team1.value.showBetCP = null; // null 不展示, 和0做区分
 			team2.value.showBetCP = null;
 			team1.value.showBetIP = null;
@@ -357,6 +373,7 @@ export const useMatchStore = defineStore('match', () => {
 			match.value.countDownLast = WINNING_TIME;
 			match.value.countDownTotal = WINNING_TIME;
 			match.value.countDownTarget = match.value.countDownLast + Date.now();
+			_visibleAndPushLogic(true, false)
 			submit(() => matchOpr.step23());
 		},
 		step24: () => {
@@ -375,68 +392,8 @@ export const useMatchStore = defineStore('match', () => {
 				// team2下注，扣除CP
 				team2.value.lastCP = team2.value.lastCP - team2.value.betCP;
 			}
-			if (team1.value.decision == 1 && team2.value.decision == 1) {
-				// 双方下注，进行比较
-				let payTeam = team1.value.betCP - team2.value.betCP;
-				if (payTeam < 0) {
-					// team2更多, team2可以看到team1消耗的点数
-					team2.value.getOprs.push(match.value.selectOpr);
-					team2.value.recordCp[match.value.selectOpr] = team2.value.betCP;
-					team1.value.recordCp[match.value.selectOpr] = team2.value.betCP;
-					addVisibleIdx(
-						[team2],
-						['showClasses', 'showBranches', 'showRares', 'showNames'],
-						[match.value.selectOpr]
-					);
-				} else if (payTeam > 0) {
-					// team1更多, team2可以看到team1消耗的点数
-					team1.value.getOprs.push(match.value.selectOpr);
-					team1.value.recordCp[match.value.selectOpr] = team1.value.betCP;
-					team2.value.recordCp[match.value.selectOpr] = team1.value.betCP;
-					addVisibleIdx(
-						[team1],
-						['showClasses', 'showBranches', 'showRares', 'showNames'],
-						[match.value.selectOpr]
-					);
-				} else {
-					// 平局
-					match.value.banBranches.push(getBranchIdx(match.value.selectOpr));
-					// 显示被ban掉的干员
-					addVisibleIdx(
-						[team1, team2],
-						['showClasses', 'showBranches', 'showRares', 'showNames'],
-						[match.value.selectOpr]
-					);
-				}
-			} else if (team1.value.decision == 1 && team2.value.decision != 1) {
-				// team1下注，team2没有下注
-				team1.value.getOprs.push(match.value.selectOpr);
-				team1.value.recordCp[match.value.selectOpr] = team1.value.betCP;
-				team2.value.recordCp[match.value.selectOpr] = team1.value.betCP; // 现在共享CP情报
-				addVisibleIdx(
-					[team1],
-					['showClasses', 'showBranches', 'showRares', 'showNames'],
-					[match.value.selectOpr]
-				);
-			} else if (team2.value.decision == 1 && team1.value.decision != 1) {
-				// team2下注，team1没有下注
-				team2.value.getOprs.push(match.value.selectOpr);
-				team2.value.recordCp[match.value.selectOpr] = team2.value.betCP;
-				team1.value.recordCp[match.value.selectOpr] = team2.value.betCP; // 现在共享CP情报
-				addVisibleIdx(
-					[team2],
-					['showClasses', 'showBranches', 'showRares', 'showNames'],
-					[match.value.selectOpr]
-				);
-			} else if (team1.value.decision == 2 && team2.value.decision == 2) {
-				// 都休息
-				match.value.banBranches.push(getBranchIdx(match.value.selectOpr));
-				addVisibleIdx(
-					[team1, team2],
-					['showClasses', 'showBranches', 'showRares', 'showNames'],
-					[match.value.selectOpr]
-				);
-			}
+			
+			_visibleAndPushLogic(false, true)
 			
 			if (team1.value.decision == 2) {
 				// team1休息
@@ -453,10 +410,19 @@ export const useMatchStore = defineStore('match', () => {
 				}
 			}
 			if (team1.value.decision == 3) {
+				if(team1.value.betFlag && team2.value.decision != 3){
+					// 如果本轮是team1选择结束, 且team2没有选择结束, 给10调用点
+					team1.value.lastCP = team1.value.lastCP + 10
+				}
 				// 结束博弈, 标记false, 禁止所有操作到下一轮
 				team1.value.betFlag = false;
 			}
 			if (team2.value.decision == 3) {
+				// 结束博弈, 标记false, 禁止所有操作到下一轮
+				if(team2.value.betFlag && team1.value.decision != 3){
+					// 如果本轮是team2选择结束, 且team1没有选择结束, 给10调用点
+					team2.value.lastCP = team2.value.lastCP + 10
+				}
 				// 结束博弈, 标记false, 禁止所有操作到下一轮
 				team2.value.betFlag = false;
 			}
@@ -508,6 +474,101 @@ export const useMatchStore = defineStore('match', () => {
 		nextRound: () => {
 		},
 	};
+	/**
+	 * 由于 展示信息 先于 获得干员, 但是逻辑均与结算一致, 所以抽出公共方法来分开进行 展示 和 获得
+	 * @param {*} visible 是否展示
+	 * @param {*} push 是否获得
+	 */
+	const _visibleAndPushLogic = (visible, push)=>{
+		if (team1.value.decision == 1 && team2.value.decision == 1) {
+			// 双方下注，进行比较
+			let payTeam = team1.value.betCP - team2.value.betCP;
+			if (payTeam < 0) {
+				// team2更多, team2可以看到team1消耗的点数
+				if(push){
+					team2.value.getOprs.push(match.value.selectOpr);
+				}
+				if(visible){
+					team2.value.recordCp[match.value.selectOpr] = team2.value.betCP;
+					team1.value.recordCp[match.value.selectOpr] = team2.value.betCP;
+					addVisibleIdx(
+						[team2],
+						['showClasses', 'showBranches', 'showRares', 'showNames'],
+						[match.value.selectOpr]
+					);
+				}
+			} else if (payTeam > 0) {
+				// team1更多, team2可以看到team1消耗的点数
+				if(push){
+					team1.value.getOprs.push(match.value.selectOpr);
+				}
+				if(visible){
+					team1.value.recordCp[match.value.selectOpr] = team1.value.betCP;
+					team2.value.recordCp[match.value.selectOpr] = team1.value.betCP;
+					addVisibleIdx(
+						[team1],
+						['showClasses', 'showBranches', 'showRares', 'showNames'],
+						[match.value.selectOpr]
+					);
+				}
+			} else {
+				// 平局
+				if(push){
+					match.value.banBranches.push(getBranchIdx(match.value.selectOpr));
+				}
+				// 显示被ban掉的干员
+				if(visible){
+					addVisibleIdx(
+						[team1, team2],
+						['showClasses', 'showBranches', 'showRares', 'showNames'],
+						[match.value.selectOpr]
+					);
+				}
+			}
+		} else if (team1.value.decision == 1 && team2.value.decision != 1) {
+			// team1下注，team2没有下注
+			if(push){
+				team1.value.getOprs.push(match.value.selectOpr);
+			}
+			if(visible){
+				team1.value.recordCp[match.value.selectOpr] = team1.value.betCP;
+				team2.value.recordCp[match.value.selectOpr] = team1.value.betCP; // 现在共享CP情报
+				addVisibleIdx(
+					[team1],
+					['showClasses', 'showBranches', 'showRares', 'showNames'],
+					[match.value.selectOpr]
+				);
+			}
+		} else if (team2.value.decision == 1 && team1.value.decision != 1) {
+			// team2下注，team1没有下注
+			if(push){
+				team2.value.getOprs.push(match.value.selectOpr);
+			}
+			if(visible){
+				team2.value.recordCp[match.value.selectOpr] = team2.value.betCP;
+				team1.value.recordCp[match.value.selectOpr] = team2.value.betCP; // 现在共享CP情报
+				addVisibleIdx(
+					[team2],
+					['showClasses', 'showBranches', 'showRares', 'showNames'],
+					[match.value.selectOpr]
+				);
+			}
+		} else if (team1.value.decision == 2 && team2.value.decision == 2) {
+			// 都休息
+			
+			if(push){
+				match.value.banBranches.push(getBranchIdx(match.value.selectOpr));
+			}
+			
+			if(visible){
+				addVisibleIdx(
+					[team1, team2],
+					['showClasses', 'showBranches', 'showRares', 'showNames'],
+					[match.value.selectOpr]
+				);
+			}
+		}
+	}
 
 	//服务器下发，专门的ws模块来调用
 	const serverOpr = {

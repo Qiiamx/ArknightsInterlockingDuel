@@ -50,37 +50,30 @@ const resumeTimer = () => {
 };
 //结束
 const stopTimer = () => {
-	console.debug('stopTimer act ', match.value.countDownType);
 	if (match.value.countDownType == 'settling') {
 		//开局阶段结束, 抽取动画开始
-		console.debug('start duling animation');
 		matchOpr.step20();
 		// startTimer();
 	} else if (match.value.countDownType == 'dulingAnimation') {
 		// 抽取动画结束, 博弈倒计时开始
-		console.debug('start duling');
 		matchOpr.step21();
 		// startTimer();
 	} else if (match.value.countDownType == 'duling') {
 		//博弈阶段结束, 获胜动画开始
-		console.debug('start showing animation');
 		matchOpr.step23();
 		// startTimer();
 	} else if (match.value.countDownType == 'showingAnimation') {
 		//获胜动画结束, 公示倒计时开始
-		console.debug('start showing');
 		matchOpr.step24();
 		// startTimer();
 	} else if (match.value.countDownType == 'showing') {
 		// 公示阶段结束
 		if (match.value.continueMind && (team1.value.betFlag || team2.value.betFlag)) {
 			// 下一轮还有干员可以选择, 且 有一方还在进行, 继续 博弈循环
-			console.debug('repeat duling');
 			matchOpr.step20();
 			// startTimer();
 		} else {
 			// 进行步骤3, 展示隐藏公共干员, 转进到step4 开始作战
-			console.debug('end timer all');
 			matchOpr.step3();
 			// intervalId.value = null;
 		}

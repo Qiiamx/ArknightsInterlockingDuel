@@ -43,7 +43,6 @@ const create = () => {
 			}
 		})
 		.then((data) => {
-			console.debug(data);
 			update(tmpLinks);
 			router.push(`/match?shareId=${o}`);
 		});

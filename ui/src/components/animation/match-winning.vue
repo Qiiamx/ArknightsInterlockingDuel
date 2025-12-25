@@ -22,9 +22,6 @@ const currentDuiboCount = ref(0); // 已经浮动的次数
 const random = ref(0); // 对波浮动数
 const duiboCls = ref('duibo-show');
 const data = computed(() => {
-	if (match.step != 23) {
-		return null;
-	}
 	let obj = { ...operators[match.selectOpr] };
 	if (userInfo.team1) {
 		if (team1.showNames.indexOf(match.selectOpr) < 0) {
@@ -89,7 +86,8 @@ const data = computed(() => {
 	return obj;
 });
 const ban = computed(() => {
-	return !(team1.betCP != team2.betCP || (team1.decision == 3 && team2.decision == 3));
+	//拼点一致 或 都 休息, ban
+	return (team1.decision == 2 && team2.decision == 2) || (team1.decision == team2.decision && team1.decision == 1 && team1.betCP == team2.betCP);
 });
 const team = computed(() => {
 	return ban.value
@@ -108,7 +106,6 @@ worker.onmessage = (e) => {
 	if (e.data.cmd === 'fire') {
 		if (currentDuiboCount.value < duiboCount - 1 && currentDuiboCount.value != -1) {
 			// 对波过程
-			console.debug('battle');
 			random.value = Math.ceil(Math.random() * 80 - 50);
 			currentDuiboCount.value = currentDuiboCount.value + 1;
 			worker.postMessage({ cmd: 'start', remain: duiboRate });
@@ -117,14 +114,11 @@ worker.onmessage = (e) => {
 			duiboCls.value = 'duibo-show hide';
 			currentDuiboCount.value = 0;
 			if (team.value == 'win-left') {
-				console.debug('win-left');
 				random.value = 50;
 			} else if (team.value == 'win-right') {
-				console.debug('win-right');
 				random.value = -50;
 			}
 		} else {
-			console.debug('rest');
 			currentDuiboCount.value = -1;
 			random.value = 0;
 			worker.postMessage({ cmd: 'start', remain: duiboWinTime - duiboRate });
@@ -145,13 +139,12 @@ watch(
 watch(battleVisible, (v) => {
 	if (v && (team.value == 'win-left' || team.value == 'win-right')) {
 		duiboCls.value = 'duibo-show';
-		console.debug('show');
 		worker.postMessage({ cmd: 'start', remain: 0 });
 	}
 });
 </script>
 <template>
-	<div v-if="data" class="bidding-scene">
+	<div :class="`bidding-scene ${match.step==23?'':'hide'}`">
 		<div v-if="battleVisible && match.battle2" :class="duiboCls">
 			<div class="duibo left" :style="{ flex: 50 + random }"></div>
 			<div class="duibo right" :style="{ flex: 50 - random }"></div>
@@ -164,8 +157,12 @@ watch(battleVisible, (v) => {
 		<div :class="`operator-card ${team}`">
 			<div v-if="ban" class="stamp-mark">OUT</div>
 			<div :class="`mystery-content ${ban ? 'ban' : ''}`">
-				<img v-if="data.干员" :src="`/icon/头像_${data.干员}.png`" class="portrait" />
-				<img v-else :src="`/images/${data.职业}.png`" class="big-class-icon" />
+				<div class="portrait-content">
+					<Transition name="flip">
+						<img v-if="data.干员" :src="`/icon/头像_${data.干员}.png`" class="portrait" />
+						<img v-else :src="`/images/${data.职业}.png`" class="portrait big-class-icon" />
+					</Transition>
+				</div>
 				<div class="info-box">
 					<div class="name">{{ data.干员 || `未知干员` }}</div>
 					<div class="stars" v-if="data.稀有度">
@@ -194,6 +191,9 @@ watch(battleVisible, (v) => {
 	gap: 30px;
 	z-index: -1;
 	perspective: 1200px;
+}
+.bidding-scene.hide {
+	display: none;
 }
 
 .operator-card {
@@ -253,16 +253,33 @@ watch(battleVisible, (v) => {
 .big-class-icon {
 	width: 80px;
 	height: 80px;
-	object-fit: contain;
 }
-
+.portrait-content{
+  	perspective: 1000px;
+	width: 120px;
+	height: 120px;
+	position: relative;
+}
 .portrait {
 	width: 120px;
 	height: 120px;
 	object-fit: cover;
 	border-radius: 4px;
+	backface-visibility: hidden;
+	position: absolute;            /* 让两张卡片重叠 */
+	top: 0;
+	left: 0;
 }
-
+.flip-enter-active,
+.flip-leave-active {
+  transition: transform 0.6s;
+}
+.flip-enter-from {
+  transform: rotateY(-180deg);
+}
+.flip-leave-to {
+  transform: rotateY(180deg);
+}
 .info-box {
 	text-align: center;
 }

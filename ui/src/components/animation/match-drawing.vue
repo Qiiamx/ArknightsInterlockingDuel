@@ -14,7 +14,6 @@ const randomPercent = ref(0);
 const show = ref('');
 const jumpCount = ref(0);
 worker.onmessage = (e) => {
-	console.debug('msg', e.data.cmd);
 	if (e.data.cmd === 'fire') {
 		startDrawingEffect();
 	}
@@ -31,10 +30,8 @@ watch(
 	(step) => {
 		if (step == 20) {
 			// 播放回合
-			console.debug('start turn');
 			startTurnInfo();
 		} else {
-			console.debug('clear play');
 			worker.postMessage({ cmd: 'clear' });
 		}
 	}
@@ -52,7 +49,6 @@ const startDrawingEffect = () => {
 		jumpCount.value = jumpCount.value + 1;
 		worker.postMessage({ cmd: 'start', remain: (DULING_TIME / 2 - TURN_TIME - TURN_TIME) * 0.1 });
 	} else {
-		console.debug('show off');
 		show.value = '';
 		jumpCount.value = 0;
 	}
