@@ -10,8 +10,8 @@ const { match } = storeToRefs(useMatchStore());
 const fullOpeningText = '正在建立神经连接... 检测到干员信号...';
 const decodedText = ref('');
 const iteration = ref(0);
-const textTime = SETTLEMENT_TIME / 2 / fullOpeningText.length; //每个字符的时间
-const totalTime = SETTLEMENT_TIME / 2 / 1000 + 's';
+const textTime = SETTLEMENT_TIME / 2 / (fullOpeningText.length + 2); //每个字符的时间
+const totalTime = (SETTLEMENT_TIME-500) / 2 / 1000 + 's'; // 加速结束
 const className = ref('public-pool-container');
 const showCrt = ref(false);
 worker.onmessage = (e) => {

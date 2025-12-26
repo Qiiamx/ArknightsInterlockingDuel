@@ -65,7 +65,7 @@ const startDrawingEffect = () => {
 					<div class="banner-sub-top">WARNING // COMBAT PROTOCOL INITIATED</div>
 					<div class="banner-main-text">
 						<span class="round-num">TURN {{ match.turn }}</span>
-						<span class="divider">//</span>
+						<span class="divider"> </span>
 						<span class="action-text">START</span>
 					</div>
 					<div class="banner-sub-bottom">请双方做好博弈准备</div>
@@ -176,12 +176,12 @@ const startDrawingEffect = () => {
 
 /* 核心故障文字 (50%透明度 + 白色-淡红色强光晕) */
 .glitch-text {
-	font-size: 48px;
+	font-size: 3em;
 	font-weight: 900;
 	color: rgba(255, 255, 255, 0.5);
 	/* 50% 不透明度 */
 	position: relative;
-	letter-spacing: 4px;
+	letter-spacing: 0.1em;
 	/* 白色核心 + 淡红色外发光 */
 	text-shadow:
 		0 0 5px rgba(255, 255, 255, 1),
@@ -312,8 +312,8 @@ const startDrawingEffect = () => {
 .drawing-sub {
 	font-family: 'Rajdhani', sans-serif;
 	color: #aaa;
-	letter-spacing: 2px;
-	font-size: 14px;
+	letter-spacing: 0.1em;
+	font-size: 1.2em;
 }
 
 .percent-counter {
@@ -372,8 +372,8 @@ const startDrawingEffect = () => {
 
 .tactical-banner {
 	background: rgba(0, 0, 0, 0.9);
-	border-top: 4px solid #ffcd00;
-	border-bottom: 4px solid #ffcd00;
+	border-top: 0.2em solid #ffcd00;
+	border-bottom: 0.2em solid #ffcd00;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -451,6 +451,10 @@ const startDrawingEffect = () => {
 	line-height: 1;
 	text-shadow: 0 0 20px rgba(255, 205, 0, 0.5);
 	animation: tracking-contract 0.8s cubic-bezier(0.215, 0.61, 0.355, 1) both 0.2s;
+	transform: skewX(20deg);
+    text-align: center;
+    z-index: 2;
+    position: relative;
 }
 
 @keyframes tracking-contract {
@@ -484,8 +488,8 @@ const startDrawingEffect = () => {
 
 .banner-sub-top,
 .banner-sub-bottom {
-	font-size: 14px;
-	letter-spacing: 4px;
+	font-size: 1.2em;
+	letter-spacing: 0.2em;
 	color: #888;
 	font-family: 'Rajdhani', sans-serif;
 	opacity: 0;
@@ -495,8 +499,8 @@ const startDrawingEffect = () => {
 .banner-sub-top {
 	border-bottom: 1px solid #ffcd00;
 	display: inline-block;
-	padding: 0 20px 4px 20px;
-	margin-bottom: 10px;
+	padding: 0 1.2em 0.2em 1.2em;
+	margin-bottom: 0.8em;
 	color: #ffcd00;
 }
 
@@ -516,10 +520,10 @@ const startDrawingEffect = () => {
 	top: 50%;
 	width: 20px;
 	height: 80px;
-	border: 4px solid #fff;
+	border: 0.5em solid #fff;
 	transform: translateY(-50%) skewX(20deg);
 	opacity: 0;
-	animation: bracket-in 0.5s ease forwards 0.8s;
+	animation: bracket-in 0.5s linear forwards 0.8s;
 }
 
 .bracket-left {
