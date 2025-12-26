@@ -34,7 +34,9 @@ const lockedCheck = computed(() => {
 <template>
 	<div v-if="userInfo.team2 && match.step == 21" class="control-deck-area role-PLAYER">
 		<div class="player-panel">
-			<div class="deck-label">战术终端 // TACTICAL INPUT</div>
+			<div class="deck-label">
+				<div class="deck-label-rolling-text">TEAM B 战术终端 / TEAM B TERMINAL</div>
+			</div>
 			<div class="player-actions">
 				<button
 					:class="`ak-btn btn-rest ${team2.decision == '1' ? 'active' : ''}`"
@@ -167,15 +169,27 @@ const lockedCheck = computed(() => {
 		drop-shadow(0 0 30px rgba(0, 174, 239, 0.3));
 }
 
+
 .deck-label {
 	font-family: 'Rajdhani', sans-serif;
 	font-size: 10px;
-	color: #666;
+	color: #d50000;
 	border-bottom: 1px solid #333;
 	margin-bottom: 15px;
 	padding-bottom: 5px;
-	text-align: right;
 	letter-spacing: 1px;
+	overflow: hidden;
+}
+
+.deck-label-rolling-text {
+	display: inline-block;
+	transform-origin: center center;
+  	animation: scroll 15s linear infinite;
+}
+
+@keyframes scroll {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(40vw); }
 }
 
 /* =========================================

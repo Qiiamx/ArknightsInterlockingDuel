@@ -6,7 +6,7 @@ import { computed } from 'vue';
 import TeamOperator from './team/team-operator.vue';
 const { match, userInfo, team2 } = useMatchStore();
 const deg = computed(() => {
-	return '-15deg';
+	return match.round > 0 ? '-10deg' : '-180deg';
 });
 const isShow = () => {
 	return userInfo.team2 || userInfo.owner || userInfo.viewer;
@@ -29,10 +29,12 @@ const ip = computed(() => {
 </script>
 
 <template>
-	<div class="rotate-bordered-pannel right">
-		<TeamIdentity name="B"></TeamIdentity>
-		<TeamResource :cp="cp" :ip="ip"></TeamResource>
-		<TeamOperator :oprs="team2.getOprs" side="right"></TeamOperator>
+	<div class="rotate-bordered-pannel-container">
+		<div class="bordered-pannel right">
+			<TeamIdentity name="B"></TeamIdentity>
+			<TeamResource :cp="cp" :ip="ip"></TeamResource>
+			<TeamOperator :oprs="team2.getOprs" side="right"></TeamOperator>
+		</div>
 	</div>
 	<!-- <div>
     <div>获得干员</div>
@@ -55,21 +57,32 @@ const ip = computed(() => {
   </div> -->
 </template>
 <style lang="css" scoped>
-.rotate-bordered-pannel {
+.rotate-bordered-pannel-container {
 	width: 20vw;
 	height: 80vh;
-	padding: 15px;
 	background: #0f0f14d9;
-	display: flex;
-	flex-direction: column;
-}
-
-.right {
-	border-right: 4px solid #00aeef;
-	transform: translate(50vw, -50%) rotateY(v-bind(deg));
+	box-shadow: inset -4px 0 20px #d5000099, inset -8px 0 40px #d5000066, inset -12px 0 60px #d5000033;
+	transform: translateY(-50%) rotateY(v-bind(deg));
 	transform-origin: right center;
+	transition: transform 1s linear;
 	top: 50vh;
-	right: 50vw;
+	right: 0vw;
 	position: absolute;
+}
+.bordered-pannel {
+    width: 100%;
+    height: 100%;
+    background: #0f0f14d9;
+    border: 1px solid rgba(255, 255, 255, .1);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    transition: all .3s;
+    box-sizing: border-box;
+}
+.right {
+	border-right: 4px solid #D50000;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 20px 100%, 0 calc(100% - 20px));
 }
 </style>

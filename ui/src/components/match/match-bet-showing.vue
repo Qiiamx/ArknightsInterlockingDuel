@@ -3,7 +3,13 @@ import { useMatchStore } from '@/stores/match';
 import { computed } from 'vue';
 import { operators } from '@/utils/operator';
 const { userInfo, match, team1, team2 } = useMatchStore();
-
+const public3 = computed(()=>{
+	if(!match.continueMind){
+		let obj = { ...operators[match.publicOprs[2]] };
+		return obj;
+	}
+	return null
+})
 const data = computed(() => {
 	let obj = { ...operators[match.selectOpr] };
 	if (userInfo.team1) {
@@ -126,6 +132,9 @@ const data = computed(() => {
 				</div>
 				<div v-else class="outcome-row text-yellow">
 					{{ `干员已重返有效干员池！` }}
+				</div>
+				<div v-if="!match.continueMind" class="outcome-row text-yellow">
+					{{ `隐藏公共干员是: ${public3?.干员}` }}
 				</div>
 			</div>
 

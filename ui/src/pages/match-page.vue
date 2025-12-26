@@ -87,5 +87,6 @@ const randomId = () => {
 	perspective: 1200px;
 	width: 100vw;
 	height: 100vh;
+	overflow: hidden;
 }
 </style>

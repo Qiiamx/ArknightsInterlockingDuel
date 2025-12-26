@@ -7,6 +7,9 @@ import { storeToRefs } from 'pinia';
 const { match } = storeToRefs(useMatchStore());
 const classes = [...new Set(branches.map((t) => t.所属职业))];
 const showClass = ref(false);
+const barTranslateY = computed(()=>{
+	return match.value.round > 0 ? '0vh' : '10vh';
+})
 const toggle = () => {
 	showClass.value = !showClass.value;
 };
@@ -139,7 +142,8 @@ const showDetail = ref({});
 	position: absolute;
 	left: 50%;
 	bottom: 10px;
-	transform: translateX(-50%);
+	transition: transform 1s linear;
+	transform: translateX(-50%) translateY(v-bind(barTranslateY));
 	transform-origin: bottom center;
 	width: 80%;
 	z-index: 200;
@@ -156,8 +160,6 @@ const showDetail = ref({});
 .ban-header-bar {
 	height: 5vh;
 	background: rgba(17, 17, 17, 0.95);
-	/* border: 2px solid #d50000; */
-	/* border-bottom: none; */
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -270,9 +272,9 @@ const showDetail = ref({});
 }
 
 .group-title {
-	font-size: 1.5em;
+	font-size: 1.1em;
 	color: #aaa;
-	font-weight: 800;
+	font-weight: 600;
 	letter-spacing: 1px;
 	text-align: center;
 	width: 100%;
@@ -286,7 +288,7 @@ const showDetail = ref({});
 .group-label {
 	font-size: 1em;
 	color: #aaa;
-	font-weight: bold;
+	font-weight: 500;
 	letter-spacing: 1px;
 	text-align: center;
 	width: 100%;

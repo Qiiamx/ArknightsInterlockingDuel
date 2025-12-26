@@ -131,7 +131,7 @@ const decodeEffect = () => {
 	left: 0;
 	width: 100vw;
 	height: 100vh;
-	background: rgba(0, 0, 0, 0.95);
+	/* background: rgba(0, 0, 0, 0.95); */
 	z-index: 9999;
 	display: flex;
 	align-items: center;
