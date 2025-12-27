@@ -19,12 +19,12 @@ worker.onmessage = (e) => {
 	}
 };
 // 生成随机数据字符串
-const generateRandomDataString = () => {
-	return Array(20)
-		.fill(0)
-		.map(() => Math.random().toString(36).substring(2, 8).toUpperCase())
-		.join(' ');
-};
+// const generateRandomDataString = () => {
+// 	return Array(20)
+// 		.fill(0)
+// 		.map(() => Math.random().toString(36).substring(2, 8).toUpperCase())
+// 		.join(' ');
+// };
 watch(
 	() => match.step,
 	(step) => {
@@ -77,11 +77,11 @@ const startDrawingEffect = () => {
 		</Transition>
 		<Transition name="fade">
 			<div v-if="show == 'draw'" class="drawing-layer">
-				<div class="data-stream-bg">
+				<!-- <div class="data-stream-bg">
 					<div v-for="i in 10" :key="i" class="stream-column" :style="{ left: `${(i - 1) * 10}%` }">
 						{{ generateRandomDataString() }}
 					</div>
-				</div>
+				</div> -->
 
 				<div class="drawing-content">
 					<div class="radar-circle"></div>

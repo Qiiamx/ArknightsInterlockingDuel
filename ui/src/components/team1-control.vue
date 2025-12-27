@@ -28,7 +28,7 @@ const lockedGrab = computed(() => {
 	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning || team1.betCP < 1;
 });
 const lockedCheck = computed(() => {
-	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning
+	return !(match.step == 21) || team1.betFlag == false || team1.confirm || !match.countDownRunning || team1.lastIP < 1;
 });
 </script>
 <template>
