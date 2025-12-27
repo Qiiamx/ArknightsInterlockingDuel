@@ -9,11 +9,14 @@ import MatchBetShowing from './match/match-bet-showing.vue';
 import MatchBetStop from './match/match-bet-stop.vue';
 import MatchWinning from './animation/match-winning.vue';
 import TeamDecision from './team/team-decision.vue';
+import MatchPrepare from './match/match-prepare.vue';
 </script>
 <template>
 	<div>
 		<!-- 阶段 -->
 		<MatchPhase></MatchPhase>
+		<!-- 准备页 -->
+		<MatchPrepare></MatchPrepare>
 		<!-- 倒计时 -->
 		<MatchCountdown></MatchCountdown>
 		<!-- 公共干员 -->

@@ -1,8 +1,8 @@
 <script setup>
 import { computed, watch, nextTick, onUnmounted } from 'vue';
 import { useMatchStore } from '@/stores/match';
-import { tsParticles } from '@tsparticles/engine';
-import { loadSlim } from '@tsparticles/slim';
+// import { tsParticles } from '@tsparticles/engine';
+// import { loadSlim } from '@tsparticles/slim';
 
 const matchStore = useMatchStore();
 const { match, userInfo } = matchStore;
@@ -10,77 +10,77 @@ const { match, userInfo } = matchStore;
 const PARTICLES_ID = 'waiting-particles';
 let particlesLoaded = false;
 
-const isPreparePhase = computed(() => match.value.round === 0 && match.value.step === 0);
+const isPreparePhase = computed(() => match.round === 0 && match.step === 0);
 
 // Logo 垂直偏移
 const logoOffsetY = computed(() => (userInfo.viewer ? '-6vh' : '-10vh'));
 
-const ensureParticlesLoaded = async () => {
-	if (particlesLoaded) return;
-	await loadSlim(tsParticles);
-	particlesLoaded = true;
-};
+// const ensureParticlesLoaded = async () => {
+// 	if (particlesLoaded) return;
+// 	await loadSlim(tsParticles);
+// 	particlesLoaded = true;
+// };
 
-const initParticles = async () => {
-	await ensureParticlesLoaded();
-	destroyParticles();
+// const initParticles = async () => {
+// 	await ensureParticlesLoaded();
+// 	destroyParticles();
 
-	await tsParticles.load({
-		id: PARTICLES_ID,
-		options: {
-			fullScreen: { enable: false },
-			background: { color: 'transparent' },
-			fpsLimit: 60,
-			detectRetina: true,
+// 	await tsParticles.load({
+// 		id: PARTICLES_ID,
+// 		options: {
+// 			fullScreen: { enable: false },
+// 			background: { color: 'transparent' },
+// 			fpsLimit: 60,
+// 			detectRetina: true,
 
-			interactivity: {
-				detectsOn: 'window',
-				events: {
-					onHover: { enable: true, mode: 'repulse' },
-					onClick: { enable: true, mode: 'push' },
-					resize: true,
-				},
-				modes: {
-					repulse: { distance: 170, duration: 0.45 },
-					push: { quantity: 4 },
-				},
-			},
+// 			interactivity: {
+// 				detectsOn: 'window',
+// 				events: {
+// 					onHover: { enable: true, mode: 'repulse' },
+// 					onClick: { enable: true, mode: 'push' },
+// 					resize: true,
+// 				},
+// 				modes: {
+// 					repulse: { distance: 170, duration: 0.45 },
+// 					push: { quantity: 4 },
+// 				},
+// 			},
 
-			particles: {
-				// 粒子数量
-				number: { value: 140, density: { enable: true, area: 800 } },
-				color: { value: ['#00bfff', '#4f7cff', '#ffffff'] },
-				links: { enable: true, distance: 150, color: '#4f7cff', opacity: 0.25, width: 1 },
-				opacity: { value: { min: 0.2, max: 0.6 } },
-				size: { value: { min: 1.2, max: 3.0 } },
-				move: { enable: true, speed: 1.1, outModes: { default: 'out' } },
-			},
-		},
-	});
-};
+// 			particles: {
+// 				// 粒子数量
+// 				number: { value: 140, density: { enable: true, area: 800 } },
+// 				color: { value: ['#00bfff', '#4f7cff', '#ffffff'] },
+// 				links: { enable: true, distance: 150, color: '#4f7cff', opacity: 0.25, width: 1 },
+// 				opacity: { value: { min: 0.2, max: 0.6 } },
+// 				size: { value: { min: 1.2, max: 3.0 } },
+// 				move: { enable: true, speed: 1.1, outModes: { default: 'out' } },
+// 			},
+// 		},
+// 	});
+// };
 
-const destroyParticles = () => {
-	const inst = tsParticles.domItem(PARTICLES_ID);
-	if (inst) inst.destroy();
-};
+// const destroyParticles = () => {
+// 	const inst = tsParticles.domItem(PARTICLES_ID);
+// 	if (inst) inst.destroy();
+// };
 
 // 进入准备阶段就初始化粒子，离开就销毁
-watch(
-	isPreparePhase,
-	async (val) => {
-		if (val) {
-			await nextTick();
-			initParticles();
-		} else {
-			destroyParticles();
-		}
-	},
-	{ immediate: true }
-);
+// watch(
+// 	isPreparePhase,
+// 	async (val) => {
+// 		if (val) {
+// 			await nextTick();
+// 			initParticles();
+// 		} else {
+// 			destroyParticles();
+// 		}
+// 	},
+// 	{ immediate: true }
+// );
 
-onUnmounted(() => {
-	destroyParticles();
-});
+// onUnmounted(() => {
+// 	destroyParticles();
+// });
 </script>
 
 <template>
