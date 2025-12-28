@@ -6,6 +6,44 @@ const { Server, OPEN } = require('ws')
 const { Mutex } = require('async-mutex')
 const path = require('path')
 const fs = require('fs')
+/**
+ * 读取密码
+ */
+
+let userTable = null; // null 表示“无文件，不校验”
+const pwdFile = '/home/ecs-user/mrfz/password.txt';
+
+try {
+	if (fs.existsSync(pwdFile)) {
+		userTable = Object.fromEntries(
+			fs.readFileSync(pwdFile, 'utf8')
+				.split(/\r?\n/)
+				.map(l => l.trim())
+				.filter(Boolean)
+				.map(l => l.split(':'))      // 一行一个  user:pass
+		);
+		console.log('[auth] loaded', Object.keys(userTable).length, 'users');
+	}
+} catch (e) {
+	console.warn('[auth] read pwd file failed:', e.message);
+}
+
+function checkBasic(req) {
+	if (!userTable) {
+		return true;
+	}        // 无文件 → 直接过
+
+	const hdr = req.headers.authorization || '';
+	const m = hdr.match(/^Basic\s+(.+)/i);
+	if (!m) {
+		return false;
+	}
+
+	const [user, pass] = Buffer.from(m[1], 'base64')
+		.toString()
+		.split(':');
+	return userTable[user] === pass;    // 简单比对
+}
 
 /* 内存结构
 	shareMap : Map<shareId, {roomId, type}> // type = team1 / team2 / owner / viewer
@@ -59,6 +97,11 @@ server.on('request', (req, res) => {
 
 	const { pathname } = parse(req.url, true);
 	if (req.method === 'POST' && pathname === '/api/create-room') {
+		if (!checkBasic(req)) {
+			res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="CreateRoom"' });
+			res.end('Unauthorized');
+			return;
+		}
 		let body = '';
 		req.on('data', c => body += c);
 		req.on('end', () => {
@@ -151,10 +194,18 @@ server.on('request', (req, res) => {
 				'.jpg': 'image/jpeg',
 				'.ico': 'image/x-icon',
 			};
-
-			res.writeHead(200, {
+			const cacheMap = {
+				'.png': 'public, max-age=2592000, immutable',  // 30 天
+				'.jpg': 'public, max-age=2592000, immutable',
+				'.ico': 'public, max-age=2592000, immutable',
+			};
+			const headers = {
 				'Content-Type': mimeTypes[ext] || 'application/octet-stream'
-			});
+			}
+			if (cacheMap[ext]) {
+				headers['Cache-Control'] = cacheMap[ext];
+			}
+			res.writeHead(200, headers);
 			res.end(content);
 		}
 	});
