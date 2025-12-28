@@ -136,18 +136,20 @@ const data = computed(() => {
 				<div v-else class="outcome-row text-yellow">
 					{{ `干员${(userInfo.owner || userInfo.viewer)?origin.干员:'???'}已重返有效池！` }}
 				</div>
-				<div v-if="!match.continueMind" class="outcome-row text-yellow">
-					{{ `隐藏公共干员是: ${public3?.干员}` }}
-				</div>
-				<div v-if="team1.quitTimeStamp < team2.quitTimeStamp" class="outcome-row text-yellow">
-					队伍A先行终止博弈, 获得10CP
-				</div>
-				<div v-else-if="team1.quitTimeStamp > team2.quitTimeStamp" class="outcome-row text-yellow">
-					队伍B先行终止博弈, 获得10CP
-				</div>
-				<div v-else class="outcome-row text-yellow">
-					双方同时终止博弈(毫秒级对轴??????)
-				</div>
+				<template v-if="!match.continueMind" >
+					<div class="outcome-row text-yellow">
+						{{ `隐藏公共干员是: ${public3?.干员}` }}
+					</div>
+					<div v-if="team1.quitTimeStamp < team2.quitTimeStamp" class="outcome-row text-yellow">
+						队伍A先行终止博弈, 获得10CP
+					</div>
+					<div v-else-if="team1.quitTimeStamp > team2.quitTimeStamp" class="outcome-row text-yellow">
+						队伍B先行终止博弈, 获得10CP
+					</div>
+					<div v-else class="outcome-row text-yellow">
+						双方同时终止博弈(毫秒级对轴??????)
+					</div>
+				</template>
 			</div>
 
 			<div class="result-footer">

@@ -183,7 +183,7 @@ const getData = async () => {
 				<button v-if="match.step != 23 && match.battle2" @click="() => matchOpr.battleAniChange(1)">
 					对波（当前）
 				</button>
-				<button v-if="match.step == 3" @click="startRound">下一轮比赛(会直接开始)</button>
+				<button v-if="match.step == 3" :disabled="!team1.ready || !team2.ready" @click="startRound">下一轮比赛</button>
 			</div>
 		</div>
 	</div>

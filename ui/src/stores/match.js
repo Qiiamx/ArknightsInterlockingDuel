@@ -260,6 +260,12 @@ export const useMatchStore = defineStore('match', () => {
 			alert('没做');
 		},
 		step1: () => {
+			// 重置双方准备状态
+			team1.value.ready = false;
+			team2.value.ready = false;
+			// 重置双方结束时间
+			team1.value.quitTimeStamp = 0;
+			team2.value.quitTimeStamp = 0
 			// 禁用本轮公用干员
 			match.value.banOprs.push(...match.value.publicOprs);
 			// 禁用TEAM1获得的干员
@@ -481,8 +487,6 @@ export const useMatchStore = defineStore('match', () => {
 					match.value.banBranches
 				) >= 3
 			);
-		},
-		nextRound: () => {
 		},
 	};
 	/**

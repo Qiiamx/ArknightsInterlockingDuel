@@ -32,7 +32,7 @@ const lockedCheck = computed(() => {
 });
 </script>
 <template>
-	<button v-if="userInfo.team2 && match.step == 0 && match.round == 0" @click="teamOpr.ready" class="ready-button">
+	<button v-if="userInfo.team2 && ((match.step == 0 && match.round == 0) || match.step == 3)" @click="teamOpr.ready" class="ready-button">
 		{{ team2.ready?'WAITING START': 'PREAPARE TO READY'}}
 	</button>
 	<div v-else-if="userInfo.team2 && match.step == 21" class="control-deck-area role-PLAYER">

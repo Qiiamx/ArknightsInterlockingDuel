@@ -1,6 +1,5 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
-import MatchPublicOperator from './match-public-operator-box.vue';
 const { match } = useMatchStore();
 </script>
 <template>
