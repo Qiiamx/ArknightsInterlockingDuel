@@ -14,7 +14,7 @@ aka AID
 
 后端启动方式
 npm i
-node service.js
+node run.js
 
 前端启动方式
 cd ui
@@ -22,8 +22,9 @@ npm i
 npm run dev
 
 部署方式
+手动安装 node20, git, pm2
 请把 deploy.sh 脚本放在你的文件夹下启动（windows请根据你的情况找AI）
-默认8080端口
+默认80端口
 
 联锁对抗
 https://github.com/ArknightsInterInterlockingComfrontation

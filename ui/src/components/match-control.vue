@@ -170,7 +170,9 @@ const getData = async () => {
 			<div class="control-btn-group">
 				<button @click="getData">👇 快照 / SNAP</button>
 				<button @click="() => (shareVisible = true)">👉 分享 / SHARE</button>
-				<button v-if="match.round == 0"  :disabled="!team1.ready || !team2.ready" @click="startRound">▶ 开局 / INITIATE</button>
+				<button v-if="match.round == 0"  :disabled="!team1.ready || !team2.ready" @click="startRound">
+					▶ {{ team1.ready&&team2.ready?'开局 / INITIATE':(!team1.ready&&!team2.ready)?'等待双方':team1.ready?'等待红方':'等待蓝方' }}
+				</button>
 				<button v-if="match.countDownType && match.countDownRunning" @click="pauseTimer()">
 					⏹ 暂停 / PAUSE
 				</button>
@@ -183,7 +185,9 @@ const getData = async () => {
 				<button v-if="match.step != 23 && match.battle2" @click="() => matchOpr.battleAniChange(1)">
 					对波（当前）
 				</button>
-				<button v-if="match.step == 3" :disabled="!team1.ready || !team2.ready" @click="startRound">下一轮比赛</button>
+				<button v-if="match.step == 3" :disabled="!team1.ready || !team2.ready" @click="startRound">
+					▶ {{ team1.ready&&team2.ready?'开局 / INITIATE':(!team1.ready&&!team2.ready)?'等待双方':team1.ready?'等待红方':'等待蓝方' }}
+				</button>
 			</div>
 		</div>
 	</div>
