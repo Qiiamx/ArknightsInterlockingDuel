@@ -10,6 +10,9 @@ const public3 = computed(()=>{
 	}
 	return null
 })
+const origin = computed(()=>{
+	return {...operators[match.selectOpr]}
+})
 const data = computed(() => {
 	let obj = { ...operators[match.selectOpr] };
 	if (userInfo.team1) {
@@ -131,10 +134,19 @@ const data = computed(() => {
 					{{ `干员"${data && data.干员 ? data.干员 : '???'}"及"${data.分支}"分支被禁用！` }}
 				</div>
 				<div v-else class="outcome-row text-yellow">
-					{{ `干员已重返有效干员池！` }}
+					{{ `干员${(userInfo.owner || userInfo.viewer)?origin.干员:'???'}已重返有效池！` }}
 				</div>
 				<div v-if="!match.continueMind" class="outcome-row text-yellow">
 					{{ `隐藏公共干员是: ${public3?.干员}` }}
+				</div>
+				<div v-if="team1.quitTimeStamp < team2.quitTimeStamp" class="outcome-row text-yellow">
+					队伍A先行终止博弈, 获得10CP
+				</div>
+				<div v-else-if="team1.quitTimeStamp > team2.quitTimeStamp" class="outcome-row text-yellow">
+					队伍B先行终止博弈, 获得10CP
+				</div>
+				<div v-else class="outcome-row text-yellow">
+					双方同时终止博弈(毫秒级对轴??????)
 				</div>
 			</div>
 

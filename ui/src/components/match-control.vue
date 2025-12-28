@@ -1,7 +1,7 @@
 <script setup>
 import { useMatchStore } from '@/stores/match';
 import { storeToRefs } from 'pinia';
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoomStore } from '@/stores/room';
 import CountdownWorker from '@/utils/countdown.js?worker';
 const store = useMatchStore();
@@ -170,16 +170,13 @@ const getData = async () => {
 			<div class="control-btn-group">
 				<button @click="getData">👇 快照 / SNAP</button>
 				<button @click="() => (shareVisible = true)">👉 分享 / SHARE</button>
-				<button v-if="match.round == 0" @click="startRound">▶ 开局 / INITIATE</button>
-				<!-- <textarea v-model="data">
-        </textarea> -->
+				<button v-if="match.round == 0"  :disabled="!team1.ready || !team2.ready" @click="startRound">▶ 开局 / INITIATE</button>
 				<button v-if="match.countDownType && match.countDownRunning" @click="pauseTimer()">
 					⏹ 暂停 / PAUSE
 				</button>
 				<button v-if="match.countDownType && !match.countDownRunning" @click="resumeTimer()">
 					▶ 恢复 / CONTINUE
 				</button>
-				<!-- <button v-if="match.step == 3" @click="matchOpr.step3">博弈终止</button> -->
 				<button v-if="match.step != 23 && match.battle1" @click="() => matchOpr.battleAniChange(2)">
 					拼点（当前）
 				</button>
@@ -219,6 +216,7 @@ const getData = async () => {
 	letter-spacing: 1px;
 }
 .control-btn-group {
+	width: 100%;
 	display: grid;
 	grid-template-columns: repeat(3, 1fr); /* 显式 3 列 */
 	padding: 1vh;

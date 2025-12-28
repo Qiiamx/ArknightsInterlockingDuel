@@ -49,6 +49,7 @@ export const useMatchStore = defineStore('match', () => {
 		version: null, // 乐观锁（这个参数很重要，不要修改，不要移除，用于避免两个用户同时操作，其中一方的数据被另一方覆盖）
 	});
 	const team1 = ref({
+		ready: false,
 		id: '', // 由链接决定的id，用于匹配可见性
 		name: '', //队伍名称
 		nicknames: [], //选手名称
@@ -68,8 +69,10 @@ export const useMatchStore = defineStore('match', () => {
 		showBetIP: null, // 拼点展示, null 不展示, 和0做区分
 		confirm: false, // 确认操作,用于快速结束倒计时
 		betFlag: true, //参与博弈
+		quitTimeStamp: 0 //结束时间
 	});
 	const team2 = ref({
+		ready: false,
 		id: '',
 		name: '', //队伍名称
 		nicknames: [], //选手名称
@@ -89,6 +92,7 @@ export const useMatchStore = defineStore('match', () => {
 		showBetIP: null, // 拼点展示, null 不展示, 和0做区分
 		confirm: false, // 确认操作,用于快速结束倒计时
 		betFlag: true, // 参与博弈
+		quitTimeStamp: 0 //结束时间
 	});
 	// 对 targets 增加 types 的 indexes
 	const addVisibleIdx = (targets, types, indexes) => {
@@ -136,6 +140,14 @@ export const useMatchStore = defineStore('match', () => {
 	};
 	// 队伍操作, 在倒计时结束时结算, 中途可以随时变更
 	const teamOpr = {
+		ready: () => {
+			if(userInfo.value.team1){
+				team1.value.ready = true
+			}else{
+				team2.value.ready = true
+			}
+			submit(()=>teamOpr.ready())
+		},
 		useIP: () => {
 			// team 消耗情报
 			if (userInfo.value.team1) {
@@ -197,9 +209,11 @@ export const useMatchStore = defineStore('match', () => {
 			if (userInfo.value.team1) {
 				team1.value.betCP = 0;
 				team1.value.decision = 3;
+				team1.value.quitTimeStamp = Date.now()
 			} else {
 				team2.value.betCP = 0;
 				team2.value.decision = 3;
+				team2.value.quitTimeStamp = Date.now()
 			}
 			submit(() => {
 				teamOpr.quit();
@@ -219,7 +233,6 @@ export const useMatchStore = defineStore('match', () => {
 	// 比赛操作
 	const matchOpr = {
 		battleAniChange: (type) => {
-			console.log('chi', type);
 			if (type == 1) {
 				match.value.battle1 = true;
 				match.value.battle2 = false;
@@ -410,19 +423,10 @@ export const useMatchStore = defineStore('match', () => {
 				}
 			}
 			if (team1.value.decision == 3) {
-				if(team1.value.betFlag && team2.value.decision != 3){
-					// 如果本轮是team1选择结束, 且team2没有选择结束, 给10调用点
-					team1.value.lastCP = team1.value.lastCP + 10
-				}
 				// 结束博弈, 标记false, 禁止所有操作到下一轮
 				team1.value.betFlag = false;
 			}
 			if (team2.value.decision == 3) {
-				// 结束博弈, 标记false, 禁止所有操作到下一轮
-				if(team2.value.betFlag && team1.value.decision != 3){
-					// 如果本轮是team2选择结束, 且team1没有选择结束, 给10调用点
-					team2.value.lastCP = team2.value.lastCP + 10
-				}
 				// 结束博弈, 标记false, 禁止所有操作到下一轮
 				team2.value.betFlag = false;
 			}
@@ -455,6 +459,13 @@ export const useMatchStore = defineStore('match', () => {
 			match.value.step = 3;
 			match.value.countDownType = '';
 			match.value.selectOpr = null;
+
+			if(team1.value.quitTimeStamp < team2.value.quitTimeStamp){
+				team1.value.lastCP = team1.value.lastCP + 10
+			}else if(team1.value.quitTimeStamp > team2.value.quitTimeStamp){
+				team2.value.lastCP = team2.value.lastCP + 10
+			}
+
 			addVisibleIdx(
 				[team1, team2],
 				['showBranches', 'showRares', 'showNames'],
