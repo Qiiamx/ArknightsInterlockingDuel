@@ -47,6 +47,7 @@ export const useMatchStore = defineStore('match', () => {
 		countDownLast: 0, //剩余时长毫秒(仅在暂停时显示)
 		continueMind: true, // 还能继续博弈
 		version: null, // 乐观锁（这个参数很重要，不要修改，不要移除，用于避免两个用户同时操作，其中一方的数据被另一方覆盖）
+		firstQuit: null, // 1左边先结束 2右边先结束
 	});
 	const team1 = ref({
 		ready: false,
@@ -69,7 +70,6 @@ export const useMatchStore = defineStore('match', () => {
 		showBetIP: null, // 拼点展示, null 不展示, 和0做区分
 		confirm: false, // 确认操作,用于快速结束倒计时
 		betFlag: true, //参与博弈
-		quitTimeStamp: 0 //结束时间
 	});
 	const team2 = ref({
 		ready: false,
@@ -92,7 +92,6 @@ export const useMatchStore = defineStore('match', () => {
 		showBetIP: null, // 拼点展示, null 不展示, 和0做区分
 		confirm: false, // 确认操作,用于快速结束倒计时
 		betFlag: true, // 参与博弈
-		quitTimeStamp: 0 //结束时间
 	});
 	// 对 targets 增加 types 的 indexes
 	const addVisibleIdx = (targets, types, indexes) => {
@@ -209,11 +208,15 @@ export const useMatchStore = defineStore('match', () => {
 			if (userInfo.value.team1) {
 				team1.value.betCP = 0;
 				team1.value.decision = 3;
-				team1.value.quitTimeStamp = Date.now()
+				if(!match.value.firstQuit){
+					match.value.firstQuit = 1
+				}
 			} else {
 				team2.value.betCP = 0;
 				team2.value.decision = 3;
-				team2.value.quitTimeStamp = Date.now()
+				if(!match.value.firstQuit){
+					match.value.firstQuit = 2
+				}
 			}
 			submit(() => {
 				teamOpr.quit();
@@ -263,9 +266,8 @@ export const useMatchStore = defineStore('match', () => {
 			// 重置双方准备状态
 			team1.value.ready = false;
 			team2.value.ready = false;
-			// 重置双方结束时间
-			team1.value.quitTimeStamp = 0;
-			team2.value.quitTimeStamp = 0
+			// 重置先结束的队伍
+			match.value.firstQuit = null;
 			// 禁用本轮公用干员
 			match.value.banOprs.push(...match.value.publicOprs);
 			// 禁用TEAM1获得的干员
@@ -466,9 +468,9 @@ export const useMatchStore = defineStore('match', () => {
 			match.value.countDownType = '';
 			match.value.selectOpr = null;
 
-			if(team1.value.quitTimeStamp < team2.value.quitTimeStamp){
+			if(match.value.firstQuit == 1){
 				team1.value.lastCP = team1.value.lastCP + 10
-			}else if(team1.value.quitTimeStamp > team2.value.quitTimeStamp){
+			}else{
 				team2.value.lastCP = team2.value.lastCP + 10
 			}
 

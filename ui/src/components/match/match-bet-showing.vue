@@ -140,14 +140,11 @@ const data = computed(() => {
 					<div class="outcome-row text-yellow">
 						{{ `隐藏公共干员是: ${public3?.干员}` }}
 					</div>
-					<div v-if="team1.quitTimeStamp < team2.quitTimeStamp" class="outcome-row text-yellow">
+					<div v-if="match.value.firstQuit == 1" class="outcome-row text-yellow">
 						队伍A先行终止博弈, 获得10CP
 					</div>
-					<div v-else-if="team1.quitTimeStamp > team2.quitTimeStamp" class="outcome-row text-yellow">
-						队伍B先行终止博弈, 获得10CP
-					</div>
 					<div v-else class="outcome-row text-yellow">
-						双方同时终止博弈(毫秒级对轴??????)
+						队伍B先行终止博弈, 获得10CP
 					</div>
 				</template>
 			</div>
