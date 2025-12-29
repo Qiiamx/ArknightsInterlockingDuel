@@ -140,20 +140,55 @@ const data = computed(() => {
 }
 
 /* 稀有度边框 */
-.rarity-6 {
+.rarity-6.left {
 	border-left: 3px solid #ff7f27;
 }
-.rarity-5 {
+.rarity-5.left {
 	border-left: 3px solid #ffd700;
 }
-.rarity-4 {
+.rarity-4.left {
 	border-left: 3px solid #a020f0;
 }
-.rarity-3 {
+.rarity-3.left {
 	border-left: 3px solid #00aeef;
 }
-.rarity-unknown {
+.rarity-2.left {
+	border-left: 3px solid #00ef73;
+}
+.rarity-1.left {
+	border-left: 3px solid #daf0f8;
+}
+.rarity-unknown.left {
 	border-left: 3px solid #666;
+}
+
+.rarity-6.right {
+	border-left: none;
+	border-right: 3px solid #ff7f27;
+}
+.rarity-5.right {
+	border-left: none;
+	border-right: 3px solid #ffd700;
+}
+.rarity-4.right {
+	border-left: none;
+	border-right: 3px solid #a020f0;
+}
+.rarity-3.right {
+	border-left: none;
+	border-right: 3px solid #00aeef;
+}
+.rarity-2.right {
+	border-left: none;
+	border-right: 3px solid #00ef73;
+}
+.rarity-1.right {
+	border-left: none;
+	border-right: 3px solid #daf0f8;
+}
+.rarity-unknown.right {
+	border-left: none;
+	border-right: 3px solid #666;
 }
 
 /* 干员媒体（头像/图标） */

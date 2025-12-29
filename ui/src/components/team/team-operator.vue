@@ -37,36 +37,26 @@ const clsList = computed(() => {
 		<div class="sub">暂无干员调入</div>
 	</div>
 	<div v-else class="roster-container">
-		<div :class="`filter-bar ${props.side}`">
-			<div
-				v-for="cls in classes"
-				:key="cls"
-				:class="activeClasses == cls ? 'filter-bar-item active' : 'filter-bar-item'"
-				@click="() => (activeClasses = cls)"
-			>
-				{{ cls }}({{ clsList[cls] ? clsList[cls].length : 0 }})
+		<div class="filter-bar">
+			<div class="filter-bar-container">
+				<div
+					v-for="cls in classes"
+					:key="cls"
+					:class="activeClasses == cls ? 'filter-bar-item active' : 'filter-bar-item'"
+					@click="() => (activeClasses = cls)"
+				>
+					{{ cls }}({{ clsList[cls] ? clsList[cls].length : 0 }})
+				</div>
 			</div>
 		</div>
 		<div class="operator-list">
-			<TeamOperatorBox
+			<TeamOperatorBox :class="props.side"
 				v-for="opr in clsList[activeClasses]"
 				:key="opr.idx"
 				:opr-idx="opr.idx"
 				:show-cp="true"
 			></TeamOperatorBox>
 		</div>
-		<!-- <a-tabs v-model:activeKey="activeClasses" :tabBarStyle="{color:'#f0f0f0', marginLeft: 0}" tabBarGutter="0.3em">
-      <a-tab-pane v-for="cls in classes" :key="cls" :tab="`${cls}${clsList[cls]?.length || 0}`">
-        <div class="operator-list">
-          <TeamOperatorBox
-            v-for="opr in clsList[cls]"
-            :key="opr.idx"
-            :opr-idx="opr.idx"
-            :show-cp="true"
-          ></TeamOperatorBox>
-        </div>
-      </a-tab-pane>
-    </a-tabs> -->
 	</div>
 </template>
 
@@ -102,19 +92,6 @@ const clsList = computed(() => {
 	display: flex;
 }
 
-.roster-container::-webkit-scrollbar {
-	width: 4px;
-}
-
-.roster-container::-webkit-scrollbar-thumb {
-	background: #444;
-	border-radius: 2px;
-}
-
-.roster-container::-webkit-scrollbar-thumb:hover {
-	background: #666;
-}
-
 .empty-state {
 	text-align: center;
 	color: #444;
@@ -130,25 +107,33 @@ const clsList = computed(() => {
 
 .operator-list {
 	flex: 1;
-	display: flex;
-	flex-direction: column;
-	/* gap: 0.5em; */
-	order: 2;
+	overflow-y: visible;
+}
+
+
+.roster-container::-webkit-scrollbar {
+	width: 4px;
+}
+
+.roster-container::-webkit-scrollbar-thumb {
+	background: #444;
+	border-radius: 2px;
+}
+
+.roster-container::-webkit-scrollbar-thumb:hover {
+	background: #666;
 }
 .filter-bar {
 	cursor: pointer;
 	height: 100%;
+	width: 4em;
+}
+
+.filter-bar-container{
 	display: flex;
-	flex-direction: column;
-	gap: 0.5em;
-}
-.filter-bar.left {
-	order: 1;
-	padding-right: 1em;
-}
-.filter-bar.right {
-	order: 3;
-	padding-left: 1em;
+    flex-direction: column;
+    gap: 0.5em;
+    position: fixed;
 }
 
 .filter-bar-item:hover,

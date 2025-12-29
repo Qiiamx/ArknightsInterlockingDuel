@@ -138,13 +138,14 @@ const data = computed(() => {
 				</div>
 				<template v-if="!match.continueMind" >
 					<div class="outcome-row text-yellow">
-						{{ `隐藏公共干员是: ${public3?.干员}` }}
-					</div>
-					<div v-if="match.value.firstQuit == 1" class="outcome-row text-yellow">
-						队伍A先行终止博弈, 获得10CP
-					</div>
-					<div v-else class="outcome-row text-yellow">
-						队伍B先行终止博弈, 获得10CP
+						{{ `隐藏公共干员是:  ${public3?.干员}` }}
+						<br>
+						<template v-if="match.firstQuit == 1">
+							队伍A因先终止获得: 10CP
+						</template>
+						<template v-else>
+							队伍B因先终止获得: 10CP
+						</template>
 					</div>
 				</template>
 			</div>
