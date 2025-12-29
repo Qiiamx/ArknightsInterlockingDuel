@@ -12,7 +12,7 @@ import { getOprIdx, getBranchIdx, getLastOprCount } from '@/utils/operator';
 // 前端接到数据，刷新 match, team1, team2
 const INIT_CP = 50; // 初始调用点
 const INIT_IP = 1; // 初始情报点
-const REST_INCREASE_CP = 5; // 休息增加调用点
+const REST_INCREASE_CP = 3; // 休息增加调用点
 const REST_INCREASE_IP = 1; // 休息增加情报点
 const SETTLEMENT_TIME = 5000; // 开局时间(毫秒)
 const DULING_TIME = 5000; // 抽取动画时间(毫秒) 2秒TURN 2秒抽
