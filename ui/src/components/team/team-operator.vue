@@ -37,7 +37,7 @@ const clsList = computed(() => {
 		<div class="sub">暂无干员调入</div>
 	</div>
 	<div v-else class="roster-container">
-		<div class="filter-bar">
+		<div :class="`filter-bar ${props.side}`">
 			<div class="filter-bar-container">
 				<div
 					v-for="cls in classes"
@@ -50,7 +50,7 @@ const clsList = computed(() => {
 			</div>
 		</div>
 		<div class="operator-list">
-			<TeamOperatorBox :class="props.side"
+			<TeamOperatorBox
 				v-for="opr in clsList[activeClasses]"
 				:key="opr.idx"
 				:opr-idx="opr.idx"
@@ -127,6 +127,10 @@ const clsList = computed(() => {
 	cursor: pointer;
 	height: 100%;
 	width: 4em;
+}
+.filter-bar.right{
+	order: 2;
+    direction: rtl;
 }
 
 .filter-bar-container{

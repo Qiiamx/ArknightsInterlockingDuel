@@ -60,7 +60,7 @@ const ip = computed(() => {
     box-sizing: border-box;
 }
 .right {
-	direction: rtl;
+	/**direction: rtl;**/
 	border-right: 4px solid #D50000;
     clip-path: polygon(0 0, 100% 0, 100% 100%, 20px 100%, 0 calc(100% - 20px));
 }

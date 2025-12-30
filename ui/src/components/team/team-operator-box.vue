@@ -140,6 +140,28 @@ const data = computed(() => {
 }
 
 /* 稀有度边框 */
+.rarity-6 {
+	border-left: 3px solid #ff7f27;
+}
+.rarity-5 {
+	border-left: 3px solid #ffd700;
+}
+.rarity-4 {
+	border-left: 3px solid #a020f0;
+}
+.rarity-3 {
+	border-left: 3px solid #00aeef;
+}
+.rarity-2 {
+	border-left: 3px solid #00ef73;
+}
+.rarity-1 {
+	border-left: 3px solid #daf0f8;
+}
+.rarity-unknown {
+	border-left: 3px solid #666;
+}
+/* 稀有度边框-TEAM1*/
 .rarity-6.left {
 	border-left: 3px solid #ff7f27;
 }
@@ -162,6 +184,7 @@ const data = computed(() => {
 	border-left: 3px solid #666;
 }
 
+/* 稀有度边框-TEAM2*/
 .rarity-6.right {
 	border-left: none;
 	border-right: 3px solid #ff7f27;
