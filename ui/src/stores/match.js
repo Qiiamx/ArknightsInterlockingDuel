@@ -94,7 +94,7 @@ export const useMatchStore = defineStore('match', () => {
 		betFlag: true, // 参与博弈
 	});
 	// 对 targets 增加 types 的 indexes
-	const addVisibleIdx = (targets, types, indexes) => {
+	const _addVisibleIdx = (targets, types, indexes) => {
 		for (let obj of targets) {
 			for (let type of types) {
 				for (let idx of indexes) {
@@ -151,11 +151,11 @@ export const useMatchStore = defineStore('match', () => {
 			// team 消耗情报
 			if (userInfo.value.team1) {
 				team1.value.lastIP = team1.value.lastIP - 1;
-				addVisibleIdx([team1], ['showBranches', 'showRares'], [match.value.selectOpr]);
+				_addVisibleIdx([team1], ['showBranches', 'showRares'], [match.value.selectOpr]);
 				team1.value.betIP = 1;
 			} else {
 				team2.value.lastIP = team2.value.lastIP - 1;
-				addVisibleIdx([team2], ['showBranches', 'showRares'], [match.value.selectOpr]);
+				_addVisibleIdx([team2], ['showBranches', 'showRares'], [match.value.selectOpr]);
 				team2.value.betIP = 1;
 			}
 			submit(() => {
@@ -275,9 +275,9 @@ export const useMatchStore = defineStore('match', () => {
 			// 禁用TEAM2获得的干员
 			match.value.banOprs.push(...team2.value.getOprs);
 			// 展示TEAM1获得的干员
-			addVisibleIdx([team2], ['showBranches', 'showRares', 'showNames'], team1.value.getOprs);
+			_addVisibleIdx([team2], ['showBranches', 'showRares', 'showNames'], team1.value.getOprs);
 			// 展示TEAM2获得的干员
-			addVisibleIdx([team1], ['showBranches', 'showRares', 'showNames'], team2.value.getOprs);
+			_addVisibleIdx([team1], ['showBranches', 'showRares', 'showNames'], team2.value.getOprs);
 			// 重置公用干员
 			match.value.publicOprs = [];
 			// 新轮次
@@ -303,9 +303,9 @@ export const useMatchStore = defineStore('match', () => {
 			match.value.countDownTarget = match.value.countDownLast + Date.now();
 			match.value.publicOprs = getOprIdx(3, [match.value.banOprs], match.value.banBranches, '6');
 			// 展示3号公共干员的职业和稀有度
-			addVisibleIdx([team1, team2], ['showClasses', 'showRares'], [match.value.publicOprs[2]]);
+			_addVisibleIdx([team1, team2], ['showClasses', 'showRares'], [match.value.publicOprs[2]]);
 			// 展示1和2号公共干员的全部信息
-			addVisibleIdx(
+			_addVisibleIdx(
 				[team1, team2],
 				['showClasses', 'showBranches', 'showRares', 'showNames'],
 				[match.value.publicOprs[0], match.value.publicOprs[1]]
@@ -339,7 +339,7 @@ export const useMatchStore = defineStore('match', () => {
 				[match.value.banOprs, match.value.publicOprs, team1.value.getOprs, team2.value.getOprs],
 				match.value.banBranches
 			)[0];
-			addVisibleIdx([team1, team2], ['showClasses'], [match.value.selectOpr]);
+			_addVisibleIdx([team1, team2], ['showClasses'], [match.value.selectOpr]);
 
 			//重置所有队伍的抉择状态
 			team1.value.betCP = 0;
@@ -463,7 +463,6 @@ export const useMatchStore = defineStore('match', () => {
 		},
 		step3: () => {
 			// 博弈结束，阶段3
-			// 展示公共区不可见的1名五星干员
 			match.value.step = 3;
 			match.value.countDownType = '';
 			match.value.selectOpr = null;
@@ -473,12 +472,15 @@ export const useMatchStore = defineStore('match', () => {
 			}else{
 				team2.value.lastCP = team2.value.lastCP + 10
 			}
-
-			addVisibleIdx(
+			// 展示公共区不可见的1名五星干员
+			_addVisibleIdx(
 				[team1, team2],
 				['showBranches', 'showRares', 'showNames'],
 				[match.value.publicOprs[2]]
 			);
+			
+			// 向对方选手展示己方干员
+			_publishRoundSelectOpr()
 			submit(() => matchOpr.step3());
 		},
 		step4: () => {},
@@ -508,7 +510,7 @@ export const useMatchStore = defineStore('match', () => {
 				if(visible){
 					team2.value.recordCp[match.value.selectOpr] = team2.value.betCP;
 					team1.value.recordCp[match.value.selectOpr] = team2.value.betCP;
-					addVisibleIdx(
+					_addVisibleIdx(
 						[team2],
 						['showClasses', 'showBranches', 'showRares', 'showNames'],
 						[match.value.selectOpr]
@@ -522,7 +524,7 @@ export const useMatchStore = defineStore('match', () => {
 				if(visible){
 					team1.value.recordCp[match.value.selectOpr] = team1.value.betCP;
 					team2.value.recordCp[match.value.selectOpr] = team1.value.betCP;
-					addVisibleIdx(
+					_addVisibleIdx(
 						[team1],
 						['showClasses', 'showBranches', 'showRares', 'showNames'],
 						[match.value.selectOpr]
@@ -535,7 +537,7 @@ export const useMatchStore = defineStore('match', () => {
 				}
 				// 显示被ban掉的干员
 				if(visible){
-					addVisibleIdx(
+					_addVisibleIdx(
 						[team1, team2],
 						['showClasses', 'showBranches', 'showRares', 'showNames'],
 						[match.value.selectOpr]
@@ -550,7 +552,7 @@ export const useMatchStore = defineStore('match', () => {
 			if(visible){
 				team1.value.recordCp[match.value.selectOpr] = team1.value.betCP;
 				team2.value.recordCp[match.value.selectOpr] = team1.value.betCP; // 现在共享CP情报
-				addVisibleIdx(
+				_addVisibleIdx(
 					[team1],
 					['showClasses', 'showBranches', 'showRares', 'showNames'],
 					[match.value.selectOpr]
@@ -564,7 +566,7 @@ export const useMatchStore = defineStore('match', () => {
 			if(visible){
 				team2.value.recordCp[match.value.selectOpr] = team2.value.betCP;
 				team1.value.recordCp[match.value.selectOpr] = team2.value.betCP; // 现在共享CP情报
-				addVisibleIdx(
+				_addVisibleIdx(
 					[team2],
 					['showClasses', 'showBranches', 'showRares', 'showNames'],
 					[match.value.selectOpr]
@@ -578,13 +580,19 @@ export const useMatchStore = defineStore('match', () => {
 			}
 			
 			if(visible){
-				addVisibleIdx(
+				_addVisibleIdx(
 					[team1, team2],
 					['showClasses', 'showBranches', 'showRares', 'showNames'],
 					[match.value.selectOpr]
 				);
 			}
 		}
+	}
+
+	const _publishRoundSelectOpr = ()=>{
+		_addVisibleIdx(
+			[team1, team2], ['showClasses', 'showBranches', 'showRares', 'showNames'], [...team1.value.showNames, ...team2.value.showNames]
+		)
 	}
 
 	//服务器下发，专门的ws模块来调用
