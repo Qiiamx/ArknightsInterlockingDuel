@@ -469,8 +469,10 @@ export const useMatchStore = defineStore('match', () => {
 
 			if(match.value.firstQuit == 1){
 				team1.value.lastCP = team1.value.lastCP + 10
-			}else{
+			}else if(match.value.firstQuit == 2){
 				team2.value.lastCP = team2.value.lastCP + 10
+			}else{
+				//无人终止
 			}
 			// 展示公共区不可见的1名五星干员
 			_addVisibleIdx(
