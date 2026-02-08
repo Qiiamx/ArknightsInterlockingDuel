@@ -268,5 +268,5 @@ wss.on('connection', (ws, req) => {
 	});
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8087;
 server.listen(PORT, () => console.log(`server ready on ws://0.0.0.0:${PORT}`));
