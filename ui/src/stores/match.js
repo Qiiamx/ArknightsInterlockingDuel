@@ -105,6 +105,19 @@ export const useMatchStore = defineStore('match', () => {
 			}
 		}
 	};
+	// 对 targets 移除 types 的 indexes
+	const _removeVisibleIdx = (targets, types, indexes) => {
+		for (let obj of targets) {
+			for (let type of types) {
+				for (let idx of indexes) {
+					const i = obj.value[type].indexOf(idx);
+					if (i >= 0) {
+						obj.value[type].splice(i, 1);
+					}
+				}
+			}
+		}
+	};
 	const submit = (func, forceData) => {
 		// 提交数据, 成功返回 ok: true
 		fetch(`/api/submit-data`, {
@@ -438,13 +451,17 @@ export const useMatchStore = defineStore('match', () => {
 				// 结束博弈, 标记false, 禁止所有操作到下一轮
 				team2.value.betFlag = false;
 			}
-			// 双方都是3(结束), 不做处理,也不ban分支
+			// 虽然很变态,但是根据match-bet-showing.vue的113-138行, 特定决策下, 干员重返有效池, 需要重置双方可见性(useIP但是无效)
+			if(!( (team1.value.decision==1 || team2.value.decision == 1) || (team1.value.decision == 2 && team2.value.decision == 2))){
+				_removeVisibleIdx([team1,team2], ['showBranches', 'showRares'], [match.value.selectOpr])
+			}
 
 			// 展示本轮消耗情报点
 			team1.value.showBetIP = team1.value.betIP;
 			team1.value.showBetCP = team1.value.betCP;
 			team2.value.showBetIP = team2.value.betIP;
 			team2.value.showBetCP = team2.value.betCP;
+			// 
 			// 如果还有剩余干员且TEAM还能博弈, 允许继续博弈, 否则不允许(owner应该调用step3)
 			match.value.continueMind =
 				// TEAM还能博弈
