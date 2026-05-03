@@ -23,8 +23,9 @@ npm run dev
 
 部署方式
 手动安装 node20, git, pm2
-请把 deploy.sh 脚本放在你的文件夹下启动（windows请根据你的情况找AI）
-默认8080端口
+请把 deploy.sh 脚本放在你的文件夹下启动（只需要deploy.sh）
+默认8087端口
+如果你想增加密码,可以在deploy.sh脚本的同级目录新增"password.txt"文件,内容是  user:password, 例如: admin:123456
 
 联锁对抗
 https://github.com/ArknightsInterInterlockingComfrontation
