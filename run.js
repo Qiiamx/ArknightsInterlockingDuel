@@ -11,7 +11,7 @@ const fs = require('fs')
  */
 
 let userTable = null; // null 表示“无文件，不校验”
-const pwdFile = '/home/ecs-user/mrfz/password.txt';
+const pwdFile = path.join(__dirname, '..', 'password.txt');
 
 try {
 	if (fs.existsSync(pwdFile)) {
