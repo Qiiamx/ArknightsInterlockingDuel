@@ -1,0 +1,459 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终末地随机配队工具</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 0;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0, 80, 120, 0.3);
+            border: 3px solid rgba(64, 128, 192, 0.6);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            min-height: 400px;
+        }
+
+            .container::before {
+                content: '';
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                background: linear-gradient(45deg, #000000, #000000);
+                z-index: -1;
+                border-radius: 22px;
+            }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(64, 128, 192, 0.5);
+            letter-spacing: 3px;
+            background: linear-gradient(to right, #4a9eff, #6bc5ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+
+        .draw-button {
+            display: block;
+            margin: 0 auto 30px;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            color: #ffffff;
+            padding: 18px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(64, 128, 192, 0.4);
+        }
+
+            .draw-button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 0 20px rgba(64, 128, 192, 0.6);
+                background: linear-gradient(45deg, #254a8c, #3366cc);
+            }
+
+            .draw-button:active {
+                transform: translateY(1px);
+            }
+
+            .draw-button:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                transform: none;
+                box-shadow: none;
+            }
+
+        .results-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 25px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            height: calc(100% - 200px);
+            align-items: center;
+        }
+
+        .character-card {
+            display: block;
+            visibility: hidden;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(64, 128, 192, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 80, 120, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            flex: 1;
+            min-width: 200px;
+            max-width: 250px;
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+            .character-card.show {
+                visibility: visible;
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            .character-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 2px;
+                background: linear-gradient(90deg, transparent, #4a9eff, transparent);
+                transition: 0.5s;
+            }
+
+            .character-card:hover {
+                transform: scale(1.05);
+                border-color: rgba(64, 128, 192, 0.7);
+                box-shadow: 0 0 15px rgba(64, 128, 192, 0.4);
+            }
+
+                .character-card:hover::before {
+                    left: 100%;
+                }
+
+        .image-container {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: block;
+            border: 2px solid #4a9eff;
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.3);
+            overflow: hidden; /* 确保放大的图片不会超出容器 */
+            position: relative;
+        }
+
+        .character-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .character-card:hover .character-image {
+            transform: scale(1.1); /* 仅在悬停时放大图片 */
+        }
+
+        /* 默认状态下也放大图片 */
+        .character-image {
+            transform: scale(1.1);
+        }
+
+        .character-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+            color: #4a9eff;
+            text-shadow: 0 0 5px rgba(74, 158, 255, 0.3);
+            letter-spacing: 1px;
+            font-family: SimHei, "Microsoft YaHei", sans-serif
+        }
+
+        .loading {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 1.2rem;
+            color: #4a9eff;
+            text-shadow: 0 0 10px rgba(74, 158, 255, 0.3);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(64, 128, 192, 0.3);
+            border-top: 4px solid #4a9eff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #4a9eff;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 6s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.3;
+            }
+
+            90% {
+                opacity: 0.3;
+            }
+
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        .tech-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #4a9eff, transparent);
+            animation: scan 5s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+
+            50% {
+                top: 50%;
+            }
+
+            100% {
+                top: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tech-overlay">
+        <div class="scan-line"></div>
+    </div>
+
+    <div class="container">
+        <h1>OPERATOR SELECTOR</h1>
+        <button id="drawButton" class="draw-button">查询天意</button>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <span>SYSTEM INITIALIZING...</span>
+        </div>
+
+        <div id="resultsContainer" class="results-container">
+            <!-- 预先创建4个卡片位置 -->
+            <div class="character-card" id="card-0">
+                <div class="image-container">
+                    <img src="" alt="" class="character-image">
+                </div>
+                <div class="character-name"></div>
+            </div>
+            <div class="character-card" id="card-1">
+                <div class="image-container">
+                    <img src="" alt="" class="character-image">
+                </div>
+                <div class="character-name"></div>
+            </div>
+            <div class="character-card" id="card-2">
+                <div class="image-container">
+                    <img src="" alt="" class="character-image">
+                </div>
+                <div class="character-name"></div>
+            </div>
+            <div class="character-card" id="card-3">
+                <div class="image-container">
+                    <img src="" alt="" class="character-image">
+                </div>
+                <div class="character-name"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟JSON数据 - 在实际应用中，这里会从文件加载
+        const charactersData = [
+            //{ name: "余烬", image: "终末地_干员头像/余烬.webp" },
+            { name: "管理员", image: "终末地_干员头像/管理员.webp" },
+            { name: "庄方宜", image: "终末地_干员头像/庄方宜.png" },
+            { name: "艾尔黛拉", image: "终末地_干员头像/艾尔黛拉.png" },
+            { name: "莱万汀", image: "终末地_干员头像/莱万汀.png" },
+            { name: "洁尔佩塔", image: "终末地_干员头像/洁尔佩塔.png" },
+            { name: "伊冯", image: "终末地_干员头像/伊冯.png" },
+            { name: "骏卫", image: "终末地_干员头像/骏卫.png" },
+            { name: "汤汤", image: "终末地_干员头像/汤汤.png" },
+            { name: "洛茜", image: "终末地_干员头像/洛茜.png" },
+            { name: "陈千语", image: "终末地_干员头像/陈千语.png" },
+            { name: "阿列什", image: "终末地_干员头像/阿列什.png" },
+            { name: "弧光", image: "终末地_干员头像/弧光.png" },
+            { name: "赛希", image: "终末地_干员头像/赛希.png" },
+            { name: "佩丽卡", image: "终末地_干员头像/佩丽卡.png" },
+            { name: "安塔尔", image: "终末地_干员头像/安塔尔.png" },
+        ];
+
+        // 创建背景浮动元素
+        function createFloatingElements() {
+            const container = document.querySelector('.container');
+            for (let i = 0; i < 10; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = `${Math.random() * 100}%`;
+                element.style.top = `${Math.random() * 100}%`;
+                element.style.animationDelay = `${Math.random() * 5}s`;
+                element.style.animationDuration = `${3 + Math.random() * 4}s`;
+                container.appendChild(element);
+            }
+        }
+
+        // 加载角色数据
+        function loadCharacters() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(charactersData);
+                }, 100);
+            });
+        }
+
+        // 随机抽取函数
+        function getRandomCharacters(characters, count) {
+            const shuffled = [...characters].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // 显示抽取结果
+        function showResults(selectedCharacters) {
+            // 清空之前的显示状态
+            for (let i = 0; i < 4; i++) {
+                const card = document.getElementById(`card-${i}`);
+                card.classList.remove('show');
+
+                if (selectedCharacters[i]) {
+                    const char = selectedCharacters[i];
+                    card.querySelector('.character-image').src = char.image;
+                    card.querySelector('.character-image').alt = char.name;
+                    card.querySelector('.character-name').textContent = char.name;
+
+                    // 延迟显示每个角色，创建逐一展示效果
+                    setTimeout(() => {
+                        card.classList.add('show');
+                    }, i * 600);
+                } else {
+                    card.querySelector('.character-image').src = '';
+                    card.querySelector('.character-name').textContent = '';
+                }
+            }
+        }
+
+        // 抽取角色
+        async function drawCharacters() {
+            const button = document.getElementById('drawButton');
+            const loading = document.getElementById('loading');
+
+            // 清空之前的结果
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`card-${i}`).classList.remove('show');
+            }
+
+            // 显示加载状态
+            button.disabled = true;
+            loading.style.display = 'flex';
+
+            try {
+                // 模拟加载时间
+                await new Promise(resolve => setTimeout(resolve, 1200));
+
+                // 获取所有角色
+                const allCharacters = await loadCharacters();
+
+                // 随机抽取4个角色
+                const selectedCharacters = getRandomCharacters(allCharacters, 4);
+
+                // 隐藏加载状态
+                loading.style.display = 'none';
+
+                // 显示结果
+                showResults(selectedCharacters);
+            } catch (error) {
+                console.error('加载角色失败:', error);
+                loading.style.display = 'none';
+                document.querySelector('#resultsContainer').innerHTML = '<p style="color: #ff5555; text-align: center; grid-column: 1 / -1;">SYSTEM ERROR: CONNECTION LOST</p>';
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            createFloatingElements();
+            const button = document.getElementById('drawButton');
+            button.addEventListener('click', drawCharacters);
+        });
+    </script>
+</body>
+</html>
+
+
+
