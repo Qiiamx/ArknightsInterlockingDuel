@@ -2,6 +2,12 @@
 import router from '@/router';
 import { useRoomStore } from '@/stores/room';
 import { storeToRefs } from 'pinia';
+import { onMounted, ref } from 'vue';
+const beian = ref({
+	ipc: null,
+	gongan: null,
+});
+
 const { links } = storeToRefs(useRoomStore());
 const { update } = useRoomStore();
 const random = () => {
@@ -51,6 +57,23 @@ const join = () => {
 	// 主持人如闪电般归来
 	router.push(`/match?shareId=${links.value.owner.split('shareId=')[1]}`);
 };
+onMounted(async () => {
+	try {
+		const response = await fetch('/api/beian-info');
+		if (!response.ok) {
+			return;
+		}
+		const result = await response.json();
+		if (result?.ok) {
+			beian.value = {
+				ipc: result.ipc || null,
+				gongan: result.gongan || null,
+			};
+		}
+	} catch (error) {
+		// ignore request failures so it does not affect page behavior
+	}
+});
 </script>
 <template>
 	<div class="entry-content">
@@ -66,8 +89,29 @@ const join = () => {
 			</div>
 		</div>
 		<div class="entry entry-bottom">
-			<span class="entry-text entry-text-info">COPYRIGHT © RHODES ISLAND</span>
-			<span class="entry-text entry-text-info">SYSTEM STATUS: WAITING</span>
+			<div v-if="beian.ipc || beian.gongan" class="beian-footer">
+				<a class="entry-text entry-text-info"
+					v-if="beian.gongan"
+					href="https://beian.mps.gov.cn"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					{{ beian.gongan }}
+				</a>
+				&nbsp;
+				<a class="entry-text entry-text-info"
+					v-if="beian.ipc"
+					href="https://beian.miit.gov.cn"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					{{ beian.ipc }}
+				</a>
+			</div>
+			<div>
+				<span class="entry-text entry-text-info">COPYRIGHT © RHODES ISLAND</span>
+				<span class="entry-text entry-text-info">SYSTEM STATUS: WAITING</span>
+			</div>
 		</div>
 	</div>
 </template>

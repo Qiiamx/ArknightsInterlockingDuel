@@ -13,6 +13,13 @@ const fs = require('fs')
 let userTable = null; // null 表示“无文件，不校验”
 const pwdFile = path.join(__dirname, '..', 'password.txt');
 
+let beianInfo = {
+	ipc: null,
+	gongan: null,
+};
+const icpFile = path.join(__dirname, '..', 'icp.txt');
+const gonganFile = path.join(__dirname, '..', 'gongan.txt');
+
 try {
 	if (fs.existsSync(pwdFile)) {
 		userTable = Object.fromEntries(
@@ -26,6 +33,26 @@ try {
 	}
 } catch (e) {
 	console.warn('[auth] read pwd file failed:', e.message);
+}
+
+try {
+	if (fs.existsSync(icpFile)) {
+		const icpText = fs.readFileSync(icpFile, 'utf8').trim();
+		if (icpText) {
+			beianInfo.ipc = icpText;
+		}
+	}
+	if (fs.existsSync(gonganFile)) {
+		const gonganText = fs.readFileSync(gonganFile, 'utf8').trim();
+		if (gonganText) {
+			beianInfo.gongan = gonganText;
+		}
+	}
+	if (beianInfo.ipc || beianInfo.gongan) {
+		console.log('[beian] loaded', JSON.stringify(beianInfo));
+	}
+} catch (e) {
+	console.warn('[beian] read file failed:', e.message);
 }
 
 function checkBasic(req) {
@@ -96,6 +123,15 @@ server.on('request', (req, res) => {
 	}
 
 	const { pathname } = parse(req.url, true);
+	if (req.method === 'GET' && pathname === '/api/beian-info') {
+		res.writeHead(200, { 'Content-Type': 'application/json' });
+		res.end(JSON.stringify({
+			ok: true,
+			ipc: beianInfo.ipc,
+			gongan: beianInfo.gongan,
+		}));
+		return;
+	}
 	if (req.method === 'POST' && pathname === '/api/create-room') {
 		if (!checkBasic(req)) {
 			res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="CreateRoom"' });
