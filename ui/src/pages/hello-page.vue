@@ -96,7 +96,7 @@ onMounted(async () => {
 					target="_blank"
 					rel="noopener noreferrer"
 				>
-					{{ beian.gongan }}
+					<img class="gongan" src="/assert/gongan.png"/>{{ beian.gongan }}
 				</a>
 				&nbsp;
 				<a class="entry-text entry-text-info"
@@ -175,6 +175,12 @@ onMounted(async () => {
 	letter-spacing: var(--text-size-info-spacing);
 }
 
+.beian-footer .entry-text-info {
+	display: inline-flex;
+	align-items: center;
+	line-height: 1;
+}
+
 .entry-body-btn-group {
 	display: flex;
 	flex-direction: column;
@@ -195,5 +201,13 @@ onMounted(async () => {
 .entry-body-btn:hover {
 	border-color: #fff9;
 	box-shadow: 0 0 20px #fff3;
+}
+.gongan {
+	height: 1.2em;
+	width: auto;
+	display: inline-block;
+	vertical-align: middle;
+	object-fit: contain;
+	margin-right: 0.4em;
 }
 </style>
