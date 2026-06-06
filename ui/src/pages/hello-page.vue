@@ -174,7 +174,11 @@ onMounted(async () => {
 	font-family: Arial, Consolas, monospace;
 	letter-spacing: var(--text-size-info-spacing);
 }
-
+.beian-footer {
+	display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .beian-footer .entry-text-info {
 	display: inline-flex;
 	align-items: center;
@@ -203,7 +207,7 @@ onMounted(async () => {
 	box-shadow: 0 0 20px #fff3;
 }
 .gongan {
-	height: 1.2em;
+	height: 2em;
 	width: auto;
 	display: inline-block;
 	vertical-align: middle;
