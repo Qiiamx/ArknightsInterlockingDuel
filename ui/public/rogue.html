@@ -14,7 +14,34 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
 .loading-spinner{width:40px;height:40px;border:3px solid #1a3a3a;border-top-color:#00ffcc;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .main-container{max-width:1200px;margin:0 auto;padding:20px}
-.header{text-align:center;padding:30px 0 20px;border-bottom:2px solid rgba(0,255,204,.2);margin-bottom:24px}
+.header{text-align:center;padding:30px 0 20px;border-bottom:2px solid rgba(0,255,204,.2);margin-bottom:24px;position:relative}
+.settings-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);padding:8px 16px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#bbb;cursor:pointer;font-size:.85em;letter-spacing:1px;transition:all .2s;white-space:nowrap;font-family:inherit}
+.settings-btn:hover{border-color:#00ffcc88;color:#00ffcc}
+.settings-btn.on{border-color:#d50000;color:#ff6b6b}
+.ban-modal{max-width:960px}
+.ban-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.ban-toolbar input{flex:1;min-width:180px;padding:8px 12px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#ccc;font-size:.9em}
+.ban-toolbar input:focus{outline:none;border-color:#00ffcc88}
+.ban-count{font-size:.8em;color:#f5a623;white-space:nowrap}
+.ban-body{max-height:58vh;overflow-y:auto;padding-right:6px}
+.ban-body::-webkit-scrollbar{width:6px}
+.ban-body::-webkit-scrollbar-thumb{background:#00ffcc55;border-radius:3px}
+.ban-body::-webkit-scrollbar-track{background:rgba(0,0,0,.4)}
+.ban-group{margin-bottom:16px}
+.ban-group-title{display:flex;align-items:center;gap:8px;font-size:.9em;color:#00ffcc;letter-spacing:1px;padding-bottom:6px;border-bottom:1px solid rgba(0,255,204,.15);margin-bottom:8px}
+.ban-group-title img{width:18px;height:18px;object-fit:contain}
+.ban-group-count{margin-left:auto;font-size:.8em;color:#667}
+.ban-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.ban-card{display:flex;flex-direction:column;align-items:center;padding:6px 4px;border:2px solid #1e2d3d;border-radius:6px;background:#0d1117;cursor:pointer;transition:all .15s;user-select:none;position:relative}
+.ban-card:hover{border-color:#00ffcc66;background:#111d24}
+.ban-card img{width:52px;height:52px;border-radius:4px;object-fit:cover;margin-bottom:4px}
+.ban-card-name{font-size:.62em;color:#aaa;max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.ban-card.banned{border-color:#d50000;background:rgba(80,0,0,.35)}
+.ban-card.banned img{filter:grayscale(100%) contrast(1.2);opacity:.55}
+.ban-card.banned .ban-card-name{color:#ff6b6b}
+.ban-card.banned::after{content:'禁用';position:absolute;top:3px;right:3px;font-size:.55em;color:#fff;background:#d50000;border-radius:2px;padding:0 3px;letter-spacing:1px}
+.ban-empty{text-align:center;color:#555;padding:30px 0;font-size:.85em}
+.ban-toolbar .ticket-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
 .header h1{font-size:2em;color:#00ffcc;letter-spacing:4px;text-shadow:0 0 20px rgba(0,255,204,.4)}
 .header .sub{font-size:.85em;color:#557;margin-top:6px;letter-spacing:2px}
 .phase-title{font-size:1.1em;color:#00ffcc;margin-bottom:14px;letter-spacing:2px;padding-left:8px;border-left:3px solid #00ffcc}
@@ -103,7 +130,9 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
     <button @click="loadData" style="padding:10px 24px;background:transparent;border:1px solid #00ffcc;color:#00ffcc;cursor:pointer;border-radius:4px">重试</button>
   </div>
   <div v-else class="main-container">
-    <div class="header"><h1>集成战略 · 干员招募</h1><div class="sub">ROGUELIKE OPERATOR RECRUITMENT<span v-if="runDiff" class="diff-badge">{{runDiff.name}} · {{runDiff.tag}}</span></div></div>
+    <div class="header"><h1>集成战略 · 干员招募</h1><div class="sub">ROGUELIKE OPERATOR RECRUITMENT<span v-if="runDiff" class="diff-badge">{{runDiff.name}} · {{runDiff.tag}}</span></div>
+      <button class="settings-btn" :class="{on:bannedCount>0}" @click="openBanPicker">⚙ 全局设置{{ bannedCount>0 ? ' · 已禁用 '+bannedCount : '' }}</button>
+    </div>
 
     <template v-if="phase==='select-class'">
       <div class="phase-title">▶ 开局职业选择（请选3个职业）</div>
@@ -211,6 +240,41 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
       </div>
     </div>
   </div>
+
+  <div v-if="showBan" class="modal-overlay">
+    <div class="modal ban-modal">
+      <div class="modal-title">全局设置 · 禁用六星干员</div>
+      <div class="modal-notice">被禁用的干员不会再出现在任何抽取中（含开局招募与所有招募券）；本设置跨局保留，刷新后仍生效</div>
+      <div class="ban-toolbar">
+        <input v-model="banQuery" placeholder="搜索干员名…（清空即显示全部）">
+        <span class="ban-count">已禁用 {{ bannedCount }} / {{ sixStarTotal }}</span>
+        <button class="ticket-btn" :disabled="!bannedCount" @click="clearBans">全部解除</button>
+      </div>
+      <div class="ban-body">
+        <template v-for="c in CLS" :key="'bg'+c">
+          <div v-if="banGroups[c] && banGroups[c].length" class="ban-group">
+            <div class="ban-group-title">
+              <img :src="'./images/'+c+'.png'" :alt="c" @error="e=>e.target.style.display='none'">
+              <span>{{c}}</span>
+              <span class="ban-group-count">{{ banGroups[c].length }} 名</span>
+            </div>
+            <div class="ban-cards">
+              <div v-for="op in banGroups[c]" :key="op.干员" class="ban-card"
+                   :class="{banned:banned.has(op.干员)}" @click="toggleBan(op.干员)">
+                <img :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员"
+                     @error="e=>e.target.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2252%22 height=%2252%22><rect fill=%22%23333%22 width=%2252%22 height=%2252%22/><text x=%2226%22 y=%2232%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2212%22>?</text></svg>'">
+                <div class="ban-card-name">{{op.干员}}</div>
+              </div>
+            </div>
+          </div>
+        </template>
+        <div v-if="banResultCount===0" class="ban-empty">没有匹配的六星干员</div>
+      </div>
+      <div class="diff-actions" style="margin-top:16px">
+        <button class="primary" @click="showBan=false">完成</button>
+      </div>
+    </div>
+  </div>
 </div>
 <script>
 const { createApp, ref, reactive, computed, onMounted } = Vue;
@@ -295,8 +359,40 @@ createApp({
       if(mode==='newgame')newGame();else startDraw();
     };
 
+    /* ---------------- 全局设置: 禁用六星干员 ----------------
+       跨局保留并写入 localStorage; 被禁用的干员不会出现在任何抽取中(含开局招募)。 */
+    const BAN_KEY='rogue_banned_six';
+    const banned=reactive(new Set()),showBan=ref(false),banQuery=ref('');
+    const sixStars=computed(()=>ops.value.filter(o=>o.稀有度==='6'));
+    const sixStarTotal=computed(()=>sixStars.value.length);
+    const bannedCount=computed(()=>banned.size);
+    // 按 8 个职业分组以便检索; 搜索框按名称任意位置匹配, 无结果的分组自动隐藏
+    const banGroups=computed(()=>{
+      const q=banQuery.value.trim(),g={};
+      for(const c of CLS)g[c]=[];
+      for(const o of sixStars.value){
+        if(q&&o.干员.indexOf(q)<0)continue;
+        (g[o.职业]||(g[o.职业]=[])).push(o);
+      }
+      return g;
+    });
+    const banResultCount=computed(()=>CLS.reduce((n,c)=>n+(banGroups.value[c]||[]).length,0));
+    const openBanPicker=()=>{banQuery.value='';showBan.value=true};
+    // localStorage 在 file:// 或隐私模式下可能不可用, 一律静默降级为"仅本次会话有效"
+    const saveBans=()=>{try{localStorage.setItem(BAN_KEY,JSON.stringify([...banned]))}catch(e){}};
+    const loadBans=()=>{
+      try{
+        const raw=localStorage.getItem(BAN_KEY);
+        if(!raw)return;
+        const names=new Set(ops.value.map(o=>o.干员));   // 剔除数据里已不存在的名字, 避免幽灵计数
+        for(const n of JSON.parse(raw))if(names.has(n))banned.add(n);
+      }catch(e){}
+    };
+    const toggleBan=n=>{banned.has(n)?banned.delete(n):banned.add(n);saveBans()};
+    const clearBans=()=>{banned.clear();saveBans()};
+
     const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
-    const pool=()=>ops.value.filter(o=>!RN.has(o.干员));
+    const pool=()=>ops.value.filter(o=>!RN.has(o.干员)&&!banned.has(o.干员));
     // used: 本次抽取的排除集。同一张券的多段配方共用它, 段与段之间不会抽到同一名干员。
     // (旧实现是抽完再事后去重, 一旦出现重复就会静默少给几张, 这里改为抽取时排除)
     const pickRandom=(p,count,rarity,classes,used)=>{
@@ -319,6 +415,9 @@ createApp({
       }
       return {res:res,expected:expected,shortage:expected-res.length};
     };
+    // 缺口成因归属: 禁用名单是自己设的, 补一句说明, 免得把"自己禁出来的缺口"当成 bug
+    const banHint=()=>banned.size>0?`（已禁用 ${banned.size} 名六星）`:'';
+
     // 入池的唯一入口: 去掉抽卡时挂上的内部字段 _key, 避免污染已招募列表
     const addOp=o=>{if(RN.has(o.干员))return;RN.add(o.干员);const {_key,...op}=o;RO.value.push(op)};
 
@@ -326,9 +425,9 @@ createApp({
       phase.value='loading';
       try{
         // 离线包: 数据可被内联为 window.__ROGUE_OPS__, 绕开 file:// 下浏览器禁止 fetch 的限制
-        if(window.__ROGUE_OPS__){ops.value=window.__ROGUE_OPS__;phase.value='select-class';return}
+        if(window.__ROGUE_OPS__){ops.value=window.__ROGUE_OPS__;loadBans();phase.value='select-class';return}
         const r=await fetch('./data/operators.json');if(!r.ok)throw new Error('HTTP '+r.status);
-        ops.value=await r.json();phase.value='select-class';}
+        ops.value=await r.json();loadBans();phase.value='select-class';}
       catch(e){errorMsg.value=e.message;phase.value='error';}
     };
 
@@ -341,7 +440,7 @@ createApp({
       // 池子空时不进对局: 留在职业选择页让玩家重选, 避免"空手开局"
       if(!res.length){alert('无可用六星干员！请重新选择职业。');return}
       drawResults.value=res.sort((a,b)=>Number(b.稀有度)-Number(a.稀有度)).map((o,i)=>({...o,_key:'s'+i}));
-      shortageNotice.value=shortage>0?`⚠ 干员池不足：开局招募应有 ${expected} 张，实际只有 ${res.length} 张`:'';
+      shortageNotice.value=shortage>0?`⚠ 干员池不足：开局招募应有 ${expected} 张，实际只有 ${res.length} 张`+banHint():'';
       modalTitle.value='⚔ 开局招募 · 请选择1名干员';
       ticketType.value='start';showModal.value=true;phase.value='start-draw';
     };
@@ -366,7 +465,7 @@ createApp({
       const {res,expected,shortage}=drawByRecipes(recipes);
       if(!res.length){alert('已无可招募干员！');return}
       drawResults.value=res.sort((a,b)=>Number(b.稀有度)-Number(a.稀有度)).map((o,i)=>({...o,_key:'d'+i}));
-      shortageNotice.value=shortage>0?`⚠ 干员池不足：本券应有 ${expected} 张，实际只有 ${res.length} 张`:'';
+      shortageNotice.value=shortage>0?`⚠ 干员池不足：本券应有 ${expected} 张，实际只有 ${res.length} 张`+banHint():'';
       modalTitle.value=title;ticketType.value=type;showModal.value=true;
     };
 
@@ -392,6 +491,7 @@ createApp({
 
     onMounted(()=>{window.addEventListener('keydown',e=>{
       if(e.key!=='Escape')return;
+      if(showBan.value){e.preventDefault();showBan.value=false;return}
       if(showDiff.value){e.preventDefault();cancelDifficulty();return}
       if(showModal.value){e.preventDefault();forcePick()}
     });loadData()});
@@ -404,7 +504,10 @@ createApp({
       customValid,canConfirmDiff,diffPreview,pendingDiff,
       openDifficulty,cancelDifficulty,confirmDifficulty,applyDifficulty,
       // 跳过
-      canSkip,skipTicket};
+      canSkip,skipTicket,
+      // 全局设置: 禁用干员
+      banned,showBan,banQuery,sixStars,sixStarTotal,bannedCount,banGroups,banResultCount,
+      openBanPicker,toggleBan,clearBans,loadBans,saveBans,BAN_KEY};
   }
 }).mount('#app');
 </script>
