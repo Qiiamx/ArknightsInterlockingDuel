@@ -33,58 +33,68 @@ const CLASSES = ['先锋', '近卫', '重装', '狙击', '术师', '医疗', '�
 const problems = [];
 const must = (cond, msg) => { if (!cond) problems.push(msg); };
 
-// ---------------------------------------------------------------- 准备
-fs.rmSync(OUT_DIR, { recursive: true, force: true });
-fs.mkdirSync(path.join(OUT_DIR, 'vendor'), { recursive: true });
-fs.mkdirSync(path.join(OUT_DIR, 'data'), { recursive: true });
-fs.mkdirSync(path.join(OUT_DIR, 'icon'), { recursive: true });
-fs.mkdirSync(path.join(OUT_DIR, 'images'), { recursive: true });
+// ================================================================
+// 第一阶段: 只校验, 不落盘
+// 必须先校验后写入: 否则缺图时会先把 release/ 删成半个空壳, 又留下上一版的旧 zip
+// ================================================================
 
-// ---------------------------------------------------------------- 页面
+// ---- 页面 ----
 let html = fs.readFileSync(SRC_HTML, 'utf8');
 
-// 1) 注入离线数据脚本（必须在页面主脚本之前执行）
+// 注入离线数据脚本（必须在页面主脚本之前执行）
 const ANCHOR = '<script>\nconst { createApp';
 must(html.indexOf(ANCHOR) >= 0, '未找到页面主脚本锚点, rogue.html 结构可能已变');
 html = html.replace(ANCHOR, '<script src="./data/operators.js"></script>\n<script>\nconst { createApp');
 
-// 2) 离线包内不允许存在绝对路径, 否则双击打开时资源全部 404
+// 离线包内不允许存在绝对路径, 否则双击打开时资源全部 404
 const abs = html.match(/(?:src|href)="\/[^"]*"|['"]\/(?:icon|images|data|vendor)\//g);
 must(!abs, '页面中仍存在绝对资源路径: ' + (abs || []).join(', '));
 
-fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
-
-// ---------------------------------------------------------------- 数据
+// ---- 数据 ----
 const ops = JSON.parse(fs.readFileSync(SRC_DATA, 'utf8'));
 must(Array.isArray(ops) && ops.length > 0, 'operators.json 解析失败或为空');
+must(ops.every((o) => o.干员 && o.职业 && o.分支 && o.稀有度), 'operators.json 存在字段缺失的干员');
+
+// ---- 资源 ----
+must(fs.existsSync(SRC_VENDOR), '缺少 vendor/vue.global.prod.js');
+
+const iconFiles = [];
+const missingIcons = [];
+for (const op of ops) {
+	const name = '头像_' + op.干员 + '.png';
+	if (fs.existsSync(path.join(SRC_ICON, name))) iconFiles.push(name);
+	else missingIcons.push(op.干员);
+}
+must(!missingIcons.length, '缺少 ' + missingIcons.length + ' 张头像: ' + missingIcons.join(', '));
+
+const usedClasses = [...new Set(ops.map((o) => o.职业))];
+const unknownClasses = usedClasses.filter((c) => !CLASSES.includes(c));
+must(!unknownClasses.length, '出现了未登记的职业: ' + unknownClasses.join(', '));
+const missingClassIcons = usedClasses.filter((c) => !fs.existsSync(path.join(SRC_IMAGES, c + '.png')));
+must(!missingClassIcons.length, '缺少职业图标: ' + missingClassIcons.join(', '));
+
+if (problems.length) {
+	console.error('[pack-rogue] 打包前检查未通过, 未改动任何产物:');
+	for (const p of problems) console.error('  - ' + p);
+	process.exit(1);
+}
+
+// ================================================================
+// 第二阶段: 写入
+// ================================================================
+fs.rmSync(OUT_DIR, { recursive: true, force: true });
+for (const d of ['vendor', 'data', 'icon', 'images']) fs.mkdirSync(path.join(OUT_DIR, d), { recursive: true });
+
+fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
 fs.writeFileSync(
 	path.join(OUT_DIR, 'data', 'operators.js'),
 	'window.__ROGUE_OPS__ = ' + JSON.stringify(ops) + ';\n',
 	'utf8'
 );
-
-// ---------------------------------------------------------------- 资源
 fs.copyFileSync(SRC_VENDOR, path.join(OUT_DIR, 'vendor', 'vue.global.prod.js'));
-
-let iconCount = 0;
-const missingIcons = [];
-for (const op of ops) {
-	const name = '头像_' + op.干员 + '.png';
-	const src = path.join(SRC_ICON, name);
-	if (!fs.existsSync(src)) { missingIcons.push(op.干员); continue; }
-	fs.copyFileSync(src, path.join(OUT_DIR, 'icon', name));
-	iconCount++;
-}
-must(!missingIcons.length, '缺少头像: ' + missingIcons.slice(0, 10).join(', '));
-
-const usedClasses = [...new Set(ops.map((o) => o.职业))];
-const missingClass = usedClasses.filter((c) => !CLASSES.includes(c));
-must(!missingClass.length, '出现了未登记的职业: ' + missingClass.join(', '));
-for (const c of usedClasses) {
-	const src = path.join(SRC_IMAGES, c + '.png');
-	if (!fs.existsSync(src)) { problems.push('缺少职业图标: ' + c); continue; }
-	fs.copyFileSync(src, path.join(OUT_DIR, 'images', c + '.png'));
-}
+for (const name of iconFiles) fs.copyFileSync(path.join(SRC_ICON, name), path.join(OUT_DIR, 'icon', name));
+for (const c of usedClasses) fs.copyFileSync(path.join(SRC_IMAGES, c + '.png'), path.join(OUT_DIR, 'images', c + '.png'));
+const iconCount = iconFiles.length;
 
 // ---------------------------------------------------------------- 说明
 fs.writeFileSync(
@@ -119,12 +129,6 @@ fs.writeFileSync(
 	].join('\r\n'),
 	'utf8'
 );
-
-if (problems.length) {
-	console.error('[pack-rogue] 打包前检查未通过:');
-	for (const p of problems) console.error('  - ' + p);
-	process.exit(1);
-}
 
 // ---------------------------------------------------------------- zip
 const CRC_TABLE = (() => {
