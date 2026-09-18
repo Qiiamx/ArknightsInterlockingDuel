@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>肉鸽随机干员选取器</title>
+  <!-- 本地 Vue 3 生产构建（与 ui/package.json 的 vue 依赖同版本），避免公网 CDN 不可达时白屏 -->
+  <script src="/vendor/vue.global.prod.js"></script>
+  <style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei',sans-serif;min-height:100vh;overflow-x:hidden}
+#app{min-height:100vh}
+.loading-screen,.error-screen{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}
+.loading-spinner{width:40px;height:40px;border:3px solid #1a3a3a;border-top-color:#00ffcc;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.main-container{max-width:1200px;margin:0 auto;padding:20px}
+.header{text-align:center;padding:30px 0 20px;border-bottom:2px solid rgba(0,255,204,.2);margin-bottom:24px}
+.header h1{font-size:2em;color:#00ffcc;letter-spacing:4px;text-shadow:0 0 20px rgba(0,255,204,.4)}
+.header .sub{font-size:.85em;color:#557;margin-top:6px;letter-spacing:2px}
+.phase-title{font-size:1.1em;color:#00ffcc;margin-bottom:14px;letter-spacing:2px;padding-left:8px;border-left:3px solid #00ffcc}
+.class-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.class-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 10px;background:#0d1117;border:2px solid #1e2d3d;border-radius:6px;color:#888;cursor:pointer;font-size:1em;transition:all .25s;user-select:none}
+.class-btn:hover{border-color:#00aacc55;color:#ccc;background:#111922}
+.class-btn.sel{border-color:#00ffcc;color:#00ffcc;background:rgba(0,255,204,.08);box-shadow:0 0 16px rgba(0,255,204,.15)}
+.class-btn.dis{opacity:.35;cursor:not-allowed;pointer-events:none}
+.class-btn img{width:32px;height:32px;object-fit:contain}
+.start-btn-wrap{text-align:center;margin-bottom:28px}
+.start-btn{padding:14px 64px;background:linear-gradient(135deg,#0a2a2a,#0d3d36);border:2px solid #00ffcc;color:#00ffcc;cursor:pointer;font-size:1.1em;letter-spacing:3px;border-radius:4px;transition:all .3s}
+.start-btn:hover{box-shadow:0 0 24px rgba(0,255,204,.3)}
+.start-btn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+.recruited-section{border:1px solid rgba(0,255,204,.15);border-radius:8px;padding:16px;margin-bottom:24px;background:#080c12;min-height:80px}
+.recruited-label{color:#00ffcc88;font-size:.85em;margin-bottom:10px;letter-spacing:2px}
+.recruited-list{display:flex;flex-wrap:wrap;gap:10px}
+.recruited-item{display:flex;flex-direction:column;align-items:center;width:68px}
+.recruited-item img{width:56px;height:56px;border-radius:6px;object-fit:cover;border:2px solid #333}
+.recruited-item.r6 img{border-color:#e8a400;box-shadow:0 0 8px rgba(232,164,0,.3)}
+.recruited-item.r5 img{border-color:#c8a0ff;box-shadow:0 0 6px rgba(200,160,255,.2)}
+.recruited-item.r4 img{border-color:#a0a0ff}
+.recruited-name{font-size:.6em;color:#aaa;margin-top:2px;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.tickets-section{border:1px solid rgba(0,255,204,.12);border-radius:8px;padding:16px;background:#080c12}
+.ticket-group-label{font-size:.78em;color:#557;margin:12px 0 6px;letter-spacing:1px}
+.ticket-group-label:first-child{margin-top:0}
+.ticket-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.ticket-btn{padding:8px 16px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#bbb;cursor:pointer;font-size:.9em;transition:all .2s;letter-spacing:1px}
+.ticket-btn:hover{border-color:#00ffcc66;color:#00ffcc;background:#0f1a1f}
+.ticket-btn:active{transform:scale(.96)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal{background:#0a0d14;border:2px solid rgba(0,255,204,.3);border-radius:12px;padding:28px 24px 20px;max-width:900px;width:95%;max-height:85vh;overflow-y:auto;box-shadow:0 0 40px rgba(0,255,204,.1)}
+.modal-title{font-size:1.1em;color:#00ffcc;text-align:center;margin-bottom:6px;letter-spacing:2px}
+.modal-notice{font-size:.72em;color:#555;text-align:center;margin-bottom:16px;letter-spacing:1px}
+.modal-warn{font-size:.74em;color:#f5a623;text-align:center;margin:-10px 0 14px;letter-spacing:1px;line-height:1.6}
+.draw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;justify-items:center}
+.draw-card{display:flex;flex-direction:column;align-items:center;padding:12px 8px;border-radius:8px;background:#0d1117;border:2px solid #1e2d3d;cursor:pointer;transition:all .2s;width:120px;user-select:none}
+.draw-card:hover{border-color:#00ffcc88;background:#111d24;transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,255,204,.12)}
+.draw-card.r6{border-color:#e8a40044}
+.draw-card.r6:hover{border-color:#e8a400;box-shadow:0 4px 16px rgba(232,164,0,.2)}
+.draw-card.r5{border-color:#c8a0ff33}
+.draw-card.r5:hover{border-color:#c8a0ff;box-shadow:0 4px 16px rgba(200,160,255,.15)}
+.draw-card img.av{width:72px;height:72px;border-radius:6px;object-fit:cover;margin-bottom:6px}
+.draw-card .nm{font-size:.85em;color:#ddd;margin-bottom:2px;text-align:center}
+.draw-card .cl{font-size:.7em;color:#888;display:flex;align-items:center;gap:4px}
+.draw-card .cl img{width:16px;height:16px}
+.draw-card .st{font-size:.75em;margin-top:3px}
+.draw-card .st.r6{color:#e8a400}
+.draw-card .st.r5{color:#c8a0ff}
+@media(max-width:640px){.class-grid{grid-template-columns:repeat(2,1fr)}.draw-grid{grid-template-columns:repeat(2,1fr)}.modal{padding:16px 10px}.draw-card{width:100px}.draw-card img.av{width:56px;height:56px}}
+  </style>
+</head>
+<body>
+<div id="app">
+  <div v-if="phase==='loading'" class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div style="color:#557">载入干员数据...</div>
+  </div>
+  <div v-else-if="phase==='error'" class="error-screen">
+    <div style="color:#f55;font-size:1.2em">⚠ 数据加载失败</div>
+    <div style="color:#888">{{ errorMsg }}</div>
+    <button @click="loadData" style="padding:10px 24px;background:transparent;border:1px solid #00ffcc;color:#00ffcc;cursor:pointer;border-radius:4px">重试</button>
+  </div>
+  <div v-else class="main-container">
+    <div class="header"><h1>集成战略 · 干员招募</h1><div class="sub">ROGUELIKE OPERATOR RECRUITMENT</div></div>
+
+    <template v-if="phase==='select-class'">
+      <div class="phase-title">▶ 开局职业选择（请选3个职业）</div>
+      <div class="class-grid">
+        <div v-for="cls in CLS" :key="cls" class="class-btn"
+             :class="{sel:SC.includes(cls),dis:!SC.includes(cls)&&SC.length>=3}"
+             @click="toggleClass(cls)">
+          <img :src="'/images/'+cls+'.png'" :alt="cls" @error="e=>e.target.style.display='none'">
+          <span>{{cls}}</span>
+        </div>
+      </div>
+      <div v-if="SC.length>0" style="text-align:center;color:#00ffcc88;margin-bottom:16px">
+        已选: {{SC.join(' · ')}}<span v-if="SC.length<3" style="color:#555"> （还需选{{3-SC.length}}个）</span>
+      </div>
+      <div class="start-btn-wrap"><button class="start-btn" :disabled="SC.length!==3" @click="startDraw">⚔ 开始招募</button></div>
+    </template>
+
+    <template v-if="phase==='playing'||phase==='start-draw'">
+      <div class="recruited-section">
+        <div class="recruited-label">📋 已招募干员（{{RO.length}}）</div>
+        <div class="recruited-list" v-if="RO.length>0">
+          <div v-for="op in RO" :key="op.干员" class="recruited-item" :class="'r'+op.稀有度">
+            <img :src="'/icon/头像_'+op.干员+'.png'" :alt="op.干员"
+                 @error="e=>e.target.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22><rect fill=%22%23333%22 width=%2256%22 height=%2256%22/><text x=%2228%22 y=%2235%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2212%22>?</text></svg>'">
+            <div class="recruited-name">{{op.干员}}</div>
+          </div>
+        </div>
+        <div v-else style="color:#444;font-size:.85em">暂未招募干员</div>
+      </div>
+
+      <div v-if="phase==='playing'" style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+        <button class="ticket-btn" @click="newGame" style="border-color:#f54;color:#f54">新的一局</button>
+        <input v-model="customName" placeholder="输入干员名添加临时招募" style="flex:1;min-width:200px;padding:8px 12px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#ccc;font-size:.9em" @keyup.enter="addCustom">
+        <button class="ticket-btn" @click="addCustom">添加</button>
+      </div>
+
+      <div v-if="phase==='playing'" class="tickets-section">
+        <div class="phase-title" style="margin-bottom:10px">▶ 招募券</div>
+        <div class="ticket-group-label">单张招募券</div>
+        <div class="ticket-row">
+          <button v-for="cls in CLS" :key="'s'+cls" class="ticket-btn" @click="useTicket('单张',cls)">{{cls}}</button>
+        </div>
+        <div class="ticket-group-label">职业招募券</div>
+        <div class="ticket-row">
+          <button v-for="t in ['近锋','狙医','术特','重辅']" :key="t" class="ticket-btn" @click="useTicket(t)">{{t}}</button>
+        </div>
+        <div class="ticket-group-label">定向招募券</div>
+        <div class="ticket-row">
+          <button v-for="t in ['地面','高台']" :key="t" class="ticket-btn" @click="useTicket(t)">{{t}}</button>
+        </div>
+        <div class="ticket-group-label">特殊招募券</div>
+        <div class="ticket-row"><button class="ticket-btn" @click="useTicket('任意')">任意招募</button></div>
+      </div>
+    </template>
+  </div>
+
+  <div v-if="showModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-title">{{modalTitle}}</div>
+      <div class="modal-notice">点击干员头像进行选择 · 按 Esc 随机强制选择</div>
+      <div v-if="shortageNotice" class="modal-warn">{{shortageNotice}}</div>
+      <div class="draw-grid">
+        <div v-for="op in drawResults" :key="op.干员+'-'+op._key" class="draw-card" :class="'r'+op.稀有度" @click="pickOperator(op)">
+          <img class="av" :src="'/icon/头像_'+op.干员+'.png'" :alt="op.干员"
+               @error="e=>e.target.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2272%22 height=%2272%22><rect fill=%22%23333%22 width=%2272%22 height=%2272%22/><text x=%2236%22 y=%2243%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2216%22>?</text></svg>'">
+          <div class="nm">{{op.干员}}</div>
+          <div class="cl"><img :src="'/images/'+op.职业+'.png'" :alt="op.职业" style="width:16px;height:16px" @error="e=>e.target.style.display='none'">{{op.职业}}</div>
+          <div class="st" :class="'r'+op.稀有度">{{'★'.repeat(Number(op.稀有度))}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const { createApp, ref, reactive, onMounted } = Vue;
+const CLS = ['先锋','近卫','重装','狙击','术师','医疗','辅助','特种'];
+const TICKET = {
+  '近锋':['近卫','先锋'],'狙医':['狙击','医疗'],'术特':['术师','特种'],'重辅':['重装','辅助'],
+  '地面':['近卫','先锋','特种','重装'],'高台':['狙击','医疗','术师','辅助']
+};
+
+createApp({
+  setup(){
+    const phase=ref('loading'),errorMsg=ref(''),ops=ref([]);
+    const SC=ref([]),RO=ref([]),RN=reactive(new Set());
+    const showModal=ref(false),customName=ref(''),modalTitle=ref(''),drawResults=ref([]),ticketType=ref(''),shortageNotice=ref('');
+
+    const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
+    const pool=()=>ops.value.filter(o=>!RN.has(o.干员));
+    // used: 本次抽取的排除集。同一张券的多段配方共用它, 段与段之间不会抽到同一名干员。
+    // (旧实现是抽完再事后去重, 一旦出现重复就会静默少给几张, 这里改为抽取时排除)
+    const pickRandom=(p,count,rarity,classes,used)=>{
+      let f=p;if(rarity!=null)f=f.filter(o=>o.稀有度===String(rarity));
+      if(classes&&classes.length)f=f.filter(o=>classes.includes(o.职业));
+      if(used)f=f.filter(o=>!used.has(o.干员));
+      return shuffle(f).slice(0,count);
+    };
+    /**
+     * 按配方数组抽卡。recipe = { count, rarity, classes }
+     * @returns {{res:Array, expected:number, shortage:number}} shortage > 0 表示干员池不足, 实际张数少于配方期望
+     */
+    const drawByRecipes=recipes=>{
+      const used=new Set(),res=[];let expected=0;
+      for(const r of recipes){
+        expected+=r.count;
+        const got=pickRandom(pool(),r.count,r.rarity,r.classes,used);
+        for(const o of got)used.add(o.干员);
+        res.push(...got);
+      }
+      return {res:res,expected:expected,shortage:expected-res.length};
+    };
+    // 入池的唯一入口: 去掉抽卡时挂上的内部字段 _key, 避免污染已招募列表
+    const addOp=o=>{if(RN.has(o.干员))return;RN.add(o.干员);const {_key,...op}=o;RO.value.push(op)};
+
+    const loadData=async()=>{
+      phase.value='loading';
+      try{const r=await fetch('/data/operators.json');if(!r.ok)throw new Error('HTTP '+r.status);
+        ops.value=await r.json();phase.value='select-class';}
+      catch(e){errorMsg.value=e.message;phase.value='error';}
+    };
+
+    const toggleClass=c=>{const i=SC.value.indexOf(c);i>=0?SC.value.splice(i,1):SC.value.length<3&&SC.value.push(c)};
+
+    const startDraw=()=>{
+      if(SC.value.length!==3)return;
+      const {res,expected,shortage}=drawByRecipes(SC.value.map(c=>({count:3,rarity:6,classes:[c]})));
+      // 池子空时不进对局: 留在职业选择页让玩家重选, 避免"空手开局"
+      if(!res.length){alert('无可用六星干员！请重新选择职业。');return}
+      drawResults.value=res.sort((a,b)=>Number(b.稀有度)-Number(a.稀有度)).map((o,i)=>({...o,_key:'s'+i}));
+      shortageNotice.value=shortage>0?`⚠ 干员池不足：开局招募应有 ${expected} 张，实际只有 ${res.length} 张`:'';
+      modalTitle.value='⚔ 开局招募 · 请选择1名干员';
+      ticketType.value='start';showModal.value=true;phase.value='start-draw';
+    };
+
+    // 各券型的抽卡配方。想调整张数/稀有度/职业范围, 改这张表即可。
+    const ticketRecipes=(type,sc)=>{
+      if(type==='单张')return {title:'📜 单张 · '+sc,recipes:[{count:2,rarity:6,classes:[sc]},{count:3,rarity:5,classes:[sc]}]};
+      if(type==='任意')return {title:'🎲 任意招募券',recipes:[{count:8,rarity:6},{count:8,rarity:5}]};
+      if(type==='地面'||type==='高台'){
+        // 房规: 六星限定在对应地形职业, 五星不限职业(任意八张), 属特意设计
+        return {title:'📜 '+type+' 招募券',recipes:[{count:6,rarity:6,classes:TICKET[type]},{count:8,rarity:5}]};
+      }
+      const recipes=[];
+      for(const c of TICKET[type])recipes.push({count:2,rarity:6,classes:[c]},{count:3,rarity:5,classes:[c]});
+      return {title:'📜 '+type+' 招募券',recipes:recipes};
+    };
+
+    const useTicket=(type,sc)=>{
+      const {title,recipes}=ticketRecipes(type,sc);
+      const {res,expected,shortage}=drawByRecipes(recipes);
+      if(!res.length){alert('已无可招募干员！');return}
+      drawResults.value=res.sort((a,b)=>Number(b.稀有度)-Number(a.稀有度)).map((o,i)=>({...o,_key:'d'+i}));
+      shortageNotice.value=shortage>0?`⚠ 干员池不足：本券应有 ${expected} 张，实际只有 ${res.length} 张`:'';
+      modalTitle.value=title;ticketType.value=type;showModal.value=true;
+    };
+
+    const pickOperator=o=>{addOp(o);showModal.value=false;customName.value='';if(phase.value==='start-draw')phase.value='playing'};
+    // 防误触: 只有本局已有招募记录时才需要二次确认
+    const newGame=()=>{
+      if(RO.value.length&&!confirm('确定要清空当前这一局吗？已招募的干员不会保留。'))return;
+      SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';phase.value='select-class';
+    };
+    const addCustom=()=>{const n=customName.value.trim();if(!n)return;const op=ops.value.find(o=>o.干员===n);if(!op){alert('干员不存在！');return}addOp(op);customName.value=''}
+
+    // Esc 强制选择: 开局券在候选内均匀随机; 招募券优先取 1 张五星(房规, 非缺陷, 勿随意改动)
+    const forcePick=()=>{
+      if(!showModal.value)return;
+      const r=drawResults.value;if(!r.length)return;
+      let f;if(ticketType.value==='start')f=r[Math.floor(Math.random()*r.length)];
+      else{const f5=r.filter(o=>o.稀有度==='5');f=f5.length?f5[Math.floor(Math.random()*f5.length)]:r[Math.floor(Math.random()*r.length)]}
+      pickOperator(f);
+    };
+
+    onMounted(()=>{window.addEventListener('keydown',e=>{if(e.key==='Escape'&&showModal.value){e.preventDefault();forcePick()}});loadData()});
+
+    return{phase,errorMsg,SC,RO,showModal,modalTitle,drawResults,shortageNotice,CLS,customName,
+      loadData,toggleClass,startDraw,useTicket,pickOperator,forcePick,newGame,addCustom};
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
