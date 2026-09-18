@@ -15,9 +15,22 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
 @keyframes spin{to{transform:rotate(360deg)}}
 .main-container{max-width:1200px;margin:0 auto;padding:20px}
 .header{text-align:center;padding:30px 0 20px;border-bottom:2px solid rgba(0,255,204,.2);margin-bottom:24px;position:relative}
-.settings-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);padding:8px 16px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#bbb;cursor:pointer;font-size:.85em;letter-spacing:1px;transition:all .2s;white-space:nowrap;font-family:inherit}
+.header-actions{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:8px;align-items:center}
+.settings-btn{padding:8px 14px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#bbb;cursor:pointer;font-size:.85em;letter-spacing:1px;transition:all .2s;white-space:nowrap;font-family:inherit}
 .settings-btn:hover{border-color:#00ffcc88;color:#00ffcc}
 .settings-btn.on{border-color:#d50000;color:#ff6b6b}
+@media(max-width:820px){.header-actions{position:static;transform:none;justify-content:center;margin-top:12px}}
+.help-modal{max-width:820px}
+.help-body{max-height:62vh;overflow-y:auto;font-size:.82em;line-height:1.95;color:#9ab;padding-right:6px}
+.help-body::-webkit-scrollbar{width:6px}
+.help-body::-webkit-scrollbar-thumb{background:#00ffcc55;border-radius:3px}
+.help-sec{margin-bottom:16px}
+.help-sec:last-child{margin-bottom:0}
+.help-h{color:#00ffcc;letter-spacing:1px;margin-bottom:6px;font-size:1.05em}
+.help-body ul{margin:0;padding-left:18px}
+.help-body li{margin-bottom:3px}
+.help-body b{color:#ddd;font-weight:600}
+.help-body code{color:#00ffcc;background:rgba(0,255,204,.08);padding:0 4px;border-radius:3px}
 .ban-modal{max-width:960px}
 .ban-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
 .ban-toolbar input{flex:1;min-width:180px;padding:8px 12px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#ccc;font-size:.9em}
@@ -131,7 +144,10 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
   </div>
   <div v-else class="main-container">
     <div class="header"><h1>集成战略 · 干员招募</h1><div class="sub">ROGUELIKE OPERATOR RECRUITMENT<span v-if="runDiff" class="diff-badge">{{runDiff.name}} · {{runDiff.tag}}</span></div>
-      <button class="settings-btn" :class="{on:bannedCount>0}" @click="openBanPicker">⚙ 全局设置{{ bannedCount>0 ? ' · 已禁用 '+bannedCount : '' }}</button>
+      <div class="header-actions">
+        <button class="settings-btn" @click="showHelp=true">📖 简要说明</button>
+        <button class="settings-btn" :class="{on:bannedCount>0}" @click="openBanPicker">⚙ 全局设置{{ bannedCount>0 ? ' · 已禁用 '+bannedCount : '' }}</button>
+      </div>
     </div>
 
     <template v-if="phase==='select-class'">
@@ -275,6 +291,50 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
       </div>
     </div>
   </div>
+
+  <div v-if="showHelp" class="modal-overlay">
+    <div class="modal help-modal">
+      <div class="modal-title">简要说明</div>
+      <div class="help-body">
+        <div class="help-sec">
+          <div class="help-h">▍抽取规则<span style="color:#667;font-size:.9em">（当前难度：{{ curDiff().name }} · {{ curDiff().tag }}）</span></div>
+          <ul>
+            <li>先选满 <b>3 个职业</b>，点「开始招募」，从开局候选里选 1 名作为起始干员。</li>
+            <li v-for="p in curPreview" :key="'hp'+p[0]">{{ p[0] }}：<code>{{ p[1] }}</code></li>
+            <li>之后点下方招募券继续招募，<b>点击干员头像</b>即完成招募（每次选 1 名）。</li>
+            <li>按 <code>Esc</code> 从当前候选里随机强制选 1 名（招募券会优先随到五星）。</li>
+            <li>张数随难度变化；池子不够时弹窗顶部会提示实际张数。</li>
+          </ul>
+        </div>
+        <div class="help-sec">
+          <div class="help-h">▍难度说明<span style="color:#667;font-size:.9em">（在「开始招募」或「新的一局」时选择，本局内不再变更）</span></div>
+          <ul>
+            <li v-for="d in DIFFS" :key="'hd'+d.key">
+              <b>{{ d.name }}</b><span style="color:#667">（{{ d.tag }}）</span>：{{ d.desc }}
+            </li>
+          </ul>
+          <ul style="margin-top:4px">
+            <li>难度只改变<b>每张券提供多少候选</b>，不改变职业、地形与稀有度规则。</li>
+            <li>「自刻其痕」可自定义六星 1-5、五星 0-8；<b>五星填 0 表示只出六星</b>，此时必然只能选到六星。</li>
+            <li>「跳过本次招募」按钮仅在<b>简单</b>档的招募券上出现（开局券不可跳过）。</li>
+          </ul>
+        </div>
+        <div class="help-sec">
+          <div class="help-h">▍全局禁用设置</div>
+          <ul>
+            <li>点右上角「⚙ 全局设置」，可按职业分组检索并<b>多选禁用</b>六星干员，再次点击即解除。</li>
+            <li>被禁用的干员<b>不会出现在任何抽取中</b>（含开局招募与全部招募券）。</li>
+            <li>设置<b>跨局保留</b>——「新的一局」不会清空；刷新页面后仍然生效。</li>
+            <li v-if="bannedCount">当前已禁用 <b>{{ bannedCount }}</b> 名六星。</li>
+            <li v-else>当前没有禁用任何干员。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="diff-actions" style="margin-top:16px">
+        <button class="primary" @click="showHelp=false">知道了</button>
+      </div>
+    </div>
+  </div>
 </div>
 <script>
 const { createApp, ref, reactive, computed, onMounted } = Vue;
@@ -303,7 +363,7 @@ createApp({
     const phase=ref('loading'),errorMsg=ref(''),ops=ref([]);
     const SC=ref([]),RO=ref([]),RN=reactive(new Set());
     const showModal=ref(false),customName=ref(''),modalTitle=ref(''),drawResults=ref([]),ticketType=ref(''),shortageNotice=ref('');
-    const showDiff=ref(false),diffMode=ref('start'),diffKey=ref('normal'),custom6=ref(2),custom5=ref(3),runDiff=ref(null);
+    const showDiff=ref(false),diffMode=ref('start'),diffKey=ref('normal'),custom6=ref(2),custom5=ref(3),runDiff=ref(null),showHelp=ref(false);
 
     /* ---------------- 难度 ---------------- */
     // floor(普通基准 × 本档基准值 / 普通基准值), 向下取整
@@ -330,9 +390,8 @@ createApp({
       ?{...diffOf('custom'),six:custom6.value,five:custom5.value}
       :diffOf(diffKey.value);
     const canConfirmDiff=computed(()=>diffKey.value!=='custom'||customValid.value);
-    // 难度界面实时预览: 把比例算出来的张数直接摊给玩家看
-    const diffPreview=computed(()=>{
-      const r=recipeOf(pendingDiff());
+    // 把算出来的张数摊成 5 行: 难度界面与简要说明共用同一份文案
+    const previewLines=r=>{
       const sixOnly=r.one5===0?'（纯六星，必选一名六星）':'';
       return [
         ['开局招募','每职业 6★×'+r.open+'（共 '+r.open*3+' 张六星里选 1 名）'],
@@ -341,7 +400,11 @@ createApp({
         ['定向招募券','6★×'+r.dir6+' ＋ 5★×'+r.dir5+sixOnly],
         ['任意招募券','6★×'+r.any6+'（纯六星，必选一名六星）'],
       ];
-    });
+    };
+    // 难度界面: 预览当前选中项(可能是还没确认的)
+    const diffPreview=computed(()=>previewLines(recipeOf(pendingDiff())));
+    // 简要说明: 预览本局实际生效的难度
+    const curPreview=computed(()=>previewLines(curRecipe()));
     const openDifficulty=mode=>{
       diffMode.value=mode;
       diffKey.value=runDiff.value?runDiff.value.key:'normal';
@@ -491,6 +554,7 @@ createApp({
 
     onMounted(()=>{window.addEventListener('keydown',e=>{
       if(e.key!=='Escape')return;
+      if(showHelp.value){e.preventDefault();showHelp.value=false;return}
       if(showBan.value){e.preventDefault();showBan.value=false;return}
       if(showDiff.value){e.preventDefault();cancelDifficulty();return}
       if(showModal.value){e.preventDefault();forcePick()}
@@ -501,13 +565,15 @@ createApp({
       // 难度
       DIFFS,showDiff,diffMode,diffKey,custom6,custom5,runDiff,curDiff,curRecipe,recipeOf,
       CUSTOM6_MIN,CUSTOM6_MAX,CUSTOM5_MIN,CUSTOM5_MAX,
-      customValid,canConfirmDiff,diffPreview,pendingDiff,
+      customValid,canConfirmDiff,diffPreview,curPreview,pendingDiff,previewLines,
       openDifficulty,cancelDifficulty,confirmDifficulty,applyDifficulty,
       // 跳过
       canSkip,skipTicket,
       // 全局设置: 禁用干员
       banned,showBan,banQuery,sixStars,sixStarTotal,bannedCount,banGroups,banResultCount,
-      openBanPicker,toggleBan,clearBans,loadBans,saveBans,BAN_KEY};
+      openBanPicker,toggleBan,clearBans,loadBans,saveBans,BAN_KEY,
+      // 简要说明
+      showHelp};
   }
 }).mount('#app');
 </script>

@@ -4,12 +4,14 @@
  *
  * 用法: node tools/pack-rogue.js
  * 产出:
- *   release/肉鸽随机干员选取器/        解压后可直接双击 index.html
+ *   release/肉鸽随机干员选取器/        解压后双击「开始游戏.html」即用
  *   release/肉鸽随机干员选取器.zip     用于分享的压缩包
  *
  * 设计要点:
  * - 页面已改为相对路径, 因此同一份 rogue.html 在 dev / 生产 / 本地文件三种场景下都成立。
- * - 干员数据内联为 window.__ROGUE_OPS__: 浏览器禁止 file:// 下的 fetch, 不内联则双击打开必然白屏。
+ * - Vue 运行时与干员数据一律内联进启动文件: 包内只剩「启动文件 + 图片资源」,
+ *   没有 vendor/ data/ 这类目录, 分享对象一眼就能找到该双击哪个文件。
+ *   干员数据必须内联: 浏览器禁止 file:// 下的 fetch, 不内联则双击打开必然白屏。
  * - zip 由本脚本自行写出, 不依赖 zip 命令/Compress-Archive, 便于在任意平台重复打包。
  */
 const fs = require('fs');
@@ -25,10 +27,15 @@ const SRC_ICON = path.join(PUB, 'icon');
 const SRC_IMAGES = path.join(PUB, 'images');
 
 const PKG_NAME = '肉鸽随机干员选取器';
+const LAUNCHER = '开始游戏.html';        // 包内唯一的启动文件, 名字即用法
 const RELEASE = path.join(ROOT, 'release');
 const OUT_DIR = path.join(RELEASE, PKG_NAME);
 const ZIP_PATH = path.join(RELEASE, PKG_NAME + '.zip');
 const CLASSES = ['先锋', '近卫', '重装', '狙击', '术师', '医疗', '辅助', '特种'];
+
+// 页面里待内联的两个脚本标签(必须与 rogue.html 完全一致)
+const VENDOR_TAG = '<script src="./vendor/vue.global.prod.js"></script>';
+const DATA_TAG = '<script src="./data/operators.js"></script>';
 
 const problems = [];
 const must = (cond, msg) => { if (!cond) problems.push(msg); };
@@ -44,7 +51,11 @@ let html = fs.readFileSync(SRC_HTML, 'utf8');
 // 注入离线数据脚本（必须在页面主脚本之前执行）
 const ANCHOR = '<script>\nconst { createApp';
 must(html.indexOf(ANCHOR) >= 0, '未找到页面主脚本锚点, rogue.html 结构可能已变');
-html = html.replace(ANCHOR, '<script src="./data/operators.js"></script>\n<script>\nconst { createApp');
+html = html.replace(ANCHOR, DATA_TAG + '\n<script>\nconst { createApp');
+
+// 页面里带 src 的脚本一律内联成 <script>, 这样包内只剩"启动文件 + 图片资源", 不再有 vendor/ data/ 目录
+must(html.indexOf(VENDOR_TAG) >= 0, '未找到 ' + VENDOR_TAG + ', 无法内联 Vue');
+must(html.indexOf(DATA_TAG) >= 0, '未找到 ' + DATA_TAG + ', 无法内联干员数据');
 
 // 离线包内不允许存在绝对路径, 否则双击打开时资源全部 404
 const abs = html.match(/(?:src|href)="\/[^"]*"|['"]\/(?:icon|images|data|vendor)\//g);
@@ -57,6 +68,21 @@ must(ops.every((o) => o.干员 && o.职业 && o.分支 && o.稀有度), 'operato
 
 // ---- 资源 ----
 must(fs.existsSync(SRC_VENDOR), '缺少 vendor/vue.global.prod.js');
+const vueSrc = fs.readFileSync(SRC_VENDOR, 'utf8');
+// 内联的前提: 脚本内容里不能出现 </script, 否则 HTML 会被提前截断
+must(!/<\/script/i.test(vueSrc), 'Vue 源码里含 </script, 不能直接内联');
+must(!/<\/script/i.test(JSON.stringify(ops)), '干员数据里含 </script, 不能直接内联');
+
+if (!problems.length) {
+	html = html
+		.replace(VENDOR_TAG, '<script>\n/* Vue 3.5.41 生产构建（含运行时编译器），已内联以免除外部依赖 */\n' + vueSrc + '\n</script>')
+		.replace(DATA_TAG, '<script>\n/* 干员数据快照，已内联：浏览器禁止 file:// 下的 fetch，不内联则双击打开必白屏 */\nwindow.__ROGUE_OPS__ = ' + JSON.stringify(ops) + ';\n</script>');
+	// 内联后必须不再有指向已删除目录的资源引用
+	// (只查 src/href: 页面里还有一句 fetch('./data/operators.json') 的兜底分支,
+	//  离线包内因 window.__ROGUE_OPS__ 存在而永不执行, 属正常保留)
+	const leftover = html.match(/(?:src|href)="[^"]*\.\/(?:vendor|data)\//g);
+	must(!leftover, '内联后仍有指向 vendor/data 的资源引用: ' + (leftover || []).join(', '));
+}
 
 const iconFiles = [];
 const missingIcons = [];
@@ -83,52 +109,14 @@ if (problems.length) {
 // 第二阶段: 写入
 // ================================================================
 fs.rmSync(OUT_DIR, { recursive: true, force: true });
-for (const d of ['vendor', 'data', 'icon', 'images']) fs.mkdirSync(path.join(OUT_DIR, d), { recursive: true });
+for (const d of ['icon', 'images']) fs.mkdirSync(path.join(OUT_DIR, d), { recursive: true });
 
-fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
-fs.writeFileSync(
-	path.join(OUT_DIR, 'data', 'operators.js'),
-	'window.__ROGUE_OPS__ = ' + JSON.stringify(ops) + ';\n',
-	'utf8'
-);
-fs.copyFileSync(SRC_VENDOR, path.join(OUT_DIR, 'vendor', 'vue.global.prod.js'));
+fs.writeFileSync(path.join(OUT_DIR, LAUNCHER), html, 'utf8');
 for (const name of iconFiles) fs.copyFileSync(path.join(SRC_ICON, name), path.join(OUT_DIR, 'icon', name));
 for (const c of usedClasses) fs.copyFileSync(path.join(SRC_IMAGES, c + '.png'), path.join(OUT_DIR, 'images', c + '.png'));
 const iconCount = iconFiles.length;
 
-// ---------------------------------------------------------------- 说明
-fs.writeFileSync(
-	path.join(OUT_DIR, '使用说明.txt'),
-	[
-		'肉鸽随机干员选取器 · 离线版',
-		'================================================',
-		'',
-		'【怎么用】',
-		'  1. 解压本压缩包',
-		'  2. 双击 index.html（推荐 Chrome / Edge / 火狐）',
-		'  3. 全程不需要联网，也不需要安装任何东西',
-		'',
-		'【怎么玩】',
-		'  · 开局：选 3 个职业 → 点「开始招募」→ 从 9 名六星里选 1 名',
-		'  · 之后：点下方招募券继续抽，点击干员头像即完成招募',
-		'  · 按 Esc：从当前候选中随机选 1 名（招募券会优先随到五星）',
-		'  · 「新的一局」会清空当前进度，点击时会二次确认',
-		'',
-		'【文件说明】',
-		'  index.html              页面本体',
-		'  data/operators.js       干员数据（内联，供双击打开时读取）',
-		'  vendor/                 Vue 运行时',
-		'  icon/                   干员头像 ' + iconCount + ' 张',
-		'  images/                 职业图标 ' + usedClasses.length + ' 个',
-		'',
-		'【注意】',
-		'  · 本包是打包时的干员数据快照；仓库新增干员后需重新打包。',
-		'  · 进度只保存在页面内，刷新或关闭会清空。',
-		'  · 请保持目录结构不变，移动 index.html 会导致头像和职业图标加载不出来。',
-		'',
-	].join('\r\n'),
-	'utf8'
-);
+// 不再生成「使用说明.txt」: 用法就是文件名本身, 规则/难度/禁用说明都做进了页面里的「📖 简要说明」
 
 // ---------------------------------------------------------------- zip
 const CRC_TABLE = (() => {
@@ -238,5 +226,7 @@ const bytes = (p) => {
 console.log('[pack-rogue] 完成');
 console.log('  目录 : ' + path.relative(ROOT, OUT_DIR));
 console.log('  压缩包: ' + path.relative(ROOT, ZIP_PATH) + '  (' + (fs.statSync(ZIP_PATH).size / 1048576).toFixed(1) + ' MB)');
+console.log('  启动 : ' + LAUNCHER + '（' + Math.round(Buffer.byteLength(html, 'utf8') / 1024) + ' KB，已内联 Vue 与干员数据）');
+console.log('  顶层 : ' + fs.readdirSync(OUT_DIR).sort().join('  |  '));
 console.log('  干员 : ' + ops.length + ' 名, 头像 ' + iconCount + ' 张, 职业图标 ' + usedClasses.length + ' 个');
 console.log('  解压后: ' + (bytes(OUT_DIR) / 1048576).toFixed(1) + ' MB, 文件 ' + files.length + ' 个');
