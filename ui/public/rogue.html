@@ -96,9 +96,8 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
 .diff-card.sel{border-color:#00ffcc;background:rgba(0,255,204,.08);box-shadow:0 0 16px rgba(0,255,204,.15)}
 .diff-name{font-size:1.05em;color:#ccc;letter-spacing:2px}
 .diff-card.sel .diff-name{color:#00ffcc}
-.diff-tag{display:inline-block;font-size:.68em;background:#2a3a44;color:#8ab;border-radius:3px;padding:1px 6px;margin:4px 0 6px;letter-spacing:1px}
+.diff-tag{display:inline-block;font-size:.68em;background:#2a3a44;color:#8ab;border-radius:3px;padding:1px 6px;margin:4px 0 0;letter-spacing:1px}
 .diff-card.sel .diff-tag{background:#00ffcc;color:#0a0d14}
-.diff-desc{font-size:.75em;color:#889;line-height:1.6}
 .diff-custom{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;background:#080c12;border:1px solid rgba(0,255,204,.15);border-radius:6px;font-size:.85em;color:#aab}
 .diff-custom input{width:72px;padding:6px 8px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#00ffcc;font-size:1em;text-align:center}
 .diff-custom input.bad{border-color:#f55}
@@ -180,7 +179,7 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
       </div>
 
       <div v-if="phase==='playing'" style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
-        <button class="ticket-btn" @click="openDifficulty('newgame')" style="border-color:#f54;color:#f54">新的一局</button>
+        <button class="ticket-btn" @click="newGame" style="border-color:#f54;color:#f54">新的一局</button>
         <input v-model="customName" placeholder="输入干员名添加临时招募" style="flex:1;min-width:200px;padding:8px 12px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#ccc;font-size:.9em" @keyup.enter="addCustom">
         <button class="ticket-btn" @click="addCustom">添加</button>
       </div>
@@ -227,13 +226,12 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
 
   <div v-if="showDiff" class="modal-overlay">
     <div class="modal diff-modal">
-      <div class="modal-title">{{ diffMode==='newgame' ? '新的一局 · 选择难度' : '选择难度 · 开始招募' }}</div>
-      <div class="modal-notice">难度决定每次招募提供的干员数量，选定后本局内不再变更</div>
+      <div class="modal-title">选择难度</div>
+      <div class="modal-notice">难度决定每次招募提供的干员数量，本局内不再变更</div>
       <div class="diff-grid">
         <div v-for="d in DIFFS" :key="d.key" class="diff-card" :class="{sel:diffKey===d.key}" @click="diffKey=d.key">
           <div class="diff-name">{{d.name}}</div>
           <div class="diff-tag">{{d.tag}}</div>
-          <div class="diff-desc">{{d.desc}}</div>
         </div>
       </div>
       <div v-if="diffKey==='custom'" class="diff-custom">
@@ -250,9 +248,7 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
       </div>
       <div class="diff-actions">
         <button @click="cancelDifficulty">取消</button>
-        <button class="primary" :disabled="!canConfirmDiff" @click="confirmDifficulty">
-          {{ diffMode==='newgame' ? '确认并开新局' : '确认并开始招募' }}
-        </button>
+        <button class="primary" :disabled="!canConfirmDiff" @click="confirmDifficulty">确认并开始招募</button>
       </div>
     </div>
   </div>
@@ -307,10 +303,10 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
           </ul>
         </div>
         <div class="help-sec">
-          <div class="help-h">▍难度说明<span style="color:#667;font-size:.9em">（在「开始招募」或「新的一局」时选择，本局内不再变更）</span></div>
+          <div class="help-h">▍难度说明<span style="color:#667;font-size:.9em">（在点「开始招募」时选择，本局内不再变更）</span></div>
           <ul>
-            <li v-for="d in DIFFS" :key="'hd'+d.key">
-              <b>{{ d.name }}</b><span style="color:#667">（{{ d.tag }}）</span>：{{ d.desc }}
+            <li v-for="row in diffRows" :key="'hd'+row.key">
+              <b>{{ row.name }}</b><span style="color:#667">（{{ row.tag }}）</span>：<code>{{ row.summary }}</code>
             </li>
           </ul>
           <ul style="margin-top:4px">
@@ -352,10 +348,10 @@ const BASE6 = 2, BASE5 = 3;   // 普通档单职业券基准
 const ANY_CAP6 = 16;          // 任意券六星上限
 const CUSTOM6_MIN = 1, CUSTOM6_MAX = 5, CUSTOM5_MIN = 0, CUSTOM5_MAX = 8;
 const DIFFS = [
-  { key:'easy',   name:'千里使足', tag:'简单',   six:3, five:5, skip:true,  desc:'名额充裕，抽卡池更宽；任意券可跳过。' },
-  { key:'normal', name:'长路求索', tag:'普通',   six:2, five:3, skip:false, desc:'标准配置，与既有规则完全一致。' },
-  { key:'final',  name:'终末之行', tag:'困难',   six:1, five:2, skip:false, desc:'名额紧缩，每次招募都要斟酌。' },
-  { key:'custom', name:'自刻其痕', tag:'自定义', six:2, five:3, skip:false, desc:'自己决定每张券提供多少六星与五星。' },
+  { key:'easy',   name:'千里使足', tag:'简单',   six:3, five:5, skip:true  },
+  { key:'normal', name:'长路求索', tag:'普通',   six:2, five:3, skip:false },
+  { key:'final',  name:'终末之行', tag:'困难',   six:1, five:2, skip:false },
+  { key:'custom', name:'自刻其痕', tag:'自定义', six:2, five:3, skip:false },
 ];
 
 createApp({
@@ -363,7 +359,7 @@ createApp({
     const phase=ref('loading'),errorMsg=ref(''),ops=ref([]);
     const SC=ref([]),RO=ref([]),RN=reactive(new Set());
     const showModal=ref(false),customName=ref(''),modalTitle=ref(''),drawResults=ref([]),ticketType=ref(''),shortageNotice=ref('');
-    const showDiff=ref(false),diffMode=ref('start'),diffKey=ref('normal'),custom6=ref(2),custom5=ref(3),runDiff=ref(null),showHelp=ref(false);
+    const showDiff=ref(false),diffKey=ref('normal'),custom6=ref(2),custom5=ref(3),runDiff=ref(null),showHelp=ref(false);
 
     /* ---------------- 难度 ---------------- */
     // floor(普通基准 × 本档基准值 / 普通基准值), 向下取整
@@ -405,8 +401,18 @@ createApp({
     const diffPreview=computed(()=>previewLines(recipeOf(pendingDiff())));
     // 简要说明: 预览本局实际生效的难度
     const curPreview=computed(()=>previewLines(curRecipe()));
-    const openDifficulty=mode=>{
-      diffMode.value=mode;
+    // 一句话概述某档的关键张数, 供简要说明使用(不为每档写文案)
+    const diffSummary=d=>{
+      const r=recipeOf(d);
+      return '单职业券 '+r.one6+'六+'+r.one5+'五 · 任意券 '+r.any6+'六 · 开局每职业 '+r.open;
+    };
+    // 简要说明里的四档一览(自定义档按本局实际填写的值展示)
+    const diffRows=computed(()=>DIFFS.map(d=>{
+      const used=(d.key==='custom'&&runDiff.value&&runDiff.value.key==='custom')?runDiff.value:d;
+      return {key:d.key,name:d.name,tag:d.tag,summary:diffSummary(used)};
+    }));
+    // 难度只在「开始招募」时选: 「新的一局」会回到主界面, 重新走一遍流程即可
+    const openDifficulty=()=>{
       diffKey.value=runDiff.value?runDiff.value.key:'normal';
       if(runDiff.value&&runDiff.value.key==='custom'){custom6.value=runDiff.value.six;custom5.value=runDiff.value.five}
       showDiff.value=true;
@@ -416,10 +422,9 @@ createApp({
     const applyDifficulty=()=>{runDiff.value=pendingDiff();return runDiff.value};
     const confirmDifficulty=()=>{
       if(!canConfirmDiff.value)return;
-      const mode=diffMode.value;
       applyDifficulty();
       showDiff.value=false;
-      if(mode==='newgame')newGame();else startDraw();
+      startDraw();
     };
 
     /* ---------------- 全局设置: 禁用六星干员 ----------------
@@ -537,8 +542,9 @@ createApp({
     const skipTicket=()=>{if(!canSkip.value)return;showModal.value=false;shortageNotice.value=''};
 
     const pickOperator=o=>{addOp(o);showModal.value=false;customName.value='';if(phase.value==='start-draw')phase.value='playing'};
-    // 防误触由「新的一局」弹出的难度界面承担(取消 = 不重置), 因此这里不再单独 confirm
+    // 防误触: 已有招募记录时先确认。难度不在这里选, 新的一局回到主界面后重新走流程即可
     const newGame=()=>{
+      if(RO.value.length&&!confirm('确定要清空当前这一局吗？已招募的干员不会保留。'))return;
       SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';phase.value='select-class';
     };
     const addCustom=()=>{const n=customName.value.trim();if(!n)return;const op=ops.value.find(o=>o.干员===n);if(!op){alert('干员不存在！');return}addOp(op);customName.value=''}
@@ -563,9 +569,9 @@ createApp({
     return{phase,errorMsg,SC,RO,showModal,modalTitle,drawResults,shortageNotice,CLS,customName,
       loadData,toggleClass,startDraw,useTicket,pickOperator,forcePick,newGame,addCustom,
       // 难度
-      DIFFS,showDiff,diffMode,diffKey,custom6,custom5,runDiff,curDiff,curRecipe,recipeOf,
+      DIFFS,showDiff,diffKey,custom6,custom5,runDiff,curDiff,curRecipe,recipeOf,
       CUSTOM6_MIN,CUSTOM6_MAX,CUSTOM5_MIN,CUSTOM5_MAX,
-      customValid,canConfirmDiff,diffPreview,curPreview,pendingDiff,previewLines,
+      customValid,canConfirmDiff,diffPreview,curPreview,pendingDiff,previewLines,diffSummary,diffRows,
       openDifficulty,cancelDifficulty,confirmDifficulty,applyDifficulty,
       // 跳过
       canSkip,skipTicket,
