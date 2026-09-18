@@ -49,6 +49,31 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
 .modal-title{font-size:1.1em;color:#00ffcc;text-align:center;margin-bottom:6px;letter-spacing:2px}
 .modal-notice{font-size:.72em;color:#555;text-align:center;margin-bottom:16px;letter-spacing:1px}
 .modal-warn{font-size:.74em;color:#f5a623;text-align:center;margin:-10px 0 14px;letter-spacing:1px;line-height:1.6}
+.diff-modal{max-width:780px}
+.diff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.diff-card{padding:12px 14px;border:2px solid #1e2d3d;border-radius:8px;background:#0d1117;cursor:pointer;transition:all .2s;user-select:none}
+.diff-card:hover{border-color:#00ffcc55;background:#111922}
+.diff-card.sel{border-color:#00ffcc;background:rgba(0,255,204,.08);box-shadow:0 0 16px rgba(0,255,204,.15)}
+.diff-name{font-size:1.05em;color:#ccc;letter-spacing:2px}
+.diff-card.sel .diff-name{color:#00ffcc}
+.diff-tag{display:inline-block;font-size:.68em;background:#2a3a44;color:#8ab;border-radius:3px;padding:1px 6px;margin:4px 0 6px;letter-spacing:1px}
+.diff-card.sel .diff-tag{background:#00ffcc;color:#0a0d14}
+.diff-desc{font-size:.75em;color:#889;line-height:1.6}
+.diff-custom{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;background:#080c12;border:1px solid rgba(0,255,204,.15);border-radius:6px;font-size:.85em;color:#aab}
+.diff-custom input{width:72px;padding:6px 8px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#00ffcc;font-size:1em;text-align:center}
+.diff-custom input.bad{border-color:#f55}
+.diff-hint{color:#667;font-size:.8em}
+.diff-preview{background:#080c12;border:1px solid rgba(0,255,204,.12);border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:.78em;color:#89a;line-height:1.95;font-family:Consolas,'Microsoft YaHei',monospace}
+.diff-preview b{color:#00ffcc;font-weight:600}
+.diff-actions{display:flex;gap:10px;justify-content:center}
+.diff-actions button{padding:10px 30px;border-radius:4px;cursor:pointer;font-size:.95em;letter-spacing:2px;border:1px solid #1e3040;background:#0d1117;color:#bbb;transition:all .2s}
+.diff-actions button:hover{border-color:#00ffcc88;color:#00ffcc}
+.diff-actions button.primary{border-color:#00ffcc;color:#00ffcc;background:rgba(0,255,204,.08)}
+.diff-actions button:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+.modal-actions{display:flex;justify-content:center;margin-top:16px}
+.skip-btn{padding:9px 26px;border-radius:4px;cursor:pointer;font-size:.85em;letter-spacing:1px;border:1px solid #f5a62355;background:transparent;color:#f5a623;transition:all .2s}
+.skip-btn:hover{border-color:#f5a623;background:rgba(245,166,35,.08)}
+.diff-badge{display:inline-block;margin-left:8px;padding:1px 8px;border:1px solid #00ffcc55;border-radius:3px;color:#00ffcc;font-size:.8em;letter-spacing:1px}
 .draw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;justify-items:center}
 .draw-card{display:flex;flex-direction:column;align-items:center;padding:12px 8px;border-radius:8px;background:#0d1117;border:2px solid #1e2d3d;cursor:pointer;transition:all .2s;width:120px;user-select:none}
 .draw-card:hover{border-color:#00ffcc88;background:#111d24;transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,255,204,.12)}
@@ -78,7 +103,7 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
     <button @click="loadData" style="padding:10px 24px;background:transparent;border:1px solid #00ffcc;color:#00ffcc;cursor:pointer;border-radius:4px">重试</button>
   </div>
   <div v-else class="main-container">
-    <div class="header"><h1>集成战略 · 干员招募</h1><div class="sub">ROGUELIKE OPERATOR RECRUITMENT</div></div>
+    <div class="header"><h1>集成战略 · 干员招募</h1><div class="sub">ROGUELIKE OPERATOR RECRUITMENT<span v-if="runDiff" class="diff-badge">{{runDiff.name}} · {{runDiff.tag}}</span></div></div>
 
     <template v-if="phase==='select-class'">
       <div class="phase-title">▶ 开局职业选择（请选3个职业）</div>
@@ -93,7 +118,7 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
       <div v-if="SC.length>0" style="text-align:center;color:#00ffcc88;margin-bottom:16px">
         已选: {{SC.join(' · ')}}<span v-if="SC.length<3" style="color:#555"> （还需选{{3-SC.length}}个）</span>
       </div>
-      <div class="start-btn-wrap"><button class="start-btn" :disabled="SC.length!==3" @click="startDraw">⚔ 开始招募</button></div>
+      <div class="start-btn-wrap"><button class="start-btn" :disabled="SC.length!==3" @click="openDifficulty('start')">⚔ 开始招募</button></div>
     </template>
 
     <template v-if="phase==='playing'||phase==='start-draw'">
@@ -110,7 +135,7 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
       </div>
 
       <div v-if="phase==='playing'" style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
-        <button class="ticket-btn" @click="newGame" style="border-color:#f54;color:#f54">新的一局</button>
+        <button class="ticket-btn" @click="openDifficulty('newgame')" style="border-color:#f54;color:#f54">新的一局</button>
         <input v-model="customName" placeholder="输入干员名添加临时招募" style="flex:1;min-width:200px;padding:8px 12px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#ccc;font-size:.9em" @keyup.enter="addCustom">
         <button class="ticket-btn" @click="addCustom">添加</button>
       </div>
@@ -149,22 +174,126 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
           <div class="st" :class="'r'+op.稀有度">{{'★'.repeat(Number(op.稀有度))}}</div>
         </div>
       </div>
+      <div v-if="canSkip" class="modal-actions">
+        <button class="skip-btn" @click="skipTicket">跳过本次招募（放弃这张券）</button>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="showDiff" class="modal-overlay">
+    <div class="modal diff-modal">
+      <div class="modal-title">{{ diffMode==='newgame' ? '新的一局 · 选择难度' : '选择难度 · 开始招募' }}</div>
+      <div class="modal-notice">难度决定每次招募提供的干员数量，选定后本局内不再变更</div>
+      <div class="diff-grid">
+        <div v-for="d in DIFFS" :key="d.key" class="diff-card" :class="{sel:diffKey===d.key}" @click="diffKey=d.key">
+          <div class="diff-name">{{d.name}}</div>
+          <div class="diff-tag">{{d.tag}}</div>
+          <div class="diff-desc">{{d.desc}}</div>
+        </div>
+      </div>
+      <div v-if="diffKey==='custom'" class="diff-custom">
+        <span>六星</span>
+        <input type="number" :min="CUSTOM6_MIN" :max="CUSTOM6_MAX" step="1" v-model.number="custom6"
+               :class="{bad:!customValid}">
+        <span>五星</span>
+        <input type="number" :min="CUSTOM5_MIN" :max="CUSTOM5_MAX" step="1" v-model.number="custom5"
+               :class="{bad:!customValid}">
+        <span class="diff-hint">六星 {{CUSTOM6_MIN}}-{{CUSTOM6_MAX}}，五星 {{CUSTOM5_MIN}}-{{CUSTOM5_MAX}}；五星填 0 表示只出六星（必选一名六星），否则五星不得低于六星</span>
+      </div>
+      <div class="diff-preview">
+        <div v-for="p in diffPreview" :key="p[0]">{{p[0]}}：<b>{{p[1]}}</b></div>
+      </div>
+      <div class="diff-actions">
+        <button @click="cancelDifficulty">取消</button>
+        <button class="primary" :disabled="!canConfirmDiff" @click="confirmDifficulty">
+          {{ diffMode==='newgame' ? '确认并开新局' : '确认并开始招募' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>
 <script>
-const { createApp, ref, reactive, onMounted } = Vue;
+const { createApp, ref, reactive, computed, onMounted } = Vue;
 const CLS = ['先锋','近卫','重装','狙击','术师','医疗','辅助','特种'];
 const TICKET = {
   '近锋':['近卫','先锋'],'狙医':['狙击','医疗'],'术特':['术师','特种'],'重辅':['重装','辅助'],
   '地面':['近卫','先锋','特种','重装'],'高台':['狙击','医疗','术师','辅助']
 };
 
+/* 难度体系
+   以「单职业券」的六星/五星张数为基准, 其余券型一律按同比例缩放: floor(普通基准 × 基准值 / 普通基准值)。
+   普通(长路求索) = 2六星 + 3五星, 即既有设计。任意券恒为纯六星券, 并以 16 张封顶。
+   于是终末之行的任意券 = floor(16 × 1/2) = 8 张六星, 简单的任意券 = floor(16 × 3/2) = 24 → 封顶 16。 */
+const BASE6 = 2, BASE5 = 3;   // 普通档单职业券基准
+const ANY_CAP6 = 16;          // 任意券六星上限
+const CUSTOM6_MIN = 1, CUSTOM6_MAX = 5, CUSTOM5_MIN = 0, CUSTOM5_MAX = 8;
+const DIFFS = [
+  { key:'easy',   name:'千里使足', tag:'简单',   six:3, five:5, skip:true,  desc:'名额充裕，抽卡池更宽；任意券可跳过。' },
+  { key:'normal', name:'长路求索', tag:'普通',   six:2, five:3, skip:false, desc:'标准配置，与既有规则完全一致。' },
+  { key:'final',  name:'终末之行', tag:'困难',   six:1, five:2, skip:false, desc:'名额紧缩，每次招募都要斟酌。' },
+  { key:'custom', name:'自刻其痕', tag:'自定义', six:2, five:3, skip:false, desc:'自己决定每张券提供多少六星与五星。' },
+];
+
 createApp({
   setup(){
     const phase=ref('loading'),errorMsg=ref(''),ops=ref([]);
     const SC=ref([]),RO=ref([]),RN=reactive(new Set());
     const showModal=ref(false),customName=ref(''),modalTitle=ref(''),drawResults=ref([]),ticketType=ref(''),shortageNotice=ref('');
+    const showDiff=ref(false),diffMode=ref('start'),diffKey=ref('normal'),custom6=ref(2),custom5=ref(3),runDiff=ref(null);
+
+    /* ---------------- 难度 ---------------- */
+    // floor(普通基准 × 本档基准值 / 普通基准值), 向下取整
+    const scaleCnt=(base,cur,baseCur)=>Math.max(0,Math.floor(base*cur/baseCur));
+    // 一档难度对应的全部券型张数
+    const recipeOf=d=>({
+      open:   scaleCnt(3,d.six,BASE6),                                  // 开局: 每个已选职业的六星张数
+      one6:   d.six,  one5: d.five,                                     // 单职业券
+      combo6: scaleCnt(2,d.six,BASE6), combo5: scaleCnt(3,d.five,BASE5),// 职业招募券(每职业)
+      dir6:   scaleCnt(6,d.six,BASE6), dir5:   scaleCnt(8,d.five,BASE5),// 定向招募券
+      any6:   Math.min(ANY_CAP6,scaleCnt(ANY_CAP6,d.six,BASE6)),        // 任意券(纯六星, 封顶16)
+    });
+    const curDiff=()=>runDiff.value||DIFFS[1];
+    const curRecipe=()=>recipeOf(curDiff());
+    const diffOf=key=>DIFFS.find(d=>d.key===key)||DIFFS[1];
+    const customValid=computed(()=>{
+      const a=custom6.value,b=custom5.value;
+      // 五星填 0 是特例: 该档只出六星, 于是每次必然只能从六星里选一名
+      return Number.isInteger(a)&&Number.isInteger(b)
+        &&a>=CUSTOM6_MIN&&a<=CUSTOM6_MAX&&b>=CUSTOM5_MIN&&b<=CUSTOM5_MAX&&(b===0||b>=a);
+    });
+    // 难度界面里当前选中项对应的实际难度(自定义档取输入值)
+    const pendingDiff=()=>diffKey.value==='custom'
+      ?{...diffOf('custom'),six:custom6.value,five:custom5.value}
+      :diffOf(diffKey.value);
+    const canConfirmDiff=computed(()=>diffKey.value!=='custom'||customValid.value);
+    // 难度界面实时预览: 把比例算出来的张数直接摊给玩家看
+    const diffPreview=computed(()=>{
+      const r=recipeOf(pendingDiff());
+      const sixOnly=r.one5===0?'（纯六星，必选一名六星）':'';
+      return [
+        ['开局招募','每职业 6★×'+r.open+'（共 '+r.open*3+' 张六星里选 1 名）'],
+        ['单职业券','6★×'+r.one6+' ＋ 5★×'+r.one5+sixOnly],
+        ['职业招募券','每职业 6★×'+r.combo6+' ＋ 5★×'+r.combo5+sixOnly],
+        ['定向招募券','6★×'+r.dir6+' ＋ 5★×'+r.dir5+sixOnly],
+        ['任意招募券','6★×'+r.any6+'（纯六星，必选一名六星）'],
+      ];
+    });
+    const openDifficulty=mode=>{
+      diffMode.value=mode;
+      diffKey.value=runDiff.value?runDiff.value.key:'normal';
+      if(runDiff.value&&runDiff.value.key==='custom'){custom6.value=runDiff.value.six;custom5.value=runDiff.value.five}
+      showDiff.value=true;
+    };
+    const cancelDifficulty=()=>{showDiff.value=false};
+    // 只落地难度, 不触发后续动作(便于单独调用/测试)
+    const applyDifficulty=()=>{runDiff.value=pendingDiff();return runDiff.value};
+    const confirmDifficulty=()=>{
+      if(!canConfirmDiff.value)return;
+      const mode=diffMode.value;
+      applyDifficulty();
+      showDiff.value=false;
+      if(mode==='newgame')newGame();else startDraw();
+    };
 
     const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
     const pool=()=>ops.value.filter(o=>!RN.has(o.干员));
@@ -207,7 +336,8 @@ createApp({
 
     const startDraw=()=>{
       if(SC.value.length!==3)return;
-      const {res,expected,shortage}=drawByRecipes(SC.value.map(c=>({count:3,rarity:6,classes:[c]})));
+      const r=curRecipe();
+      const {res,expected,shortage}=drawByRecipes(SC.value.map(c=>({count:r.open,rarity:6,classes:[c]})));
       // 池子空时不进对局: 留在职业选择页让玩家重选, 避免"空手开局"
       if(!res.length){alert('无可用六星干员！请重新选择职业。');return}
       drawResults.value=res.sort((a,b)=>Number(b.稀有度)-Number(a.稀有度)).map((o,i)=>({...o,_key:'s'+i}));
@@ -216,16 +346,18 @@ createApp({
       ticketType.value='start';showModal.value=true;phase.value='start-draw';
     };
 
-    // 各券型的抽卡配方。想调整张数/稀有度/职业范围, 改这张表即可。
+    // 各券型的抽卡配方。张数由难度算出(recipeOf), 职业范围在这里定。
     const ticketRecipes=(type,sc)=>{
-      if(type==='单张')return {title:'📜 单张 · '+sc,recipes:[{count:2,rarity:6,classes:[sc]},{count:3,rarity:5,classes:[sc]}]};
-      if(type==='任意')return {title:'🎲 任意招募券',recipes:[{count:8,rarity:6},{count:8,rarity:5}]};
+      const r=curRecipe();
+      if(type==='单张')return {title:'📜 单张 · '+sc,recipes:[{count:r.one6,rarity:6,classes:[sc]},{count:r.one5,rarity:5,classes:[sc]}]};
+      // 任意券统一改为纯六星券, 并以 16 张封顶(简单档 floor(16×1.5)=24 → 16, 终末档 floor(16×0.5)=8)
+      if(type==='任意')return {title:'🎲 任意招募券',recipes:[{count:r.any6,rarity:6}]};
       if(type==='地面'||type==='高台'){
-        // 房规: 六星限定在对应地形职业, 五星不限职业(任意八张), 属特意设计
-        return {title:'📜 '+type+' 招募券',recipes:[{count:6,rarity:6,classes:TICKET[type]},{count:8,rarity:5}]};
+        // 房规: 六星限定在对应地形职业, 五星不限职业(任意张), 属特意设计
+        return {title:'📜 '+type+' 招募券',recipes:[{count:r.dir6,rarity:6,classes:TICKET[type]},{count:r.dir5,rarity:5}]};
       }
       const recipes=[];
-      for(const c of TICKET[type])recipes.push({count:2,rarity:6,classes:[c]},{count:3,rarity:5,classes:[c]});
+      for(const c of TICKET[type])recipes.push({count:r.combo6,rarity:6,classes:[c]},{count:r.combo5,rarity:5,classes:[c]});
       return {title:'📜 '+type+' 招募券',recipes:recipes};
     };
 
@@ -238,10 +370,13 @@ createApp({
       modalTitle.value=title;ticketType.value=type;showModal.value=true;
     };
 
+    // 跳过本次招募: 仅简单档开放, 且只对招募券开放(开局必须选一名, 否则本局无人可用)
+    const canSkip=computed(()=>!!(runDiff.value&&runDiff.value.skip)&&showModal.value&&ticketType.value!=='start');
+    const skipTicket=()=>{if(!canSkip.value)return;showModal.value=false;shortageNotice.value=''};
+
     const pickOperator=o=>{addOp(o);showModal.value=false;customName.value='';if(phase.value==='start-draw')phase.value='playing'};
-    // 防误触: 只有本局已有招募记录时才需要二次确认
+    // 防误触由「新的一局」弹出的难度界面承担(取消 = 不重置), 因此这里不再单独 confirm
     const newGame=()=>{
-      if(RO.value.length&&!confirm('确定要清空当前这一局吗？已招募的干员不会保留。'))return;
       SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';phase.value='select-class';
     };
     const addCustom=()=>{const n=customName.value.trim();if(!n)return;const op=ops.value.find(o=>o.干员===n);if(!op){alert('干员不存在！');return}addOp(op);customName.value=''}
@@ -255,10 +390,21 @@ createApp({
       pickOperator(f);
     };
 
-    onMounted(()=>{window.addEventListener('keydown',e=>{if(e.key==='Escape'&&showModal.value){e.preventDefault();forcePick()}});loadData()});
+    onMounted(()=>{window.addEventListener('keydown',e=>{
+      if(e.key!=='Escape')return;
+      if(showDiff.value){e.preventDefault();cancelDifficulty();return}
+      if(showModal.value){e.preventDefault();forcePick()}
+    });loadData()});
 
     return{phase,errorMsg,SC,RO,showModal,modalTitle,drawResults,shortageNotice,CLS,customName,
-      loadData,toggleClass,startDraw,useTicket,pickOperator,forcePick,newGame,addCustom};
+      loadData,toggleClass,startDraw,useTicket,pickOperator,forcePick,newGame,addCustom,
+      // 难度
+      DIFFS,showDiff,diffMode,diffKey,custom6,custom5,runDiff,curDiff,curRecipe,recipeOf,
+      CUSTOM6_MIN,CUSTOM6_MAX,CUSTOM5_MIN,CUSTOM5_MAX,
+      customValid,canConfirmDiff,diffPreview,pendingDiff,
+      openDifficulty,cancelDifficulty,confirmDifficulty,applyDifficulty,
+      // 跳过
+      canSkip,skipTicket};
   }
 }).mount('#app');
 </script>
