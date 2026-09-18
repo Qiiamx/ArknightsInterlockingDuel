@@ -31,6 +31,8 @@ body.tp{background:transparent}
 .wait b{color:#3ff0cc}
 .credit{margin-top:clamp(4px,.8vw,8px);padding-top:clamp(4px,.8vw,7px);border-top:1px solid #2b4256;text-align:right;color:#93a7b5;font-size:clamp(9px,1.3vw,12px);letter-spacing:.5px;white-space:nowrap}
 .credit b{color:#c8d6e0;font-weight:600}
+.imgwarn{margin-top:clamp(4px,.8vw,8px);padding:clamp(3px,.7vw,7px) clamp(6px,1vw,10px);background:#3a2200;border:1px solid #ffc247;border-radius:4px;color:#ffe6b8;font-size:clamp(9px,1.4vw,13px);line-height:1.7}
+.imgwarn b{color:#ffc247}
 </style>
 </head>
 <body>
@@ -46,6 +48,7 @@ body.tp{background:transparent}
     <div class="empty" id="empty">尚未招募干员</div>
   </div>
   <div class="wait" id="wait">等待主界面数据…<br>请从「开始游戏.html」点右上角 <b>📺 直播窗口</b> 打开本页。</div>
+  <div class="imgwarn" id="imgwarn" hidden>⚠ 头像未加载：请确认 <b>icon</b> 文件夹与页面在同一层（分享包需先完整解压，不要在压缩包内直接双击）</div>
   <div class="credit">原项目作者 <b>Qiiamx</b> ｜ 本分支扩展 <b>x2048x</b></div>
 </div>
 <script>
@@ -54,13 +57,20 @@ body.tp{background:transparent}
   var $=function(id){return document.getElementById(id)};
   if(location.hash==='#transparent')document.body.classList.add('tp');
 
+  // 头像加载失败自检: 全部变问号基本只有一个原因 —— icon/ 没和页面放在一起
+  var fails=0;
+  function imgFail(){
+    fails++;
+    if(fails>=3){var w=$('imgwarn');if(w)w.hidden=false;}
+  }
+
   function card(o,picked,faint){
     var d=document.createElement('div');
     d.className='card r'+o.稀有度+(picked?' picked':'')+(faint?' faint':'');
     var img=document.createElement('img');
     img.src='./icon/头像_'+o.干员+'.png';
     img.alt=o.干员;
-    img.onerror=function(){img.src=PH};
+    img.onerror=function(){img.src=PH;imgFail()};
     var nm=document.createElement('div');
     nm.className='nm';nm.textContent=o.干员;
     d.appendChild(img);d.appendChild(nm);

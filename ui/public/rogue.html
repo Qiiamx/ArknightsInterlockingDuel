@@ -116,6 +116,12 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 .credit{position:fixed;right:10px;bottom:9px;z-index:2000;padding:3px 10px;background:rgba(8,14,20,.8);border:1px solid #2b4256;border-radius:4px;color:#93a7b5;font-size:.72em;letter-spacing:.5px;pointer-events:none;user-select:none;white-space:nowrap}
 .credit b{color:#c8d6e0;font-weight:600}
 .credit-inline{text-align:center;color:#7b8fa0;font-size:.75em;margin-top:12px;letter-spacing:.5px}
+.imgwarn{position:fixed;top:0;left:0;right:0;z-index:2100;background:#3a2200;border-bottom:2px solid #ffc247;color:#ffe6b8;padding:12px 18px;font-size:.88em;line-height:1.8;box-shadow:0 8px 26px rgba(0,0,0,.65)}
+.imgwarn b{color:#ffc247}
+.imgwarn .h{font-size:1.08em;font-weight:700;letter-spacing:.5px}
+.imgwarn code{background:rgba(0,0,0,.4);padding:0 5px;border-radius:3px;color:#fff;font-family:Consolas,monospace}
+.imgwarn .path{margin-top:5px;color:#ffd98a;word-break:break-all;font-family:Consolas,monospace;font-size:.94em}
+.imgwarn button{margin-top:9px;padding:6px 18px;background:#ffc247;border:none;border-radius:4px;color:#3a2200;font-weight:700;cursor:pointer;font-family:inherit;font-size:.95em}
 .draw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:12px;justify-items:center}
 .draw-card{display:flex;flex-direction:column;align-items:center;padding:12px 8px;border-radius:8px;background:#12202c;border:2px solid #2b4256;cursor:pointer;transition:all .2s;width:124px;user-select:none}
 .draw-card:hover{border-color:#00ffcc;background:#18293a;transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,255,204,.2)}
@@ -159,7 +165,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         <div v-for="cls in CLS" :key="cls" class="class-btn"
              :class="{sel:SC.includes(cls),dis:!SC.includes(cls)&&SC.length>=3}"
              @click="toggleClass(cls)">
-          <img :src="'./images/'+cls+'.png'" :alt="cls" @error="e=>e.target.style.display='none'">
+          <img :src="'./images/'+cls+'.png'" :alt="cls" @error="onImgHide($event)">
           <span>{{cls}}</span>
         </div>
       </div>
@@ -174,12 +180,11 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         <div class="recruited-label">📋 已招募干员（{{RO.length}}）</div>
         <div class="recruited-list" v-if="RO.length>0">
           <div v-for="op in RO" :key="op.干员" class="recruited-item" :class="'r'+op.稀有度">
-            <img :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员"
-                 @error="e=>e.target.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22><rect fill=%22%23333%22 width=%2256%22 height=%2256%22/><text x=%2228%22 y=%2235%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2212%22>?</text></svg>'">
+            <img :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员" @error="onImgError($event)">
             <div class="recruited-name">{{op.干员}}</div>
           </div>
         </div>
-        <div v-else style="color:#444;font-size:.85em">暂未招募干员</div>
+        <div v-else style="color:#7b8fa0;font-size:.88em">暂未招募干员</div>
       </div>
 
       <div v-if="phase==='playing'" style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
@@ -215,10 +220,9 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
       <div v-if="shortageNotice" class="modal-warn">{{shortageNotice}}</div>
       <div class="draw-grid">
         <div v-for="op in drawResults" :key="op.干员+'-'+op._key" class="draw-card" :class="'r'+op.稀有度" @click="pickOperator(op)">
-          <img class="av" :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员"
-               @error="e=>e.target.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2272%22 height=%2272%22><rect fill=%22%23333%22 width=%2272%22 height=%2272%22/><text x=%2236%22 y=%2243%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2216%22>?</text></svg>'">
+          <img class="av" :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员" @error="onImgError($event)">
           <div class="nm">{{op.干员}}</div>
-          <div class="cl"><img :src="'./images/'+op.职业+'.png'" :alt="op.职业" style="width:16px;height:16px" @error="e=>e.target.style.display='none'">{{op.职业}}</div>
+          <div class="cl"><img :src="'./images/'+op.职业+'.png'" :alt="op.职业" style="width:16px;height:16px" @error="onImgHide($event)">{{op.职业}}</div>
           <div class="st" :class="'r'+op.稀有度">{{'★'.repeat(Number(op.稀有度))}}</div>
         </div>
       </div>
@@ -270,15 +274,14 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         <template v-for="c in CLS" :key="'bg'+c">
           <div v-if="banGroups[c] && banGroups[c].length" class="ban-group">
             <div class="ban-group-title">
-              <img :src="'./images/'+c+'.png'" :alt="c" @error="e=>e.target.style.display='none'">
+              <img :src="'./images/'+c+'.png'" :alt="c" @error="onImgHide($event)">
               <span>{{c}}</span>
               <span class="ban-group-count">{{ banGroups[c].length }} 名</span>
             </div>
             <div class="ban-cards">
               <div v-for="op in banGroups[c]" :key="op.干员" class="ban-card"
                    :class="{banned:banned.has(op.干员)}" @click="toggleBan(op.干员)">
-                <img :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员"
-                     @error="e=>e.target.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2252%22 height=%2252%22><rect fill=%22%23333%22 width=%2252%22 height=%2252%22/><text x=%2226%22 y=%2232%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2212%22>?</text></svg>'">
+                <img :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员" @error="onImgError($event)">
                 <div class="ban-card-name">{{op.干员}}</div>
               </div>
             </div>
@@ -336,6 +339,14 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
       </div>
       <div class="credit-inline">原项目作者 Qiiamx ｜ 本分支扩展 x2048x</div>
     </div>
+  </div>
+
+  <div v-if="imgWarn" class="imgwarn">
+    <div class="h">⚠ 干员头像 / 职业图标未能加载（已失败 {{ imgFails }} 次）</div>
+    <div>最常见原因：<b>直接在压缩包里双击打开了 HTML</b>——此时只有这一个文件被临时解出来，页面找不到同目录的 <code>icon</code> 与 <code>images</code> 文件夹。</div>
+    <div>正确用法：右键压缩包 →「全部解压」→ 进入解压出的文件夹，确认 <code>icon</code>、<code>images</code> 与 <code>开始游戏.html</code> 在同一层，再双击 <code>开始游戏.html</code>。</div>
+    <div class="path" v-if="imgSample">页面尝试读取：{{ imgSample }}</div>
+    <button @click="imgOff=true">知道了，继续使用</button>
   </div>
 
   <div class="credit">原项目作者 <b>Qiiamx</b> ｜ 本分支扩展 <b>x2048x</b></div>
@@ -404,6 +415,24 @@ createApp({
       setTimeout(pushLive,400);   // 新窗口可能还没挂上监听, 延迟补推一次(小窗也会主动来要)
       return liveWin;
     };
+
+    /* ---------------- 图片加载失败自检 ----------------
+       全部头像/图标都变问号时, 原因几乎只有一个: icon/ 与 images/ 没和页面放在一起
+       (典型场景 —— 直接在压缩包里双击 HTML, 只解出了那一个文件)。
+       这里把失败次数记下来并给出可执行的修复指引, 同时显示页面实际尝试读取的路径。 */
+    const PLACEHOLDER='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><rect fill=%22%2318293a%22 width=%2264%22 height=%2264%22/><text x=%2232%22 y=%2241%22 text-anchor=%22middle%22 fill=%22%237b8fa0%22 font-size=%2224%22>?</text></svg>';
+    const imgFails=ref(0),imgSample=ref(''),imgOff=ref(false);
+    const onImgError=e=>{                       // 头像: 退化为占位图
+      imgFails.value++;
+      const el=e&&e.target;
+      if(el){if(!imgSample.value)imgSample.value=el.src||'';el.src=PLACEHOLDER;}
+    };
+    const onImgHide=e=>{                        // 职业图标: 直接隐藏
+      imgFails.value++;
+      const el=e&&e.target;
+      if(el){if(!imgSample.value)imgSample.value=el.src||'';el.style.display='none';}
+    };
+    const imgWarn=computed(()=>imgFails.value>=3&&!imgOff.value);
 
     /* ---------------- 难度 ---------------- */
     // floor(普通基准 × 本档基准值 / 普通基准值), 向下取整
@@ -631,6 +660,8 @@ createApp({
       charKey,SAME_CHAR,
       // 直播窗口
       LIVE_KEY,lastPicked,livePayload,pushLive,openLive,
+      // 图片失败自检
+      imgFails,imgSample,imgOff,imgWarn,onImgError,onImgHide,
       // 难度
       DIFFS,showDiff,diffKey,custom6,custom5,runDiff,curDiff,curRecipe,recipeOf,
       CUSTOM6_MIN,CUSTOM6_MAX,CUSTOM5_MIN,CUSTOM5_MAX,
