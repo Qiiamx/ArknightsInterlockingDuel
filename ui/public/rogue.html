@@ -299,6 +299,7 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
             <li v-for="p in curPreview" :key="'hp'+p[0]">{{ p[0] }}：<code>{{ p[1] }}</code></li>
             <li>之后点下方招募券继续招募，<b>点击干员头像</b>即完成招募（每次选 1 名）。</li>
             <li>按 <code>Esc</code> 从当前候选里随机强制选 1 名（招募券会优先随到五星）。</li>
+            <li>阿米娅的三个形态视为<b>同一名干员</b>：抽到任一形态后，其余形态不再出现。</li>
             <li>张数随难度变化；池子不够时弹窗顶部会提示实际张数。</li>
           </ul>
         </div>
@@ -338,6 +339,17 @@ const CLS = ['先锋','近卫','重装','狙击','术师','医疗','辅助','特
 const TICKET = {
   '近锋':['近卫','先锋'],'狙医':['狙击','医疗'],'术特':['术师','特种'],'重辅':['重装','辅助'],
   '地面':['近卫','先锋','特种','重装'],'高台':['狙击','医疗','术师','辅助']
+};
+
+/* 同一名干员的多个形态
+   阿米娅的三个形态(术师/近卫/医疗)在游戏里共用同一个干员位, 是同一名干员,
+   因此抽到任一形态后, 其余形态也必须一并退出候选池(同一张券里也不会同时出现两个形态)。
+   注意: 异格干员(如 凯尔希 与 凯尔希·思衡托、陈 与 假日威龙陈)是各自独立的干员, 不合并。
+   这里用"前缀 + (形态)"匹配, 所以日后新增的阿米娅形态会自动并入同一组。 */
+const SAME_CHAR = ['阿米娅'];
+const charKey = n => {
+  for (const p of SAME_CHAR) if (n === p || n.indexOf(p + '(') === 0) return p;
+  return n;
 };
 
 /* 难度体系
@@ -460,14 +472,23 @@ createApp({
     const clearBans=()=>{banned.clear();saveBans()};
 
     const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
-    const pool=()=>ops.value.filter(o=>!RN.has(o.干员)&&!banned.has(o.干员));
-    // used: 本次抽取的排除集。同一张券的多段配方共用它, 段与段之间不会抽到同一名干员。
+    // 已招募与禁用都按"干员(同一形态组)"过滤: 抽到阿米娅任一形态, 三个形态一起出池
+    const pool=()=>ops.value.filter(o=>!RN.has(charKey(o.干员))&&!banned.has(o.干员));
+    // used: 本次抽取的排除集, 键为 charKey(干员)。同一张券的多段配方共用它,
+    // 段与段之间(以及同一段内部)既不会抽到同一名干员, 也不会同时出现同一名干员的两个形态。
     // (旧实现是抽完再事后去重, 一旦出现重复就会静默少给几张, 这里改为抽取时排除)
     const pickRandom=(p,count,rarity,classes,used)=>{
       let f=p;if(rarity!=null)f=f.filter(o=>o.稀有度===String(rarity));
       if(classes&&classes.length)f=f.filter(o=>classes.includes(o.职业));
-      if(used)f=f.filter(o=>!used.has(o.干员));
-      return shuffle(f).slice(0,count);
+      const out=[];
+      for(const o of shuffle(f)){
+        if(out.length>=count)break;
+        const k=charKey(o.干员);
+        if(used&&used.has(k))continue;
+        out.push(o);
+        if(used)used.add(k);
+      }
+      return out;
     };
     /**
      * 按配方数组抽卡。recipe = { count, rarity, classes }
@@ -477,17 +498,15 @@ createApp({
       const used=new Set(),res=[];let expected=0;
       for(const r of recipes){
         expected+=r.count;
-        const got=pickRandom(pool(),r.count,r.rarity,r.classes,used);
-        for(const o of got)used.add(o.干员);
-        res.push(...got);
+        res.push(...pickRandom(pool(),r.count,r.rarity,r.classes,used));
       }
       return {res:res,expected:expected,shortage:expected-res.length};
     };
     // 缺口成因归属: 禁用名单是自己设的, 补一句说明, 免得把"自己禁出来的缺口"当成 bug
     const banHint=()=>banned.size>0?`（已禁用 ${banned.size} 名六星）`:'';
 
-    // 入池的唯一入口: 去掉抽卡时挂上的内部字段 _key, 避免污染已招募列表
-    const addOp=o=>{if(RN.has(o.干员))return;RN.add(o.干员);const {_key,...op}=o;RO.value.push(op)};
+    // 入池的唯一入口: 记入"干员"而非"形态", 并去掉抽卡时挂上的内部字段 _key
+    const addOp=o=>{const k=charKey(o.干员);if(RN.has(k))return;RN.add(k);const {_key,...op}=o;RO.value.push(op)};
 
     const loadData=async()=>{
       phase.value='loading';
@@ -568,6 +587,7 @@ createApp({
 
     return{phase,errorMsg,SC,RO,showModal,modalTitle,drawResults,shortageNotice,CLS,customName,
       loadData,toggleClass,startDraw,useTicket,pickOperator,forcePick,newGame,addCustom,
+      charKey,SAME_CHAR,
       // 难度
       DIFFS,showDiff,diffKey,custom6,custom5,runDiff,curDiff,curRecipe,recipeOf,
       CUSTOM6_MIN,CUSTOM6_MAX,CUSTOM5_MIN,CUSTOM5_MAX,
