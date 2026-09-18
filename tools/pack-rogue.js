@@ -25,9 +25,11 @@ const SRC_DATA = path.join(PUB, 'data', 'operators.json');
 const SRC_VENDOR = path.join(PUB, 'vendor', 'vue.global.prod.js');
 const SRC_ICON = path.join(PUB, 'icon');
 const SRC_IMAGES = path.join(PUB, 'images');
+const SRC_LIVE = path.join(PUB, '直播展示.html');   // 直播小窗页面(独立文件, 只展示已招募与本次抽取)
 
 const PKG_NAME = '肉鸽随机干员选取器';
-const LAUNCHER = '开始游戏.html';        // 包内唯一的启动文件, 名字即用法
+const LAUNCHER = '开始游戏.html';              // 主界面, 名字即用法
+const LIVE_PAGE = '直播展示.html';             // 直播小窗, 由主界面「📺 直播窗口」打开
 const RELEASE = path.join(ROOT, 'release');
 const OUT_DIR = path.join(RELEASE, PKG_NAME);
 const ZIP_PATH = path.join(RELEASE, PKG_NAME + '.zip');
@@ -68,6 +70,7 @@ must(ops.every((o) => o.干员 && o.职业 && o.分支 && o.稀有度), 'operato
 
 // ---- 资源 ----
 must(fs.existsSync(SRC_VENDOR), '缺少 vendor/vue.global.prod.js');
+must(fs.existsSync(SRC_LIVE), '缺少 ' + LIVE_PAGE + '（直播小窗页面）');
 const vueSrc = fs.readFileSync(SRC_VENDOR, 'utf8');
 // 内联的前提: 脚本内容里不能出现 </script, 否则 HTML 会被提前截断
 must(!/<\/script/i.test(vueSrc), 'Vue 源码里含 </script, 不能直接内联');
@@ -112,6 +115,7 @@ fs.rmSync(OUT_DIR, { recursive: true, force: true });
 for (const d of ['icon', 'images']) fs.mkdirSync(path.join(OUT_DIR, d), { recursive: true });
 
 fs.writeFileSync(path.join(OUT_DIR, LAUNCHER), html, 'utf8');
+fs.copyFileSync(SRC_LIVE, path.join(OUT_DIR, LIVE_PAGE));
 for (const name of iconFiles) fs.copyFileSync(path.join(SRC_ICON, name), path.join(OUT_DIR, 'icon', name));
 for (const c of usedClasses) fs.copyFileSync(path.join(SRC_IMAGES, c + '.png'), path.join(OUT_DIR, 'images', c + '.png'));
 const iconCount = iconFiles.length;
@@ -227,6 +231,7 @@ console.log('[pack-rogue] 完成');
 console.log('  目录 : ' + path.relative(ROOT, OUT_DIR));
 console.log('  压缩包: ' + path.relative(ROOT, ZIP_PATH) + '  (' + (fs.statSync(ZIP_PATH).size / 1048576).toFixed(1) + ' MB)');
 console.log('  启动 : ' + LAUNCHER + '（' + Math.round(Buffer.byteLength(html, 'utf8') / 1024) + ' KB，已内联 Vue 与干员数据）');
+console.log('  直播 : ' + LIVE_PAGE + '（' + Math.round(fs.statSync(SRC_LIVE).size / 1024) + ' KB，由主界面「📺 直播窗口」打开）');
 console.log('  顶层 : ' + fs.readdirSync(OUT_DIR).sort().join('  |  '));
 console.log('  干员 : ' + ops.length + ' 名, 头像 ' + iconCount + ' 张, 职业图标 ' + usedClasses.length + ' 个');
 console.log('  解压后: ' + (bytes(OUT_DIR) / 1048576).toFixed(1) + ' MB, 文件 ' + files.length + ' 个');

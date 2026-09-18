@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>直播展示 · 干员招募</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070c12;color:#eef5fa;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:clamp(6px,1.2vw,14px);overflow:hidden}
+body.tp{background:transparent}
+.hd{display:flex;align-items:center;gap:8px;padding-bottom:clamp(5px,1vw,10px);border-bottom:2px solid rgba(0,255,204,.35);margin-bottom:clamp(6px,1.2vw,12px)}
+.logo{font-size:clamp(12px,2.2vw,20px);font-weight:800;letter-spacing:2px;color:#3ff0cc}
+.diff{margin-left:auto;padding:1px 8px;border:1px solid #3ff0cc88;border-radius:3px;color:#3ff0cc;font-size:clamp(9px,1.5vw,13px);letter-spacing:1px;white-space:nowrap}
+.sec{margin-bottom:clamp(6px,1.2vw,12px)}
+.sec:last-child{margin-bottom:0}
+.sec-t{display:flex;align-items:center;gap:8px;font-size:clamp(10px,1.7vw,15px);letter-spacing:1px;color:#3ff0cc;font-weight:700;margin-bottom:clamp(4px,.9vw,9px)}
+.sec-t .n{color:#ffd24a}
+.sec-t .hint{margin-left:auto;color:#9fb4c2;font-weight:400;font-size:.92em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(52px,10vw,84px),1fr));gap:clamp(4px,.8vw,9px)}
+.card{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:clamp(3px,.6vw,6px);background:#101c26;border:2px solid #2a4256;border-radius:6px}
+.card img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:4px;display:block;background:#0a1017}
+.card .nm{font-size:clamp(9px,1.5vw,14px);font-weight:600;color:#f2f8fc;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.card.r6{border-color:#ffb020}
+.card.r5{border-color:#b98cff}
+.card.r4{border-color:#7fa8ff}
+.card.picked{border-color:#22e6a5;box-shadow:0 0 0 2px #22e6a555,0 0 18px #22e6a566}
+.card .badge{position:absolute;top:-7px;right:-4px;background:#22e6a5;color:#04231a;font-size:clamp(8px,1.2vw,11px);font-weight:800;border-radius:3px;padding:0 5px;letter-spacing:1px}
+.card.faint{opacity:.55}
+.empty{color:#9fb4c2;font-size:clamp(10px,1.6vw,14px);padding:6px 0}
+.wait{color:#9fb4c2;font-size:clamp(11px,1.8vw,16px);line-height:2}
+.wait b{color:#3ff0cc}
+.credit{margin-top:clamp(4px,.8vw,8px);padding-top:clamp(4px,.8vw,7px);border-top:1px solid #2b4256;text-align:right;color:#93a7b5;font-size:clamp(9px,1.3vw,12px);letter-spacing:.5px;white-space:nowrap}
+.credit b{color:#c8d6e0;font-weight:600}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hd"><span class="logo">集成战略 · 干员招募</span><span class="diff" id="diff" hidden></span></div>
+  <div class="sec" id="drawSec" hidden>
+    <div class="sec-t">本次抽取<span class="hint" id="drawHint"></span></div>
+    <div class="grid" id="drawGrid"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-t">已招募<span class="n" id="cnt">0</span><span class="hint" id="listHint"></span></div>
+    <div class="grid" id="listGrid"></div>
+    <div class="empty" id="empty">尚未招募干员</div>
+  </div>
+  <div class="wait" id="wait">等待主界面数据…<br>请从「开始游戏.html」点右上角 <b>📺 直播窗口</b> 打开本页。</div>
+  <div class="credit">原项目作者 <b>Qiiamx</b> ｜ 本分支扩展 <b>x2048x</b></div>
+</div>
+<script>
+(function(){
+  var PH='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><rect fill=%22%23131f2a%22 width=%2264%22 height=%2264%22/><text x=%2232%22 y=%2241%22 text-anchor=%22middle%22 fill=%22%23677%22 font-size=%2224%22>?</text></svg>';
+  var $=function(id){return document.getElementById(id)};
+  if(location.hash==='#transparent')document.body.classList.add('tp');
+
+  function card(o,picked,faint){
+    var d=document.createElement('div');
+    d.className='card r'+o.稀有度+(picked?' picked':'')+(faint?' faint':'');
+    var img=document.createElement('img');
+    img.src='./icon/头像_'+o.干员+'.png';
+    img.alt=o.干员;
+    img.onerror=function(){img.src=PH};
+    var nm=document.createElement('div');
+    nm.className='nm';nm.textContent=o.干员;
+    d.appendChild(img);d.appendChild(nm);
+    if(picked){var b=document.createElement('div');b.className='badge';b.textContent='已选';d.appendChild(b)}
+    return d;
+  }
+
+  function render(p){
+    if(!p)return;
+    $('wait').hidden=true;
+    // 难度
+    var diff=$('diff');
+    if(p.diff){diff.hidden=false;diff.textContent=p.diff.name+' · '+p.diff.tag}else{diff.hidden=true}
+    // 本次抽取(最近一次抽出的候选)
+    var draw=p.draw||[];
+    var ds=$('drawSec');
+    if(draw.length){
+      ds.hidden=false;
+      $('drawHint').textContent=draw.length+' 选 1'+(p.picked?' · 已选 '+p.picked:'');
+      var dg=$('drawGrid');dg.textContent='';
+      for(var i=0;i<draw.length;i++)dg.appendChild(card(draw[i],draw[i].干员===p.picked,!!p.picked));
+    }else{ds.hidden=true}
+    // 已招募
+    var list=p.recruited||[];
+    $('cnt').textContent=list.length;
+    $('listHint').textContent=(p.diff&&p.diff.name)?'':'';
+    var lg=$('listGrid');lg.textContent='';
+    for(var j=0;j<list.length;j++)lg.appendChild(card(list[j],false,false));
+    $('empty').hidden=list.length>0;
+  }
+
+  window.addEventListener('message',function(e){
+    var d=e.data;
+    if(d&&d.type==='aid-state'){render(d.payload)}
+  });
+  // 主动向主界面要一次数据, 避免"刚打开还没收到推送"的空白期
+  if(window.opener){try{window.opener.postMessage({type:'aid-live-ready'},'*')}catch(err){}}
+  // 兜底: 若浏览器在 file:// 下共享存储, 本页即使不是由主界面打开也能拿到数据
+  setInterval(function(){
+    try{
+      var raw=localStorage.getItem('rogue_live_state');
+      if(!raw)return;
+      var p=JSON.parse(raw);
+      if(p&&p.stamp!==lastStamp){lastStamp=p.stamp;render(p)}
+    }catch(err){}
+  },700);
+  var lastStamp=null;
+})();
+</script>
+</body>
+</html>

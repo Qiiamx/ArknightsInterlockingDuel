@@ -29,3 +29,12 @@ npm run dev
 
 联锁对抗
 https://github.com/ArknightsInterInterlockingComfrontation
+
+作者
+原项目作者: Qiiamx
+https://github.com/Qiiamx/ArknightsInterlockingDuel
+
+本分支扩展: x2048x
+「肉鸽随机干员选取器」（ui/public/rogue.html，离线包内为「开始游戏.html」）、
+「直播展示小窗」（ui/public/直播展示.html），以及配套的难度体系、全局禁用设置
+与离线打包工具（tools/pack-rogue.js），均属本分支的扩展内容。
