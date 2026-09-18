@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>肉鸽随机干员选取器</title>
   <!-- 本地 Vue 3 生产构建（与 ui/package.json 的 vue 依赖同版本），避免公网 CDN 不可达时白屏 -->
-  <script src="/vendor/vue.global.prod.js"></script>
+  <script src="./vendor/vue.global.prod.js"></script>
   <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei',sans-serif;min-height:100vh;overflow-x:hidden}
@@ -86,7 +86,7 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
         <div v-for="cls in CLS" :key="cls" class="class-btn"
              :class="{sel:SC.includes(cls),dis:!SC.includes(cls)&&SC.length>=3}"
              @click="toggleClass(cls)">
-          <img :src="'/images/'+cls+'.png'" :alt="cls" @error="e=>e.target.style.display='none'">
+          <img :src="'./images/'+cls+'.png'" :alt="cls" @error="e=>e.target.style.display='none'">
           <span>{{cls}}</span>
         </div>
       </div>
@@ -101,7 +101,7 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
         <div class="recruited-label">📋 已招募干员（{{RO.length}}）</div>
         <div class="recruited-list" v-if="RO.length>0">
           <div v-for="op in RO" :key="op.干员" class="recruited-item" :class="'r'+op.稀有度">
-            <img :src="'/icon/头像_'+op.干员+'.png'" :alt="op.干员"
+            <img :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员"
                  @error="e=>e.target.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22><rect fill=%22%23333%22 width=%2256%22 height=%2256%22/><text x=%2228%22 y=%2235%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2212%22>?</text></svg>'">
             <div class="recruited-name">{{op.干员}}</div>
           </div>
@@ -142,10 +142,10 @@ body{background:#050508;color:#d0d0d0;font-family:'PingFang SC','Microsoft YaHei
       <div v-if="shortageNotice" class="modal-warn">{{shortageNotice}}</div>
       <div class="draw-grid">
         <div v-for="op in drawResults" :key="op.干员+'-'+op._key" class="draw-card" :class="'r'+op.稀有度" @click="pickOperator(op)">
-          <img class="av" :src="'/icon/头像_'+op.干员+'.png'" :alt="op.干员"
+          <img class="av" :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员"
                @error="e=>e.target.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2272%22 height=%2272%22><rect fill=%22%23333%22 width=%2272%22 height=%2272%22/><text x=%2236%22 y=%2243%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2216%22>?</text></svg>'">
           <div class="nm">{{op.干员}}</div>
-          <div class="cl"><img :src="'/images/'+op.职业+'.png'" :alt="op.职业" style="width:16px;height:16px" @error="e=>e.target.style.display='none'">{{op.职业}}</div>
+          <div class="cl"><img :src="'./images/'+op.职业+'.png'" :alt="op.职业" style="width:16px;height:16px" @error="e=>e.target.style.display='none'">{{op.职业}}</div>
           <div class="st" :class="'r'+op.稀有度">{{'★'.repeat(Number(op.稀有度))}}</div>
         </div>
       </div>
@@ -195,7 +195,10 @@ createApp({
 
     const loadData=async()=>{
       phase.value='loading';
-      try{const r=await fetch('/data/operators.json');if(!r.ok)throw new Error('HTTP '+r.status);
+      try{
+        // 离线包: 数据可被内联为 window.__ROGUE_OPS__, 绕开 file:// 下浏览器禁止 fetch 的限制
+        if(window.__ROGUE_OPS__){ops.value=window.__ROGUE_OPS__;phase.value='select-class';return}
+        const r=await fetch('./data/operators.json');if(!r.ok)throw new Error('HTTP '+r.status);
         ops.value=await r.json();phase.value='select-class';}
       catch(e){errorMsg.value=e.message;phase.value='error';}
     };

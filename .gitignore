@@ -6,5 +6,8 @@
 
 # 忽略任意位置的 dist 目录
 **/dist/
+
+# 忽略离线打包产物（由 tools/pack-rogue.js 生成，含 420 张头像，体积约 17MB）
+/release/
 网站雏形演示.mp4
 .~lock.联锁博弈.docx#
