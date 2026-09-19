@@ -30,11 +30,13 @@ const SRC_SQUADS = path.join(PUB, 'data', 'squads.json');
 const SRC_LIVE = path.join(PUB, '直播展示.html');   // 直播小窗页面(独立文件, 只展示已招募与本次抽取)
 
 const PKG_NAME = '肉鸽随机干员选取器';
+const VERSION = '1.0';                         // 版本号: 必须与 rogue.html 里的 const VERSION 一致(下面会校验)
+const PKG_DIR = PKG_NAME + 'v' + VERSION;      // 产物目录/压缩包名: 肉鸽随机干员选取器v1.0
 const LAUNCHER = '开始游戏.html';              // 主界面, 名字即用法
 const LIVE_PAGE = '直播展示.html';             // 直播小窗, 由主界面「📺 直播窗口」打开
 const RELEASE = path.join(ROOT, 'release');
-const OUT_DIR = path.join(RELEASE, PKG_NAME);
-const ZIP_PATH = path.join(RELEASE, PKG_NAME + '.zip');
+const OUT_DIR = path.join(RELEASE, PKG_DIR);
+const ZIP_PATH = path.join(RELEASE, PKG_DIR + '.zip');
 const CLASSES = ['先锋', '近卫', '重装', '狙击', '术师', '医疗', '辅助', '特种'];
 
 // 页面里待内联的两个脚本标签(必须与 rogue.html 完全一致)
@@ -64,6 +66,13 @@ must(html.indexOf(DATA_TAG) >= 0, '未找到 ' + DATA_TAG + ', 无法内联干�
 // 离线包内不允许存在绝对路径, 否则双击打开时资源全部 404
 const abs = html.match(/(?:src|href)="\/[^"]*"|['"]\/(?:icon|images|data|vendor)\//g);
 must(!abs, '页面中仍存在绝对资源路径: ' + (abs || []).join(', '));
+
+// ---- 版本一致性: 产物名里的版本必须与页面内显示的版本一致, 否则迟早对不上 ----
+const pageVersion = (html.match(/const\s+VERSION\s*=\s*'([^']+)'/) || [])[1];
+must(pageVersion === VERSION,
+	'版本不一致: rogue.html 里是 ' + (pageVersion || '(没找到 const VERSION)') + ', 打包脚本里是 ' + VERSION);
+const liveHtml = fs.readFileSync(SRC_LIVE, 'utf8');
+must(liveHtml.indexOf('v' + VERSION) >= 0, LIVE_PAGE + ' 里没有版本号 v' + VERSION);
 
 // ---- 数据 ----
 const ops = JSON.parse(fs.readFileSync(SRC_DATA, 'utf8'));
@@ -135,6 +144,21 @@ if (problems.length) {
 // ================================================================
 // 第二阶段: 写入
 // ================================================================
+// 清掉旧版本/旧命名留下的同名系产物, 保证 release/ 下只有当前这一份, 避免发错包
+// (只认本工具自己的命名: 无版本的旧名, 或 <基名>v<数字>; 不会误删其他东西)
+const legacyNames = [PKG_NAME, PKG_NAME + '.zip'];
+const versionedRe = new RegExp('^' + PKG_NAME + 'v[0-9.]+(\\.zip)?$');
+const stale = [];
+if (fs.existsSync(RELEASE)) {
+	for (const e of fs.readdirSync(RELEASE)) {
+		if (e === PKG_DIR || e === PKG_DIR + '.zip') continue;
+		if (legacyNames.includes(e) || versionedRe.test(e)) {
+			fs.rmSync(path.join(RELEASE, e), { recursive: true, force: true });
+			stale.push(e);
+		}
+	}
+}
+
 fs.rmSync(OUT_DIR, { recursive: true, force: true });
 for (const d of ['icon', path.join('images', '分队')]) fs.mkdirSync(path.join(OUT_DIR, d), { recursive: true });
 
@@ -230,9 +254,10 @@ const entry = (name, data) => {
 };
 
 // 目录条目，便于解压工具直接还原层级
+// 注意: 条目前缀必须用带版本的 PKG_DIR, 与解压后的文件夹名保持一致
 const dirs = [...new Set(files.map((f) => path.posix.dirname(f)).filter((d) => d !== '.'))].sort();
-for (const d of dirs) entry(PKG_NAME + '/' + d + '/', Buffer.alloc(0));
-for (const f of files) entry(PKG_NAME + '/' + f, fs.readFileSync(path.join(OUT_DIR, f)));
+for (const d of dirs) entry(PKG_DIR + '/' + d + '/', Buffer.alloc(0));
+for (const f of files) entry(PKG_DIR + '/' + f, fs.readFileSync(path.join(OUT_DIR, f)));
 
 const centralBuf = Buffer.concat(centralParts);
 const eocd = Buffer.alloc(22);
@@ -252,7 +277,8 @@ const bytes = (p) => {
 	const st = fs.statSync(p);
 	return st.isDirectory() ? walk(p).reduce((s, f) => s + fs.statSync(path.join(p, f)).size, 0) : st.size;
 };
-console.log('[pack-rogue] 完成');
+console.log('[pack-rogue] 完成  版本 v' + VERSION);
+if (stale.length) console.log('  已清理旧产物: ' + stale.join(', '));
 console.log('  目录 : ' + path.relative(ROOT, OUT_DIR));
 console.log('  压缩包: ' + path.relative(ROOT, ZIP_PATH) + '  (' + (fs.statSync(ZIP_PATH).size / 1048576).toFixed(1) + ' MB)');
 console.log('  启动 : ' + LAUNCHER + '（' + Math.round(Buffer.byteLength(html, 'utf8') / 1024) + ' KB，已内联 Vue 与干员数据）');

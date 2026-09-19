@@ -444,7 +444,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
       <div class="diff-actions" style="margin-top:16px">
         <button class="primary" @click="showHelp=false">知道了</button>
       </div>
-      <div class="credit-inline">原项目作者 Qiiamx ｜ 本分支扩展 x2048x</div>
+      <div class="credit-inline">原项目作者 Qiiamx ｜ 本分支扩展 x2048x ｜ 版本 v{{ VERSION }}</div>
     </div>
   </div>
 
@@ -456,10 +456,11 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
     <button @click="imgOff=true">知道了，继续使用</button>
   </div>
 
-  <div class="credit">原项目作者 <b>Qiiamx</b> ｜ 本分支扩展 <b>x2048x</b></div>
+  <div class="credit">原项目作者 <b>Qiiamx</b> ｜ 本分支扩展 <b>x2048x</b> · v{{ VERSION }}</div>
 </div>
 <script>
 const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
+const VERSION = '1.0';   // 与打包脚本 tools/pack-rogue.js 的 VERSION 必须一致(打包时会校验)
 const CLS = ['先锋','近卫','重装','狙击','术师','医疗','辅助','特种'];
 const TICKET = {
   '近锋':['近卫','先锋'],'狙医':['狙击','医疗'],'术特':['术师','特种'],'重辅':['重装','辅助'],
@@ -844,7 +845,7 @@ createApp({
     // 任何一次状态变化都同步给直播小窗
     watch(livePayload,()=>pushLive());
 
-    return{phase,errorMsg,SC,RO,showModal,modalTitle,drawResults,shortageNotice,CLS,customName,ticketType,
+    return{phase,errorMsg,SC,RO,showModal,modalTitle,drawResults,shortageNotice,CLS,customName,ticketType,VERSION,
       loadData,toggleClass,startDraw,useTicket,pickOperator,forcePick,newGame,addCustom,
       charKey,SAME_CHAR,
       // 直播窗口
