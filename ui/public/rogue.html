@@ -137,7 +137,14 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 .diff-actions button:hover{border-color:#00ffcc;color:#00ffcc}
 .diff-actions button.primary{border-color:#00ffcc;color:#00ffcc;background:rgba(0,255,204,.12)}
 .diff-actions button:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
-.modal-actions{display:flex;justify-content:center;margin-top:16px}
+.modal-actions{display:flex;justify-content:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+.temp-btn,.undo-btn{padding:9px 20px;border-radius:4px;cursor:pointer;font-size:.9em;font-weight:600;letter-spacing:1px;transition:all .2s;font-family:inherit;background:#12202c;border:1px solid #2b4256;color:#d3dfe8}
+.temp-btn:hover{border-color:#00ffcc;color:#00ffcc;background:#18293a}
+.undo-btn{border-color:#ffc24799;color:#ffc247}
+.undo-btn:hover{border-color:#ffc247;background:rgba(255,194,71,.12)}
+.temp-overlay{z-index:1500}
+.temp-modal{max-width:620px}
+.undo-tag{display:inline-block;padding:2px 9px;border:1px solid #ffc24788;border-radius:3px;color:#ffc247;font-size:.85em;letter-spacing:1px}
 .skip-btn{padding:9px 26px;border-radius:4px;cursor:pointer;font-size:.9em;font-weight:600;letter-spacing:1px;border:1px solid #ffc24788;background:transparent;color:#ffc247;transition:all .2s;font-family:inherit}
 .skip-btn:hover{border-color:#ffc247;background:rgba(255,194,71,.12)}
 .diff-badge{display:inline-block;margin-left:8px;padding:1px 8px;border:1px solid #00ffcc88;border-radius:3px;color:#00ffcc;font-size:.85em;letter-spacing:1px}
@@ -244,6 +251,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
           </div>
         </div>
         <button class="ticket-btn" @click="addCustom">添加</button>
+        <span v-if="undoCount" class="undo-tag">本局反悔 {{ undoCount }} 次</span>
       </div>
 
       <div v-if="phase==='playing'" class="tickets-section">
@@ -279,8 +287,35 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
           <div class="st" :class="'r'+op.稀有度">{{'★'.repeat(Number(op.稀有度))}}</div>
         </div>
       </div>
-      <div v-if="canSkip" class="modal-actions">
-        <button class="skip-btn" @click="skipTicket">跳过本次招募（放弃这张券）</button>
+      <div class="modal-actions">
+        <button class="temp-btn" @click="openTemp">＋ 临时干员</button>
+        <button v-if="ticketType!=='start'" class="undo-btn" @click="undoDraw">
+          ↩ 反悔 · 不选取退出{{ undoCount ? '（本局已 '+undoCount+' 次）' : '' }}
+        </button>
+        <button v-if="canSkip" class="skip-btn" @click="skipTicket">跳过本次招募（放弃这张券）</button>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="showTemp" class="modal-overlay temp-overlay">
+    <div class="modal temp-modal">
+      <div class="modal-title">＋ 临时干员</div>
+      <div class="modal-notice">输入干员名即可加入（首字联想）；加入后<b>不消耗</b>本次抽取，候选仍然保留</div>
+      <div class="add-box">
+        <input v-model="customName" placeholder="输入干员名（首字即可联想）"
+               @keyup.enter="addCustomTemp" @input="suggestOpen=true" @focus="suggestOpen=true" @blur="suggestOpen=false">
+        <div v-if="suggestOpen && nameSuggestions.length" class="suggest">
+          <div v-for="o in nameSuggestions" :key="'t'+o.干员" class="suggest-item" @mousedown.prevent="pickSuggestion(o)">
+            <img :src="'./icon/头像_'+o.干员+'.png'" :alt="o.干员" @error="onImgError($event)">
+            <span class="suggest-nm">{{o.干员}}</span>
+            <span class="suggest-meta">{{o.职业}} · {{o.稀有度}}★</span>
+          </div>
+          <div v-if="suggestMore>0" class="suggest-more">还有 {{ suggestMore }} 个匹配，继续输入可缩小范围…</div>
+        </div>
+      </div>
+      <div class="diff-actions" style="margin-top:16px">
+        <button @click="showTemp=false">关闭</button>
+        <button class="primary" @click="addCustomTemp">添加</button>
       </div>
     </div>
   </div>
@@ -372,6 +407,8 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
             <li>按 <code>Esc</code> 从当前候选里随机强制选 1 名（招募券会优先随到五星）。</li>
             <li>阿米娅的三个形态视为<b>同一名干员</b>：抽到任一形态后，其余形态不再出现。</li>
             <li>开局后可用 <b>🎲 随机抽取分队</b>，从未被禁用的分队里随机抽一个（可重复抽）。</li>
+            <li>抽取弹窗内可直接 <b>＋ 临时干员</b>：手动输入或首字联想加入，<b>不消耗</b>本次抽取。</li>
+            <li>抽取弹窗内可 <b>↩ 反悔</b>：不选取直接退出，<b>该次数会被记录</b>并显示在页面上。</li>
             <li>张数随难度变化；池子不够时弹窗顶部会提示实际张数。</li>
           </ul>
         </div>
@@ -456,6 +493,8 @@ createApp({
     const SC=ref([]),RO=ref([]),RN=reactive(new Set());
     const showModal=ref(false),customName=ref(''),modalTitle=ref(''),drawResults=ref([]),ticketType=ref(''),shortageNotice=ref('');
     const showDiff=ref(false),diffKey=ref('normal'),custom6=ref(2),custom5=ref(3),runDiff=ref(null),showHelp=ref(false),lastPicked=ref(null);
+    // 抽取弹窗内的两个补充动作: 临时干员(额外加入, 不消耗本次抽取) / 反悔(不选取退出, 记录次数)
+    const showTemp=ref(false),undoCount=ref(0);
 
     /* ---------------- 直播窗口 ----------------
        主界面把「已招募 + 本次抽取结果」推给独立的小窗页面(直播展示.html),
@@ -468,6 +507,7 @@ createApp({
       stamp:Date.now(),
       diff:runDiff.value?{name:runDiff.value.name,tag:runDiff.value.tag}:null,
       squad:drawnSquad.value?drawnSquad.value.分队:null,
+      undo:undoCount.value,
       draw:drawResults.value.map(slim),
       picked:lastPicked.value,
       recruited:RO.value.map(slim),
@@ -728,7 +768,7 @@ createApp({
     // 防误触: 已有招募记录时先确认。难度不在这里选, 新的一局回到主界面后重新走流程即可
     const newGame=()=>{
       if(RO.value.length&&!confirm('确定要清空当前这一局吗？已招募的干员不会保留。'))return;
-      SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';lastPicked.value=null;drawResults.value=[];drawnSquad.value=null;phase.value='select-class';
+      SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';lastPicked.value=null;drawResults.value=[];drawnSquad.value=null;undoCount.value=0;showTemp.value=false;phase.value='select-class';
     };
     /* ---------------- 手动添加: 首字联想 ----------------
        按干员名的开头匹配(输入第一个字就会列出候选), 点击直接加入;
@@ -756,6 +796,15 @@ createApp({
       }
       customName.value='';suggestOpen.value=false;
     }
+    // 抽取弹窗里的「临时干员」: 复用同一份输入状态与联想逻辑
+    const openTemp=()=>{customName.value='';suggestOpen.value=false;showTemp.value=true};
+    const addCustomTemp=()=>{const before=RO.value.length;addCustom();if(RO.value.length>before)showTemp.value=false};
+    // 抽取弹窗里的「反悔」: 不选取直接退出, 并记录本局次数(供展示/复盘)
+    const undoDraw=()=>{
+      if(!showModal.value)return;
+      undoCount.value++;
+      showModal.value=false;shortageNotice.value='';lastPicked.value=null;drawResults.value=[];
+    };
 
     // Esc 强制选择: 开局券在候选内均匀随机; 招募券优先取 1 张五星(房规, 非缺陷, 勿随意改动)
     const forcePick=()=>{
@@ -769,6 +818,7 @@ createApp({
     onMounted(()=>{
       window.addEventListener('keydown',e=>{
         if(e.key!=='Escape')return;
+        if(showTemp.value){e.preventDefault();showTemp.value=false;return}
         if(showHelp.value){e.preventDefault();showHelp.value=false;return}
         if(showBan.value){e.preventDefault();showBan.value=false;return}
         if(showDiff.value){e.preventDefault();cancelDifficulty();return}
@@ -781,7 +831,7 @@ createApp({
     // 任何一次状态变化都同步给直播小窗
     watch(livePayload,()=>pushLive());
 
-    return{phase,errorMsg,SC,RO,showModal,modalTitle,drawResults,shortageNotice,CLS,customName,
+    return{phase,errorMsg,SC,RO,showModal,modalTitle,drawResults,shortageNotice,CLS,customName,ticketType,
       loadData,toggleClass,startDraw,useTicket,pickOperator,forcePick,newGame,addCustom,
       charKey,SAME_CHAR,
       // 直播窗口
@@ -802,6 +852,8 @@ createApp({
       squads,squadGroups,squadPool,bannedSquads,drawnSquad,toggleBanSquad,drawSquad,BAN_SQUAD_KEY,
       // 手动添加的首字联想
       suggestOpen,nameMatches,nameSuggestions,suggestMore,pickSuggestion,
+      // 抽取弹窗: 临时干员 / 反悔
+      showTemp,undoCount,openTemp,addCustomTemp,undoDraw,
       // 简要说明
       showHelp};
   }

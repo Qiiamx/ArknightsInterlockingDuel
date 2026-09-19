@@ -13,6 +13,8 @@ body.tp{background:transparent}
 .diff{margin-left:auto;padding:1px 8px;border:1px solid #3ff0cc88;border-radius:3px;color:#3ff0cc;font-size:clamp(9px,1.5vw,13px);letter-spacing:1px;white-space:nowrap}
 .squad{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;border:1px solid #ffd24a88;border-radius:3px;color:#ffd24a;font-size:clamp(9px,1.5vw,13px);letter-spacing:1px;white-space:nowrap}
 .squad img{width:clamp(16px,2.6vw,26px);height:clamp(12px,2vw,20px);object-fit:contain}
+.undo{padding:1px 8px;border:1px solid #ffc24788;border-radius:3px;color:#ffc247;font-size:clamp(9px,1.5vw,13px);letter-spacing:1px;white-space:nowrap}
+.undo b{font-weight:700}
 .sec{margin-bottom:clamp(6px,1.2vw,12px)}
 .sec:last-child{margin-bottom:0}
 .sec-t{display:flex;align-items:center;gap:8px;font-size:clamp(10px,1.7vw,15px);letter-spacing:1px;color:#3ff0cc;font-weight:700;margin-bottom:clamp(4px,.9vw,9px)}
@@ -39,7 +41,7 @@ body.tp{background:transparent}
 </head>
 <body>
 <div id="app">
-  <div class="hd"><span class="logo">集成战略 · 干员招募</span><span class="diff" id="diff" hidden></span><span class="squad" id="squad" hidden><img id="squadImg" alt=""><b id="squadName"></b></span></div>
+  <div class="hd"><span class="logo">集成战略 · 干员招募</span><span class="diff" id="diff" hidden></span><span class="squad" id="squad" hidden><img id="squadImg" alt=""><b id="squadName"></b></span><span class="undo" id="undo" hidden>反悔 <b id="undoN">0</b> 次</span></div>
   <div class="sec" id="drawSec" hidden>
     <div class="sec-t">本次抽取<span class="hint" id="drawHint"></span></div>
     <div class="grid" id="drawGrid"></div>
@@ -97,6 +99,9 @@ body.tp{background:transparent}
       si.src='./images/分队/'+p.squad+'.png';
       si.alt=p.squad;
     }else{sq.hidden=true}
+    // 反悔次数(记录用, 便于观众/对手核对)
+    var ud=$('undo');
+    if(p.undo>0){ud.hidden=false;$('undoN').textContent=p.undo}else{ud.hidden=true}
     // 本次抽取(最近一次抽出的候选)
     var draw=p.draw||[];
     var ds=$('drawSec');
