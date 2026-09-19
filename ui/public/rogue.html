@@ -194,6 +194,21 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
       </div>
     </div>
 
+    <!-- 随机分队: 放在开局职业选择之前, 开局前就该定下来; 对局中同样常驻显示 -->
+    <div v-if="phase==='select-class'||phase==='playing'" class="squad-bar">
+      <button class="ticket-btn squad-btn" :disabled="!squadPool.length" @click="drawSquad">
+        🎲 {{ drawnSquad ? '重新抽取分队' : '随机抽取分队' }}
+      </button>
+      <div v-if="drawnSquad" class="squad-drawn">
+        <img :src="'./images/分队/'+drawnSquad.分队+'.png'" :alt="drawnSquad.分队" @error="onImgHide($event)">
+        <div class="squad-drawn-t">本局分队<small>（共 {{ squadPool.length }} 个可选）</small></div>
+        <div class="squad-drawn-n">{{ drawnSquad.分队 }}</div>
+      </div>
+      <div v-else class="squad-hint">
+        可抽取 {{ squadPool.length }} / {{ squads.length }} 个分队{{ bannedSquads.size ? '（已禁用 '+bannedSquads.size+' 个）' : '' }}
+      </div>
+    </div>
+
     <template v-if="phase==='select-class'">
       <div class="phase-title">▶ 开局职业选择（请选3个职业）</div>
       <div class="class-grid">
@@ -220,20 +235,6 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
           </div>
         </div>
         <div v-else style="color:#7b8fa0;font-size:.88em">暂未招募干员</div>
-      </div>
-
-      <div v-if="phase==='playing'" class="squad-bar">
-        <button class="ticket-btn squad-btn" :disabled="!squadPool.length" @click="drawSquad">
-          🎲 {{ drawnSquad ? '重新抽取分队' : '随机抽取分队' }}
-        </button>
-        <div v-if="drawnSquad" class="squad-drawn">
-          <img :src="'./images/分队/'+drawnSquad.分队+'.png'" :alt="drawnSquad.分队" @error="onImgHide($event)">
-          <div class="squad-drawn-t">本局分队<small>（共 {{ squadPool.length }} 个可选）</small></div>
-          <div class="squad-drawn-n">{{ drawnSquad.分队 }}</div>
-        </div>
-        <div v-else class="squad-hint">
-          可抽取 {{ squadPool.length }} / {{ squads.length }} 个分队{{ bannedSquads.size ? '（已禁用 '+bannedSquads.size+' 个）' : '' }}
-        </div>
       </div>
 
       <div v-if="phase==='playing'" class="add-row">
@@ -407,7 +408,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
             <li>之后点下方招募券继续招募，<b>点击干员头像</b>即完成招募（每次选 1 名）。</li>
             <li>按 <code>Esc</code> 从当前候选里随机强制选 1 名（招募券会优先随到五星）。</li>
             <li>阿米娅的三个形态视为<b>同一名干员</b>：抽到任一形态后，其余形态不再出现。</li>
-            <li>开局后可用 <b>🎲 随机抽取分队</b>，从未被禁用的分队里随机抽一个（可重复抽）。</li>
+            <li>开局前（主界面）可用 <b>🎲 随机抽取分队</b>，从未被禁用的分队里随机抽一个（可重复抽）；抽到的分队在开局与对局中都会显示。</li>
             <li>抽取弹窗内可直接 <b>＋ 临时干员</b>：手动输入或首字联想加入，<b>不消耗</b>本次抽取。</li>
             <li>抽取弹窗内可 <b>↩ 反悔</b>：招募券的抽取「不选取退出」，<b>该次数会被记录</b>并显示在页面上。</li>
             <li>开局弹窗的 <b>↩ 反悔 · 改选职业</b> 是另一回事：选错职业时作废开局候选、返回职业选择
