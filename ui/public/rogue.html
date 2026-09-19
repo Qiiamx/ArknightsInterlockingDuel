@@ -69,6 +69,20 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 .squad-drawn-t small{color:#7b8fa0}
 .squad-drawn-n{font-size:1.25em;font-weight:800;color:#00ffcc;letter-spacing:2px}
 .squad-hint{font-size:.86em;color:#93a7b5}
+.add-row{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.add-box{position:relative;flex:1;min-width:220px}
+.add-box input{width:100%;padding:9px 12px;background:#12202c;border:1px solid #2b4256;border-radius:4px;color:#eef5fa;font-size:.95em;font-family:inherit}
+.add-box input:focus{outline:none;border-color:#00ffcc}
+.suggest{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:60;max-height:320px;overflow-y:auto;background:#0c151d;border:1px solid #2b4256;border-radius:6px;box-shadow:0 14px 36px rgba(0,0,0,.7)}
+.suggest::-webkit-scrollbar{width:6px}
+.suggest::-webkit-scrollbar-thumb{background:#00ffcc88;border-radius:3px}
+.suggest-item{display:flex;align-items:center;gap:10px;padding:7px 11px;cursor:pointer;border-bottom:1px solid rgba(43,66,86,.5)}
+.suggest-item:last-child{border-bottom:none}
+.suggest-item:hover{background:#18293a}
+.suggest-item img{width:32px;height:32px;border-radius:4px;object-fit:cover;background:#0a1017}
+.suggest-nm{color:#eef5fa;font-weight:600;font-size:.95em}
+.suggest-meta{margin-left:auto;color:#93a7b5;font-size:.8em;white-space:nowrap}
+.suggest-more{padding:7px 11px;color:#93a7b5;font-size:.8em;background:#0e1a24}
 .header h1{font-size:2.05em;font-weight:800;color:#00ffcc;letter-spacing:4px;text-shadow:0 0 12px rgba(0,255,204,.25)}
 .header .sub{font-size:.9em;color:#93a7b5;margin-top:6px;letter-spacing:2px}
 .phase-title{font-size:1.15em;font-weight:700;color:#00ffcc;margin-bottom:14px;letter-spacing:2px;padding-left:8px;border-left:3px solid #00ffcc}
@@ -215,9 +229,20 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         </div>
       </div>
 
-      <div v-if="phase==='playing'" style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+      <div v-if="phase==='playing'" class="add-row">
         <button class="ticket-btn" @click="newGame" style="border-color:#ff5a5a;color:#ff8080">新的一局</button>
-        <input v-model="customName" placeholder="输入干员名添加临时招募" style="flex:1;min-width:200px;padding:9px 12px;background:#12202c;border:1px solid #2b4256;border-radius:4px;color:#eef5fa;font-size:.95em" @keyup.enter="addCustom">
+        <div class="add-box">
+          <input v-model="customName" placeholder="输入干员名添加临时招募（首字即可联想）"
+                 @keyup.enter="addCustom" @input="suggestOpen=true" @focus="suggestOpen=true" @blur="suggestOpen=false">
+          <div v-if="suggestOpen && nameSuggestions.length" class="suggest">
+            <div v-for="o in nameSuggestions" :key="o.干员" class="suggest-item" @mousedown.prevent="pickSuggestion(o)">
+              <img :src="'./icon/头像_'+o.干员+'.png'" :alt="o.干员" @error="onImgError($event)">
+              <span class="suggest-nm">{{o.干员}}</span>
+              <span class="suggest-meta">{{o.职业}} · {{o.稀有度}}★</span>
+            </div>
+            <div v-if="suggestMore>0" class="suggest-more">还有 {{ suggestMore }} 个匹配，继续输入可缩小范围…</div>
+          </div>
+        </div>
         <button class="ticket-btn" @click="addCustom">添加</button>
       </div>
 
@@ -705,7 +730,32 @@ createApp({
       if(RO.value.length&&!confirm('确定要清空当前这一局吗？已招募的干员不会保留。'))return;
       SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';lastPicked.value=null;drawResults.value=[];drawnSquad.value=null;phase.value='select-class';
     };
-    const addCustom=()=>{const n=customName.value.trim();if(!n)return;const op=ops.value.find(o=>o.干员===n);if(!op){alert('干员不存在！');return}addOp(op);customName.value=''}
+    /* ---------------- 手动添加: 首字联想 ----------------
+       按干员名的开头匹配(输入第一个字就会列出候选), 点击直接加入;
+       已招募的干员不再出现在联想列表里。 */
+    const suggestOpen=ref(false);
+    const nameMatches=computed(()=>{
+      const q=customName.value.trim();
+      if(!q)return [];
+      return ops.value.filter(o=>o.干员.indexOf(q)===0&&!RN.has(charKey(o.干员)));
+    });
+    const nameSuggestions=computed(()=>nameMatches.value.slice(0,12));
+    const suggestMore=computed(()=>Math.max(0,nameMatches.value.length-nameSuggestions.value.length));
+    const pickSuggestion=o=>{customName.value=o.干员;suggestOpen.value=false;addCustom()};
+    const addCustom=()=>{
+      const n=customName.value.trim();
+      if(!n)return;
+      const exact=ops.value.find(o=>o.干员===n);
+      if(exact&&RN.has(charKey(n))){alert('「'+n+'」已经在已招募列表中了。');return}
+      const m=nameMatches.value;                 // 以 n 开头且尚未招募
+      if(exact)addOp(exact);                     // 精确命中的名字
+      else if(m.length===1)addOp(m[0]);          // 只有一个候选, 省掉一次点击
+      else{
+        alert(m.length?('有 '+m.length+' 个匹配，请从联想列表里选一个。'):('没有以「'+n+'」开头的干员。'));
+        return;
+      }
+      customName.value='';suggestOpen.value=false;
+    }
 
     // Esc 强制选择: 开局券在候选内均匀随机; 招募券优先取 1 张五星(房规, 非缺陷, 勿随意改动)
     const forcePick=()=>{
@@ -750,6 +800,8 @@ createApp({
       openBanPicker,toggleBan,clearBans,loadBans,saveBans,BAN_KEY,
       // 分队
       squads,squadGroups,squadPool,bannedSquads,drawnSquad,toggleBanSquad,drawSquad,BAN_SQUAD_KEY,
+      // 手动添加的首字联想
+      suggestOpen,nameMatches,nameSuggestions,suggestMore,pickSuggestion,
       // 简要说明
       showHelp};
   }
