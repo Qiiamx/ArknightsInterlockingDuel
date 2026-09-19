@@ -87,7 +87,15 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 .header .sub{font-size:.9em;color:#93a7b5;margin-top:6px;letter-spacing:2px}
 .phase-title{font-size:1.15em;font-weight:700;color:#00ffcc;margin-bottom:14px;letter-spacing:2px;padding-left:8px;border-left:3px solid #00ffcc}
 .class-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-.class-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 10px;background:#12202c;border:2px solid #2b4256;border-radius:6px;color:#b9c9d6;cursor:pointer;font-size:1.02em;font-weight:600;transition:all .25s;user-select:none}
+.class-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 10px;background:#12202c;border:2px solid #2b4256;border-radius:6px;color:#b9c9d6;cursor:pointer;font-size:1.02em;font-weight:600;transition:all .25s;user-select:none;position:relative}
+.cls-badge{position:absolute;top:5px;right:7px;min-width:22px;text-align:center;background:#00ffcc;color:#04241d;font-size:.72em;font-weight:800;border-radius:9px;padding:1px 5px}
+.sc-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:18px;min-height:36px}
+.sc-label{color:#93a7b5;font-size:.88em;letter-spacing:1px}
+.sc-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 5px 4px 13px;background:#12202c;border:1px solid #00ffcc;border-radius:14px;color:#00ffcc;font-size:.92em;font-weight:700}
+.sc-x{border:none;background:transparent;color:#93a7b5;cursor:pointer;font-size:1.1em;line-height:1;padding:0 4px;font-family:inherit}
+.sc-x:hover{color:#ff5a5a}
+.sc-clear{padding:5px 12px!important;font-size:.85em!important}
+.sc-hint{color:#93a7b5;font-size:.88em}
 .class-btn:hover{border-color:#00ffcc;color:#eef5fa;background:#18293a}
 .class-btn.sel{border-color:#00ffcc;color:#00ffcc;background:rgba(0,255,204,.12);box-shadow:0 0 16px rgba(0,255,204,.25)}
 .class-btn.dis{opacity:.35;cursor:not-allowed;pointer-events:none}
@@ -210,17 +218,27 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
     </div>
 
     <template v-if="phase==='select-class'">
-      <div class="phase-title">▶ 开局职业选择（请选3个职业）</div>
+      <div class="phase-title">▶ 开局职业选择（3 个位置，可重复选同一职业）</div>
       <div class="class-grid">
         <div v-for="cls in CLS" :key="cls" class="class-btn"
-             :class="{sel:SC.includes(cls),dis:!SC.includes(cls)&&SC.length>=3}"
-             @click="toggleClass(cls)">
+             :class="{sel:classCount(cls)>0,dis:SC.length>=3}"
+             @click="pickClass(cls)">
           <img :src="'./images/'+cls+'.png'" :alt="cls" @error="onImgHide($event)">
           <span>{{cls}}</span>
+          <span v-if="classCount(cls)>0" class="cls-badge">×{{ classCount(cls) }}</span>
         </div>
       </div>
-      <div v-if="SC.length>0" style="text-align:center;color:#00ffcc88;margin-bottom:16px">
-        已选: {{SC.join(' · ')}}<span v-if="SC.length<3" style="color:#555"> （还需选{{3-SC.length}}个）</span>
+      <div class="sc-row">
+        <template v-if="SC.length>0">
+          <span class="sc-label">已选</span>
+          <div v-for="(c,i) in SC" :key="'sc'+i" class="sc-chip">
+            <span>{{c}}</span>
+            <button class="sc-x" title="移除这一位" @click="removeClassAt(i)">×</button>
+          </div>
+          <button class="ticket-btn sc-clear" @click="clearClasses">清空</button>
+          <span v-if="SC.length<3" class="sc-hint">还需 {{ 3-SC.length }} 位</span>
+        </template>
+        <span v-else class="sc-hint">请选择 3 个位置（同一职业可以重复选）</span>
       </div>
       <div class="start-btn-wrap"><button class="start-btn" :disabled="SC.length!==3" @click="openDifficulty('start')">⚔ 开始招募</button></div>
     </template>
@@ -403,7 +421,8 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         <div class="help-sec">
           <div class="help-h">▍抽取规则<span style="color:#667;font-size:.9em">（当前难度：{{ curDiff().name }} · {{ curDiff().tag }}）</span></div>
           <ul>
-            <li>先选满 <b>3 个职业</b>，点「开始招募」，从开局候选里选 1 名作为起始干员。</li>
+            <li>先选满 <b>3 个职业位</b>，点「开始招募」，从开局候选里选 1 名作为起始干员。</li>
+            <li>3 个职业位<b>可以重复选同一职业</b>（例如医疗×3），此时开局候选都来自该职业。</li>
             <li v-for="p in curPreview" :key="'hp'+p[0]">{{ p[0] }}：<code>{{ p[1] }}</code></li>
             <li>之后点下方招募券继续招募，<b>点击干员头像</b>即完成招募（每次选 1 名）。</li>
             <li>按 <code>Esc</code> 从当前候选里随机强制选 1 名（招募券会优先随到五星）。</li>
@@ -460,7 +479,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 </div>
 <script>
 const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
-const VERSION = '1.0';   // 与打包脚本 tools/pack-rogue.js 的 VERSION 必须一致(打包时会校验)
+const VERSION = '1.1';   // 与打包脚本 tools/pack-rogue.js 的 VERSION 必须一致(打包时会校验)
 const CLS = ['先锋','近卫','重装','狙击','术师','医疗','辅助','特种'];
 const TICKET = {
   '近锋':['近卫','先锋'],'狙医':['狙击','医疗'],'术特':['术师','特种'],'重辅':['重装','辅助'],
@@ -575,7 +594,7 @@ createApp({
     const previewLines=r=>{
       const sixOnly=r.one5===0?'（纯六星，必选一名六星）':'';
       return [
-        ['开局招募','每职业 6★×'+r.open+'（共 '+r.open*3+' 张六星里选 1 名）'],
+        ['开局招募','每个职业位 6★×'+r.open+'（共 '+r.open*3+' 张六星里选 1 名）'],
         ['单职业券','6★×'+r.one6+' ＋ 5★×'+r.one5+sixOnly],
         ['职业招募券','每职业 6★×'+r.combo6+' ＋ 5★×'+r.combo5+sixOnly],
         ['定向招募券','6★×'+r.dir6+' ＋ 5★×'+r.dir5+sixOnly],
@@ -589,7 +608,7 @@ createApp({
     // 一句话概述某档的关键张数, 供简要说明使用(不为每档写文案)
     const diffSummary=d=>{
       const r=recipeOf(d);
-      return '单职业券 '+r.one6+'六+'+r.one5+'五 · 任意券 '+r.any6+'六 · 开局每职业 '+r.open;
+      return '单职业券 '+r.one6+'六+'+r.one5+'五 · 任意券 '+r.any6+'六 · 开局每职业位 '+r.open;
     };
     // 简要说明里的四档一览(自定义档按本局实际填写的值展示)
     const diffRows=computed(()=>DIFFS.map(d=>{
@@ -725,7 +744,12 @@ createApp({
       catch(e){errorMsg.value=e.message;phase.value='error';}
     };
 
-    const toggleClass=c=>{const i=SC.value.indexOf(c);i>=0?SC.value.splice(i,1):SC.value.length<3&&SC.value.push(c)};
+    // 开局职业选择: 3 个位置, 允许重复选同一职业(同一职业券可以重复拿)
+    const MAX_SC=3;
+    const classCount=c=>SC.value.filter(x=>x===c).length;
+    const pickClass=c=>{if(SC.value.length<MAX_SC)SC.value.push(c)};
+    const removeClassAt=i=>{if(i>=0&&i<SC.value.length)SC.value.splice(i,1)};
+    const clearClasses=()=>{SC.value=[]};
 
     const startDraw=()=>{
       if(SC.value.length!==3)return;
@@ -846,7 +870,8 @@ createApp({
     watch(livePayload,()=>pushLive());
 
     return{phase,errorMsg,SC,RO,showModal,modalTitle,drawResults,shortageNotice,CLS,customName,ticketType,VERSION,
-      loadData,toggleClass,startDraw,useTicket,pickOperator,forcePick,newGame,addCustom,
+      loadData,startDraw,useTicket,pickOperator,forcePick,newGame,addCustom,
+      pickClass,removeClassAt,clearClasses,classCount,MAX_SC,
       charKey,SAME_CHAR,
       // 直播窗口
       LIVE_KEY,lastPicked,livePayload,pushLive,openLive,

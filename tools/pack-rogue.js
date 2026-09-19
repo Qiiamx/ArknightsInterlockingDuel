@@ -30,8 +30,8 @@ const SRC_SQUADS = path.join(PUB, 'data', 'squads.json');
 const SRC_LIVE = path.join(PUB, '直播展示.html');   // 直播小窗页面(独立文件, 只展示已招募与本次抽取)
 
 const PKG_NAME = '肉鸽随机干员选取器';
-const VERSION = '1.0';                         // 版本号: 必须与 rogue.html 里的 const VERSION 一致(下面会校验)
-const PKG_DIR = PKG_NAME + 'v' + VERSION;      // 产物目录/压缩包名: 肉鸽随机干员选取器v1.0
+const VERSION = '1.1';                         // 版本号: 必须与 rogue.html 里的 const VERSION 一致(下面会校验)
+const PKG_DIR = PKG_NAME + 'v' + VERSION;      // 产物目录/压缩包名: 肉鸽随机干员选取器v1.1
 const LAUNCHER = '开始游戏.html';              // 主界面, 名字即用法
 const LIVE_PAGE = '直播展示.html';             // 直播小窗, 由主界面「📺 直播窗口」打开
 const RELEASE = path.join(ROOT, 'release');
