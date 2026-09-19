@@ -25,6 +25,8 @@ const SRC_DATA = path.join(PUB, 'data', 'operators.json');
 const SRC_VENDOR = path.join(PUB, 'vendor', 'vue.global.prod.js');
 const SRC_ICON = path.join(PUB, 'icon');
 const SRC_IMAGES = path.join(PUB, 'images');
+const SRC_SQUAD_ICON = path.join(PUB, 'images', '分队');
+const SRC_SQUADS = path.join(PUB, 'data', 'squads.json');
 const SRC_LIVE = path.join(PUB, '直播展示.html');   // 直播小窗页面(独立文件, 只展示已招募与本次抽取)
 
 const PKG_NAME = '肉鸽随机干员选取器';
@@ -68,6 +70,11 @@ const ops = JSON.parse(fs.readFileSync(SRC_DATA, 'utf8'));
 must(Array.isArray(ops) && ops.length > 0, 'operators.json 解析失败或为空');
 must(ops.every((o) => o.干员 && o.职业 && o.分支 && o.稀有度), 'operators.json 存在字段缺失的干员');
 
+// 分队: 没有它页面仍可用(只是随机分队功能空), 但既然页面要读, 就要求数据与图标齐备
+const squads = JSON.parse(fs.readFileSync(SRC_SQUADS, 'utf8'));
+must(Array.isArray(squads) && squads.length > 0, 'squads.json 解析失败或为空');
+must(squads.every((s) => s.分队), 'squads.json 存在缺少「分队」字段的条目');
+
 // ---- 资源 ----
 must(fs.existsSync(SRC_VENDOR), '缺少 vendor/vue.global.prod.js');
 must(fs.existsSync(SRC_LIVE), '缺少 ' + LIVE_PAGE + '（直播小窗页面）');
@@ -75,13 +82,16 @@ const vueSrc = fs.readFileSync(SRC_VENDOR, 'utf8');
 // 内联的前提: 脚本内容里不能出现 </script, 否则 HTML 会被提前截断
 must(!/<\/script/i.test(vueSrc), 'Vue 源码里含 </script, 不能直接内联');
 must(!/<\/script/i.test(JSON.stringify(ops)), '干员数据里含 </script, 不能直接内联');
+must(!/<\/script/i.test(JSON.stringify(squads)), '分队数据里含 </script, 不能直接内联');
 
 if (!problems.length) {
 	html = html
 		.replace(VENDOR_TAG, '<script>\n/* Vue 3.5.41 生产构建（含运行时编译器），已内联以免除外部依赖 */\n' + vueSrc + '\n</script>')
-		.replace(DATA_TAG, '<script>\n/* 干员数据快照，已内联：浏览器禁止 file:// 下的 fetch，不内联则双击打开必白屏 */\nwindow.__ROGUE_OPS__ = ' + JSON.stringify(ops) + ';\n</script>');
+		.replace(DATA_TAG, '<script>\n/* 干员与分队数据快照，已内联：浏览器禁止 file:// 下的 fetch，不内联则双击打开必白屏 */\n'
+			+ 'window.__ROGUE_OPS__ = ' + JSON.stringify(ops) + ';\n'
+			+ 'window.__ROGUE_SQUADS__ = ' + JSON.stringify(squads) + ';\n</script>');
 	// 内联后必须不再有指向已删除目录的资源引用
-	// (只查 src/href: 页面里还有一句 fetch('./data/operators.json') 的兜底分支,
+	// (只查 src/href: 页面里还有 fetch('./data/…') 的兜底分支,
 	//  离线包内因 window.__ROGUE_OPS__ 存在而永不执行, 属正常保留)
 	const leftover = html.match(/(?:src|href)="[^"]*\.\/(?:vendor|data)\//g);
 	must(!leftover, '内联后仍有指向 vendor/data 的资源引用: ' + (leftover || []).join(', '));
@@ -102,6 +112,20 @@ must(!unknownClasses.length, '出现了未登记的职业: ' + unknownClasses.jo
 const missingClassIcons = usedClasses.filter((c) => !fs.existsSync(path.join(SRC_IMAGES, c + '.png')));
 must(!missingClassIcons.length, '缺少职业图标: ' + missingClassIcons.join(', '));
 
+// 分队图标: 必须与数据一一对应(页面按 分队名.png 拼路径)
+const squadIcons = [];
+const missingSquadIcons = [];
+for (const s of squads) {
+	const f = s.分队 + '.png';
+	if (fs.existsSync(path.join(SRC_SQUAD_ICON, f))) squadIcons.push(f);
+	else missingSquadIcons.push(s.分队);
+}
+must(!missingSquadIcons.length, '缺少 ' + missingSquadIcons.length + ' 个分队图标: ' + missingSquadIcons.join(', '));
+if (fs.existsSync(SRC_SQUAD_ICON)) {
+	const orphans = fs.readdirSync(SRC_SQUAD_ICON).filter((f) => f.endsWith('.png') && !squadIcons.includes(f));
+	must(!orphans.length, '分队图标目录里有对不上数据的文件: ' + orphans.join(', '));
+}
+
 if (problems.length) {
 	console.error('[pack-rogue] 打包前检查未通过, 未改动任何产物:');
 	for (const p of problems) console.error('  - ' + p);
@@ -112,12 +136,13 @@ if (problems.length) {
 // 第二阶段: 写入
 // ================================================================
 fs.rmSync(OUT_DIR, { recursive: true, force: true });
-for (const d of ['icon', 'images']) fs.mkdirSync(path.join(OUT_DIR, d), { recursive: true });
+for (const d of ['icon', path.join('images', '分队')]) fs.mkdirSync(path.join(OUT_DIR, d), { recursive: true });
 
 fs.writeFileSync(path.join(OUT_DIR, LAUNCHER), html, 'utf8');
 fs.copyFileSync(SRC_LIVE, path.join(OUT_DIR, LIVE_PAGE));
 for (const name of iconFiles) fs.copyFileSync(path.join(SRC_ICON, name), path.join(OUT_DIR, 'icon', name));
 for (const c of usedClasses) fs.copyFileSync(path.join(SRC_IMAGES, c + '.png'), path.join(OUT_DIR, 'images', c + '.png'));
+for (const f of squadIcons) fs.copyFileSync(path.join(SRC_SQUAD_ICON, f), path.join(OUT_DIR, 'images', '分队', f));
 const iconCount = iconFiles.length;
 
 // 不再生成「使用说明.txt」: 用法就是文件名本身, 规则/难度/禁用说明都做进了页面里的「📖 简要说明」
@@ -234,4 +259,5 @@ console.log('  启动 : ' + LAUNCHER + '（' + Math.round(Buffer.byteLength(html
 console.log('  直播 : ' + LIVE_PAGE + '（' + Math.round(fs.statSync(SRC_LIVE).size / 1024) + ' KB，由主界面「📺 直播窗口」打开）');
 console.log('  顶层 : ' + fs.readdirSync(OUT_DIR).sort().join('  |  '));
 console.log('  干员 : ' + ops.length + ' 名, 头像 ' + iconCount + ' 张, 职业图标 ' + usedClasses.length + ' 个');
+console.log('  分队 : ' + squads.length + ' 个, 图标 ' + squadIcons.length + ' 张');
 console.log('  解压后: ' + (bytes(OUT_DIR) / 1048576).toFixed(1) + ' MB, 文件 ' + files.length + ' 个');

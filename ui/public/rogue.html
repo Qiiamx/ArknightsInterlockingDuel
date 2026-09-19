@@ -55,6 +55,20 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 .ban-card.banned::after{content:'禁用';position:absolute;top:2px;right:2px;font-size:.62em;font-weight:700;color:#fff;background:#e00000;border-radius:2px;padding:0 4px;letter-spacing:1px}
 .ban-empty{text-align:center;color:#93a7b5;padding:30px 0;font-size:.9em}
 .ban-toolbar .ticket-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+.ban-sect{margin-bottom:10px;font-size:1em}
+.ban-sect2{margin-top:20px}
+.squad-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+.ban-card.squad img{width:60px;height:44px;object-fit:contain;background:transparent}
+.squad-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:#0e1a24;border:1px solid rgba(0,255,204,.26);border-radius:8px}
+.squad-btn{padding:10px 20px!important;font-size:1em!important;border-color:#00ffcc!important;color:#00ffcc!important}
+.squad-btn:hover{background:rgba(0,255,204,.12)!important}
+.squad-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+.squad-drawn{display:flex;align-items:center;gap:12px}
+.squad-drawn img{width:62px;height:46px;object-fit:contain}
+.squad-drawn-t{font-size:.8em;color:#93a7b5;letter-spacing:1px}
+.squad-drawn-t small{color:#7b8fa0}
+.squad-drawn-n{font-size:1.25em;font-weight:800;color:#00ffcc;letter-spacing:2px}
+.squad-hint{font-size:.86em;color:#93a7b5}
 .header h1{font-size:2.05em;font-weight:800;color:#00ffcc;letter-spacing:4px;text-shadow:0 0 12px rgba(0,255,204,.25)}
 .header .sub{font-size:.9em;color:#93a7b5;margin-top:6px;letter-spacing:2px}
 .phase-title{font-size:1.15em;font-weight:700;color:#00ffcc;margin-bottom:14px;letter-spacing:2px;padding-left:8px;border-left:3px solid #00ffcc}
@@ -155,7 +169,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
       <div class="header-actions">
         <button class="settings-btn" @click="showHelp=true">📖 简要说明</button>
         <button class="settings-btn" @click="openLive">📺 直播窗口</button>
-        <button class="settings-btn" :class="{on:bannedCount>0}" @click="openBanPicker">⚙ 全局设置{{ bannedCount>0 ? ' · 已禁用 '+bannedCount : '' }}</button>
+        <button class="settings-btn" :class="{on:bannedCount>0||bannedSquads.size>0}" @click="openBanPicker">⚙ 全局设置{{ (bannedCount||bannedSquads.size) ? ' · 禁用 '+bannedCount+' 干员'+(bannedSquads.size?' / '+bannedSquads.size+' 分队':'') : '' }}</button>
       </div>
     </div>
 
@@ -187,9 +201,23 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         <div v-else style="color:#7b8fa0;font-size:.88em">暂未招募干员</div>
       </div>
 
+      <div v-if="phase==='playing'" class="squad-bar">
+        <button class="ticket-btn squad-btn" :disabled="!squadPool.length" @click="drawSquad">
+          🎲 {{ drawnSquad ? '重新抽取分队' : '随机抽取分队' }}
+        </button>
+        <div v-if="drawnSquad" class="squad-drawn">
+          <img :src="'./images/分队/'+drawnSquad.分队+'.png'" :alt="drawnSquad.分队" @error="onImgHide($event)">
+          <div class="squad-drawn-t">本局分队<small>（共 {{ squadPool.length }} 个可选）</small></div>
+          <div class="squad-drawn-n">{{ drawnSquad.分队 }}</div>
+        </div>
+        <div v-else class="squad-hint">
+          可抽取 {{ squadPool.length }} / {{ squads.length }} 个分队{{ bannedSquads.size ? '（已禁用 '+bannedSquads.size+' 个）' : '' }}
+        </div>
+      </div>
+
       <div v-if="phase==='playing'" style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
-        <button class="ticket-btn" @click="newGame" style="border-color:#f54;color:#f54">新的一局</button>
-        <input v-model="customName" placeholder="输入干员名添加临时招募" style="flex:1;min-width:200px;padding:8px 12px;background:#0d1117;border:1px solid #1e3040;border-radius:4px;color:#ccc;font-size:.9em" @keyup.enter="addCustom">
+        <button class="ticket-btn" @click="newGame" style="border-color:#ff5a5a;color:#ff8080">新的一局</button>
+        <input v-model="customName" placeholder="输入干员名添加临时招募" style="flex:1;min-width:200px;padding:9px 12px;background:#12202c;border:1px solid #2b4256;border-radius:4px;color:#eef5fa;font-size:.95em" @keyup.enter="addCustom">
         <button class="ticket-btn" @click="addCustom">添加</button>
       </div>
 
@@ -263,14 +291,15 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 
   <div v-if="showBan" class="modal-overlay">
     <div class="modal ban-modal">
-      <div class="modal-title">全局设置 · 禁用六星干员</div>
-      <div class="modal-notice">被禁用的干员不会再出现在任何抽取中（含开局招募与所有招募券）；本设置跨局保留，刷新后仍生效</div>
+      <div class="modal-title">全局设置 · 禁用</div>
+      <div class="modal-notice">被禁用的六星干员不会再出现在任何抽取中；被禁用的分队不会被随机分队抽到。本设置跨局保留，刷新后仍生效</div>
       <div class="ban-toolbar">
-        <input v-model="banQuery" placeholder="搜索干员名…（清空即显示全部）">
-        <span class="ban-count">已禁用 {{ bannedCount }} / {{ sixStarTotal }}</span>
-        <button class="ticket-btn" :disabled="!bannedCount" @click="clearBans">全部解除</button>
+        <input v-model="banQuery" placeholder="搜索干员名 / 分队名…（清空即显示全部）">
+        <span class="ban-count">已禁用 {{ bannedCount }} 六星 · {{ bannedSquads.size }} 分队</span>
+        <button class="ticket-btn" :disabled="!bannedCount && !bannedSquads.size" @click="clearBans">全部解除</button>
       </div>
       <div class="ban-body">
+        <div class="ban-group-title ban-sect">六星干员<span class="ban-group-count">{{ bannedCount }} / {{ sixStarTotal }} 已禁用</span></div>
         <template v-for="c in CLS" :key="'bg'+c">
           <div v-if="banGroups[c] && banGroups[c].length" class="ban-group">
             <div class="ban-group-title">
@@ -288,6 +317,16 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
           </div>
         </template>
         <div v-if="banResultCount===0" class="ban-empty">没有匹配的六星干员</div>
+
+        <div class="ban-group-title ban-sect ban-sect2">分队<span class="ban-group-count">{{ bannedSquads.size }} / {{ squads.length }} 已禁用</span></div>
+        <div class="ban-cards squad-grid">
+          <div v-for="s in squadGroups" :key="s.分队" class="ban-card squad"
+               :class="{banned:bannedSquads.has(s.分队)}" @click="toggleBanSquad(s.分队)">
+            <img :src="'./images/分队/'+s.分队+'.png'" :alt="s.分队" @error="onImgHide($event)">
+            <div class="ban-card-name">{{s.分队}}</div>
+          </div>
+        </div>
+        <div v-if="!squadGroups.length" class="ban-empty">没有匹配的分队</div>
       </div>
       <div class="diff-actions" style="margin-top:16px">
         <button class="primary" @click="showBan=false">完成</button>
@@ -307,6 +346,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
             <li>之后点下方招募券继续招募，<b>点击干员头像</b>即完成招募（每次选 1 名）。</li>
             <li>按 <code>Esc</code> 从当前候选里随机强制选 1 名（招募券会优先随到五星）。</li>
             <li>阿米娅的三个形态视为<b>同一名干员</b>：抽到任一形态后，其余形态不再出现。</li>
+            <li>开局后可用 <b>🎲 随机抽取分队</b>，从未被禁用的分队里随机抽一个（可重复抽）。</li>
             <li>张数随难度变化；池子不够时弹窗顶部会提示实际张数。</li>
           </ul>
         </div>
@@ -328,9 +368,10 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
           <ul>
             <li>点右上角「⚙ 全局设置」，可按职业分组检索并<b>多选禁用</b>六星干员，再次点击即解除。</li>
             <li>被禁用的干员<b>不会出现在任何抽取中</b>（含开局招募与全部招募券）。</li>
+            <li>同一界面下方可<b>禁用分队</b>：被禁用的分队不会被「随机抽取分队」抽到。</li>
             <li>设置<b>跨局保留</b>——「新的一局」不会清空；刷新页面后仍然生效。</li>
-            <li v-if="bannedCount">当前已禁用 <b>{{ bannedCount }}</b> 名六星。</li>
-            <li v-else>当前没有禁用任何干员。</li>
+            <li v-if="bannedCount || bannedSquads.size">当前已禁用 <b>{{ bannedCount }}</b> 名六星干员、<b>{{ bannedSquads.size }}</b> 个分队。</li>
+            <li v-else>当前没有禁用任何干员与分队。</li>
           </ul>
         </div>
       </div>
@@ -401,6 +442,7 @@ createApp({
     const livePayload=computed(()=>({
       stamp:Date.now(),
       diff:runDiff.value?{name:runDiff.value.name,tag:runDiff.value.tag}:null,
+      squad:drawnSquad.value?drawnSquad.value.分队:null,
       draw:drawResults.value.map(slim),
       picked:lastPicked.value,
       recruited:RO.value.map(slim),
@@ -500,10 +542,12 @@ createApp({
       startDraw();
     };
 
-    /* ---------------- 全局设置: 禁用六星干员 ----------------
-       跨局保留并写入 localStorage; 被禁用的干员不会出现在任何抽取中(含开局招募)。 */
-    const BAN_KEY='rogue_banned_six';
-    const banned=reactive(new Set()),showBan=ref(false),banQuery=ref('');
+    /* ---------------- 全局设置: 禁用六星干员 / 分队 ----------------
+       跨局保留并写入 localStorage; 被禁用的干员不出现在任何抽取中(含开局招募),
+       被禁用的分队不会被「随机抽取分队」抽到。 */
+    const BAN_KEY='rogue_banned_six',BAN_SQUAD_KEY='rogue_banned_squad';
+    const banned=reactive(new Set()),bannedSquads=reactive(new Set()),showBan=ref(false),banQuery=ref('');
+    const squads=ref([]),drawnSquad=ref(null);
     const sixStars=computed(()=>ops.value.filter(o=>o.稀有度==='6'));
     const sixStarTotal=computed(()=>sixStars.value.length);
     const bannedCount=computed(()=>banned.size);
@@ -518,19 +562,43 @@ createApp({
       return g;
     });
     const banResultCount=computed(()=>CLS.reduce((n,c)=>n+(banGroups.value[c]||[]).length,0));
+    // 分队的检索与可抽取池
+    const squadGroups=computed(()=>{
+      const q=banQuery.value.trim();
+      return squads.value.filter(s=>!q||s.分队.indexOf(q)>=0);
+    });
+    const squadPool=computed(()=>squads.value.filter(s=>!bannedSquads.has(s.分队)));
     const openBanPicker=()=>{banQuery.value='';showBan.value=true};
     // localStorage 在 file:// 或隐私模式下可能不可用, 一律静默降级为"仅本次会话有效"
-    const saveBans=()=>{try{localStorage.setItem(BAN_KEY,JSON.stringify([...banned]))}catch(e){}};
+    const saveBans=()=>{
+      try{
+        localStorage.setItem(BAN_KEY,JSON.stringify([...banned]));
+        localStorage.setItem(BAN_SQUAD_KEY,JSON.stringify([...bannedSquads]));
+      }catch(e){}
+    };
     const loadBans=()=>{
       try{
         const raw=localStorage.getItem(BAN_KEY);
-        if(!raw)return;
-        const names=new Set(ops.value.map(o=>o.干员));   // 剔除数据里已不存在的名字, 避免幽灵计数
-        for(const n of JSON.parse(raw))if(names.has(n))banned.add(n);
+        if(raw){
+          const names=new Set(ops.value.map(o=>o.干员));   // 剔除数据里已不存在的名字, 避免幽灵计数
+          for(const n of JSON.parse(raw))if(names.has(n))banned.add(n);
+        }
+        const rawS=localStorage.getItem(BAN_SQUAD_KEY);
+        if(rawS){
+          const sn=new Set(squads.value.map(s=>s.分队));
+          for(const n of JSON.parse(rawS))if(sn.has(n))bannedSquads.add(n);
+        }
       }catch(e){}
     };
     const toggleBan=n=>{banned.has(n)?banned.delete(n):banned.add(n);saveBans()};
-    const clearBans=()=>{banned.clear();saveBans()};
+    const toggleBanSquad=n=>{bannedSquads.has(n)?bannedSquads.delete(n):bannedSquads.add(n);saveBans()};
+    const clearBans=()=>{banned.clear();bannedSquads.clear();saveBans()};
+    // 随机抽取分队: 只从没被禁用的分队里抽
+    const drawSquad=()=>{
+      const p=squadPool.value;
+      if(!p.length){alert('没有可抽取的分队了！请到「⚙ 全局设置」解除部分分队禁用。');return}
+      drawnSquad.value=p[Math.floor(Math.random()*p.length)];
+    };
 
     const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
     // 已招募与禁用都按"干员(同一形态组)"过滤: 抽到阿米娅任一形态, 三个形态一起出池
@@ -572,10 +640,18 @@ createApp({
     const loadData=async()=>{
       phase.value='loading';
       try{
-        // 离线包: 数据可被内联为 window.__ROGUE_OPS__, 绕开 file:// 下浏览器禁止 fetch 的限制
-        if(window.__ROGUE_OPS__){ops.value=window.__ROGUE_OPS__;loadBans();phase.value='select-class';return}
-        const r=await fetch('./data/operators.json');if(!r.ok)throw new Error('HTTP '+r.status);
-        ops.value=await r.json();loadBans();phase.value='select-class';}
+        // 离线包: 数据可被内联为 window.__ROGUE_OPS__ / window.__ROGUE_SQUADS__,
+        // 绕开 file:// 下浏览器禁止 fetch 的限制
+        if(window.__ROGUE_OPS__){ops.value=window.__ROGUE_OPS__}
+        else{const r=await fetch('./data/operators.json');if(!r.ok)throw new Error('HTTP '+r.status);ops.value=await r.json()}
+        // 分队数据缺失不应阻塞主流程(例如套用旧版本数据包)
+        try{
+          if(window.__ROGUE_SQUADS__){squads.value=window.__ROGUE_SQUADS__}
+          else{const s=await fetch('./data/squads.json');if(s.ok)squads.value=await s.json()}
+        }catch(e2){squads.value=[]}
+        loadBans();
+        phase.value='select-class';
+      }
       catch(e){errorMsg.value=e.message;phase.value='error';}
     };
 
@@ -627,7 +703,7 @@ createApp({
     // 防误触: 已有招募记录时先确认。难度不在这里选, 新的一局回到主界面后重新走流程即可
     const newGame=()=>{
       if(RO.value.length&&!confirm('确定要清空当前这一局吗？已招募的干员不会保留。'))return;
-      SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';lastPicked.value=null;drawResults.value=[];phase.value='select-class';
+      SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';lastPicked.value=null;drawResults.value=[];drawnSquad.value=null;phase.value='select-class';
     };
     const addCustom=()=>{const n=customName.value.trim();if(!n)return;const op=ops.value.find(o=>o.干员===n);if(!op){alert('干员不存在！');return}addOp(op);customName.value=''}
 
@@ -669,9 +745,11 @@ createApp({
       openDifficulty,cancelDifficulty,confirmDifficulty,applyDifficulty,
       // 跳过
       canSkip,skipTicket,
-      // 全局设置: 禁用干员
+      // 全局设置: 禁用干员 / 禁用分队
       banned,showBan,banQuery,sixStars,sixStarTotal,bannedCount,banGroups,banResultCount,
       openBanPicker,toggleBan,clearBans,loadBans,saveBans,BAN_KEY,
+      // 分队
+      squads,squadGroups,squadPool,bannedSquads,drawnSquad,toggleBanSquad,drawSquad,BAN_SQUAD_KEY,
       // 简要说明
       showHelp};
   }
