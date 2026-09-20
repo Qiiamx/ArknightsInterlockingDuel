@@ -6,7 +6,9 @@
 <title>直播展示 · 干员招募</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#070c12;color:#eef5fa;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:clamp(6px,1.2vw,14px);overflow:hidden}
+body{background:#070c12;color:#eef5fa;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:clamp(6px,1.2vw,14px);overflow-x:hidden;overflow-y:auto}
+body::-webkit-scrollbar{width:6px}
+body::-webkit-scrollbar-thumb{background:#2a4256;border-radius:3px}
 body.tp{background:transparent}
 .hd{display:flex;align-items:center;gap:8px;padding-bottom:clamp(5px,1vw,10px);border-bottom:2px solid rgba(0,255,204,.35);margin-bottom:clamp(6px,1.2vw,12px)}
 .logo{font-size:clamp(12px,2.2vw,20px);font-weight:800;letter-spacing:2px;color:#3ff0cc}
@@ -20,7 +22,7 @@ body.tp{background:transparent}
 .sec-t{display:flex;align-items:center;gap:8px;font-size:clamp(10px,1.7vw,15px);letter-spacing:1px;color:#3ff0cc;font-weight:700;margin-bottom:clamp(4px,.9vw,9px)}
 .sec-t .n{color:#ffd24a}
 .sec-t .hint{margin-left:auto;color:#9fb4c2;font-weight:400;font-size:.92em}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(52px,10vw,84px),1fr));gap:clamp(4px,.8vw,9px)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(46px,min(10vw,13vh),84px),1fr));gap:clamp(4px,.8vw,9px)}
 .card{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:clamp(3px,.6vw,6px);background:#101c26;border:2px solid #2a4256;border-radius:6px}
 .card img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:4px;display:block;background:#0a1017}
 .card .nm{font-size:clamp(9px,1.5vw,14px);font-weight:600;color:#f2f8fc;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}

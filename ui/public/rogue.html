@@ -403,7 +403,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
   <div v-if="showBan" class="modal-overlay">
     <div class="modal ban-modal">
       <div class="modal-title">全局设置 · 禁用</div>
-      <div class="modal-notice">被禁用的六星干员不会再出现在任何抽取中；被禁用的分队不会被随机分队抽到。本设置跨局保留，刷新后仍生效</div>
+      <div class="modal-notice">被禁用的六星干员不会再出现在任何抽取中；被禁用的分队不会被随机分队抽到。本设置<b>跨局保留、刷新后仍生效</b>，按<b>版本 + 打开位置</b>存在你自己的浏览器里：同一份文件接着用会延续上次名单，<b>换副本 / 换版本 / 换位置打开都是全新状态</b>，分享给别人不会带上你的名单</div>
       <div class="ban-toolbar">
         <input v-model="banQuery" placeholder="搜索干员名 / 分队名…（清空即显示全部）">
         <span class="ban-count">已禁用 {{ bannedCount }} 六星 · {{ bannedSquads.size }} 分队</span>
@@ -487,7 +487,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
             <li>点右上角「⚙ 全局设置」，可按职业分组检索并<b>多选禁用</b>六星干员，再次点击即解除。</li>
             <li>被禁用的干员<b>不会出现在任何抽取中</b>（含开局招募与全部招募券）。</li>
             <li>同一界面下方可<b>禁用分队</b>：被禁用的分队不会被「随机抽取分队」抽到。</li>
-            <li>设置<b>跨局保留</b>——「新的一局」不会清空；刷新页面后仍然生效。</li>
+            <li>设置<b>跨局保留</b>——「新的一局」不会清空，刷新页面后仍然生效；名单只存在你自己的浏览器里，并按<b>版本 + 打开位置</b>区分：同一份文件接着用会延续上次，<b>换副本 / 换版本 / 换位置打开都是全新状态</b>（分享给别人不会带上你的名单）。</li>
             <li v-if="bannedCount || bannedSquads.size">当前已禁用 <b>{{ bannedCount }}</b> 名六星干员、<b>{{ bannedSquads.size }}</b> 个分队。</li>
             <li v-else>当前没有禁用任何干员与分队。</li>
           </ul>
@@ -585,8 +585,10 @@ createApp({
       try{if(liveWin&&!liveWin.closed)liveWin.postMessage({type:'aid-state',payload:p},'*')}catch(e){}
       try{localStorage.setItem(LIVE_KEY,JSON.stringify(p))}catch(e){}
     };
+    // 展示小窗默认尺寸: 宽度 560 不变, 高度取宽度的一半(560×280) —— 横向长条, 方便压在直播画面边上
+    const LIVE_W=560,LIVE_H=Math.round(LIVE_W*.5);
     const openLive=()=>{
-      liveWin=window.open('./直播展示.html','aid_live','width=560,height=820');
+      liveWin=window.open('./直播展示.html','aid_live','width='+LIVE_W+',height='+LIVE_H);
       setTimeout(pushLive,400);   // 新窗口可能还没挂上监听, 延迟补推一次(小窗也会主动来要)
       return liveWin;
     };
@@ -677,8 +679,24 @@ createApp({
 
     /* ---------------- 全局设置: 禁用六星干员 / 分队 ----------------
        跨局保留并写入 localStorage; 被禁用的干员不出现在任何抽取中(含开局招募),
-       被禁用的分队不会被「随机抽取分队」抽到。 */
-    const BAN_KEY='rogue_banned_six',BAN_SQUAD_KEY='rogue_banned_squad';
+       被禁用的分队不会被「随机抽取分队」抽到。
+
+       存储键带「版本 + 打开位置」指纹。原因: 浏览器在 file:// 下把本地页面当成同一个
+       存储域, 于是仓库里的页面、每一份解压出来的副本、新旧版本会共用同一份禁用名单 ——
+       自己连着用没问题, 但把工具分享出去、或换个位置打开时, 上一份留下的配置会跟过来。
+       加指纹之后: 同一份文件接着用 = 延续上次设置; 换副本 / 换版本 / 换位置 = 全新状态。 */
+    const storeFingerprint=()=>{
+      try{
+        const p=String((location&&location.pathname)||'');
+        if(!p)return VERSION;                    // 取不到路径时退化为"只按版本分区"
+        let h=0;for(let i=0;i<p.length;i++)h=(h*33+p.charCodeAt(i))>>>0;
+        return VERSION+'.'+h.toString(36);
+      }catch(e){return VERSION}
+    };
+    const STORE_FP=storeFingerprint();
+    const BAN_KEY='rogue_banned_six@'+STORE_FP,BAN_SQUAD_KEY='rogue_banned_squad@'+STORE_FP;
+    // v1.2 之前的版本用的是不带指纹的旧键: 不再读写, 读到就顺手清掉, 免得占着存储还让人误以为生效
+    const LEGACY_KEYS=['rogue_banned_six','rogue_banned_squad'];
     const banned=reactive(new Set()),bannedSquads=reactive(new Set()),showBan=ref(false),banQuery=ref('');
     const squads=ref([]),drawnSquad=ref(null);
     const sixStars=computed(()=>ops.value.filter(o=>o.稀有度==='6'));
@@ -712,6 +730,7 @@ createApp({
     };
     const loadBans=()=>{
       try{
+        try{for(const k of LEGACY_KEYS)localStorage.removeItem(k)}catch(e0){}   // 旧键清不掉也不影响下面载入
         const raw=localStorage.getItem(BAN_KEY);
         if(raw){
           const names=new Set(ops.value.map(o=>o.干员));   // 剔除数据里已不存在的名字, 避免幽灵计数
@@ -963,7 +982,7 @@ createApp({
       pickClass,removeClassAt,clearClasses,classCount,MAX_SC,
       charKey,SAME_CHAR,
       // 直播窗口
-      LIVE_KEY,lastPicked,livePayload,pushLive,openLive,
+      LIVE_KEY,LIVE_W,LIVE_H,lastPicked,livePayload,pushLive,openLive,
       // 图片失败自检
       imgFails,imgSample,imgOff,imgWarn,onImgError,onImgHide,
       // 难度
@@ -975,7 +994,7 @@ createApp({
       canSkip,skipTicket,
       // 全局设置: 禁用干员 / 禁用分队
       banned,showBan,banQuery,sixStars,sixStarTotal,opsTotal,bannedCount,banGroups,banResultCount,
-      openBanPicker,toggleBan,clearBans,loadBans,saveBans,BAN_KEY,
+      openBanPicker,toggleBan,clearBans,loadBans,saveBans,BAN_KEY,STORE_FP,storeFingerprint,LEGACY_KEYS,
       // 分队
       squads,squadGroups,squadPool,bannedSquads,drawnSquad,toggleBanSquad,drawSquad,BAN_SQUAD_KEY,
       // 手动添加的首字联想
