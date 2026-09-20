@@ -43,3 +43,14 @@ https://github.com/Qiiamx/ArknightsInterlockingDuel
 （反馈渠道：B 站私信或评论区）。
 随包分发的《免责声明与版权说明.txt》为对外版本：其中只写制作者与反馈渠道，
 不含任何仓库地址（暂不公开）。
+
+推送到远端（注意：本机代理不常开）
+git 全局配置里写着代理 127.0.0.1:7890，但该代理平时是关的，请不要把它当作默认路径。
+需要推送时用：
+  pwsh tools/git-sync.ps1
+它会自动择路：直连 github.com:443 能通就走直连；直连不通、且代理恰好开着才回退走代理；
+两者都不行就停下并提示先启动代理，不会反复重试干等。
+  pwsh tools/git-sync.ps1 -DryRun          # 只探测会走哪条路，不推送
+  pwsh tools/git-sync.ps1 -Route direct    # 强制直连
+  pwsh tools/git-sync.ps1 -Route proxy     # 强制代理
+  pwsh tools/git-sync.ps1 -Tag v1.1 -ForceTag   # 同时推送（并移动）标签
