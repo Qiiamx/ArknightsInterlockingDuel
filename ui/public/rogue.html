@@ -888,7 +888,14 @@ createApp({
     const emMatches=computed(()=>prefixMatches(emergencyName.value,o=>inEmergency(o.干员)));
     const emSuggestions=computed(()=>emMatches.value.slice(0,12));
     const emSuggestMore=computed(()=>Math.max(0,emMatches.value.length-emSuggestions.value.length));
-    const pickSuggestion=o=>{customName.value=o.干员;suggestOpen.value=false;addCustom()};
+    // 联想列表被「主界面手动添加」与「抽取弹窗里的临时干员」共用, 所以必须按当前上下文走各自的
+    // 完整流程: 在临时干员弹窗里点联想, 要跟回车/「添加并结束本次抽取」完全等价(加入 + 结束本次
+    // 抽取 + 关闭抽取界面); 只调 addCustom 会把后面几步跳掉 —— 干员已经加进去了, 抽取界面却还开着,
+    // 候选也没作废, 于是"添加并结束本次抽取"因输入框已空而直接返回, 看着就是按钮失效、界面关不掉。
+    const pickSuggestion=o=>{
+      customName.value=o.干员;suggestOpen.value=false;
+      if(showTemp.value)addCustomTemp();else addCustom();
+    };
     const pickEmergency=o=>{emergencyName.value=o.干员;emSuggestOpen.value=false;addEmergency()};
     const addCustom=()=>{
       const n=customName.value.trim();
@@ -926,6 +933,7 @@ createApp({
     // 语义 = 以此代替本次抽取: 添加成功后本次抽取即结束(关闭抽取界面)。
     const openTemp=()=>{customName.value='';suggestOpen.value=false;showTemp.value=true};
     const addCustomTemp=()=>{
+      if(!customName.value.trim()){alert('请先输入干员名（首字即可联想），或从联想列表里点一个。');return}
       const before=RO.value.length;
       addCustom();
       if(RO.value.length===before)return;        // 没加成功: 弹窗保持打开并显示原因
