@@ -38,3 +38,8 @@ https://github.com/Qiiamx/ArknightsInterlockingDuel
 「肉鸽随机干员选取器」（ui/public/rogue.html，离线包内为「开始游戏.html」）、
 「直播展示小窗」（ui/public/直播展示.html），以及配套的难度体系、全局禁用设置
 与离线打包工具（tools/pack-rogue.js），均属本分支的扩展内容。
+
+该独立工具由 x2048x 制作、维护并对外分享，责任与反馈均指向 x2048x
+（反馈渠道：B 站私信或评论区）。
+随包分发的《免责声明与版权说明.txt》为对外版本：其中只写制作者与反馈渠道，
+不含任何仓库地址（暂不公开）。

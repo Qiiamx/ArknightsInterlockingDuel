@@ -462,17 +462,19 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         <div class="help-sec">
           <div class="help-h">▍免责声明与版权</div>
           <ul>
-            <li>本工具是《明日方舟》的<b>非官方同人作品</b>，与鹰角网络（Hypergryph）无关；仅供玩家交流、自用与直播，<b>禁止任何商业用途</b>。</li>
+            <li>本工具是《明日方舟》的<b>非官方同人作品</b>，与鹰角网络（Hypergryph）无关；仅供玩家个人使用、交流与直播展示，<b>禁止任何商业用途</b>。</li>
+            <li>本工具由 <b>x2048x</b> 制作、维护并分享，<b>一切问题与责任均指向 x2048x</b>；反馈请走 <b>B 站私信或评论区</b>（同一发布账号）。</li>
+            <li>基础来自 <b>Qiiamx</b> 的「联锁对抗 / AID」项目（代码结构与干员数据），特此致谢；请勿因本工具的问题打扰原作者。</li>
             <li>干员名称、干员头像、职业图标与分队图标等素材<b>版权归鹰角网络所有</b>，本工具仅作检索与随机抽取展示。</li>
-            <li>内置干员数据是<b>打包时的快照</b>（<b>v{{ VERSION }}</b> 收录 {{ opsTotal }} 名），可能滞后于游戏版本，请以游戏内为准。</li>
-            <li>原作者：<b>Qiiamx</b>（联锁对抗 / AID）｜本工具的扩展与打包：<b>x2048x</b></li>
+            <li>内置数据为<b>打包时的快照</b>（<b>v{{ VERSION }}</b> 收录 {{ opsTotal }} 名干员、{{ squads.length }} 个分队），可能滞后于游戏版本，请以游戏内为准。</li>
+            <li>本工具按「现状」提供，不对使用结果作担保。</li>
           </ul>
         </div>
       </div>
       <div class="diff-actions" style="margin-top:16px">
         <button class="primary" @click="showHelp=false">知道了</button>
       </div>
-      <div class="credit-inline">原项目作者 Qiiamx ｜ 本分支扩展 x2048x ｜ 版本 v{{ VERSION }}</div>
+      <div class="credit-inline">x2048x 制作 ｜ 原项目 Qiiamx ｜ 版本 v{{ VERSION }}</div>
     </div>
   </div>
 
@@ -484,7 +486,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
     <button @click="imgOff=true">知道了，继续使用</button>
   </div>
 
-  <div class="credit">原项目作者 <b>Qiiamx</b> ｜ 本分支扩展 <b>x2048x</b> · v{{ VERSION }}</div>
+  <div class="credit">x2048x 制作 ｜ 原项目 <b>Qiiamx</b> ｜ v{{ VERSION }}</div>
 </div>
 <script>
 const { createApp, ref, reactive, computed, watch, onMounted } = Vue;

@@ -28,12 +28,14 @@ const SRC_IMAGES = path.join(PUB, 'images');
 const SRC_SQUAD_ICON = path.join(PUB, 'images', '分队');
 const SRC_SQUADS = path.join(PUB, 'data', 'squads.json');
 const SRC_LIVE = path.join(PUB, '直播展示.html');   // 直播小窗页面(独立文件, 只展示已招募与本次抽取)
+const SRC_DISCLAIMER = path.join(ROOT, '免责声明与版权说明.txt');   // 随包分发的免责声明(仓库根)
 
 const PKG_NAME = '肉鸽随机干员选取器';
 const VERSION = '1.1';                         // 版本号: 必须与 rogue.html 里的 const VERSION 一致(下面会校验)
 const PKG_DIR = PKG_NAME + 'v' + VERSION;      // 产物目录/压缩包名: 肉鸽随机干员选取器v1.1
 const LAUNCHER = '开始游戏.html';              // 主界面, 名字即用法
 const LIVE_PAGE = '直播展示.html';             // 直播小窗, 由主界面「📺 直播窗口」打开
+const DISCLAIMER = '免责声明与版权说明.txt';   // 进包时保持同名
 const RELEASE = path.join(ROOT, 'release');
 const OUT_DIR = path.join(RELEASE, PKG_DIR);
 const ZIP_PATH = path.join(RELEASE, PKG_DIR + '.zip');
@@ -73,6 +75,17 @@ must(pageVersion === VERSION,
 	'版本不一致: rogue.html 里是 ' + (pageVersion || '(没找到 const VERSION)') + ', 打包脚本里是 ' + VERSION);
 const liveHtml = fs.readFileSync(SRC_LIVE, 'utf8');
 must(liveHtml.indexOf('v' + VERSION) >= 0, LIVE_PAGE + ' 里没有版本号 v' + VERSION);
+
+// ---- 免责声明: 必须随包分发, 且包内不得出现仓库地址 ----
+must(fs.existsSync(SRC_DISCLAIMER), '缺少 ' + DISCLAIMER + '(要随包分发的免责声明)');
+const disclaimerText = fs.existsSync(SRC_DISCLAIMER) ? fs.readFileSync(SRC_DISCLAIMER, 'utf8') : '';
+must(disclaimerText.indexOf('x2048x') >= 0, DISCLAIMER + ' 里没有标明制作者与责任人 x2048x');
+must(/B\s*站/.test(disclaimerText), DISCLAIMER + ' 里没有写反馈渠道(B 站私信或评论区)');
+// 暂不公开仓库地址: 三份对外文本里都不允许出现
+for (const [name, text] of [[LAUNCHER, html], [LIVE_PAGE, liveHtml], [DISCLAIMER, disclaimerText]]) {
+	const hit = text.match(/github\.com|github\.io|gitee\.com/i);
+	must(!hit, name + ' 里出现了仓库地址(' + (hit || []).join(', ') + ')，与「暂不公开仓库地址」冲突');
+}
 
 // ---- 数据 ----
 const ops = JSON.parse(fs.readFileSync(SRC_DATA, 'utf8'));
@@ -164,6 +177,7 @@ for (const d of ['icon', path.join('images', '分队')]) fs.mkdirSync(path.join(
 
 fs.writeFileSync(path.join(OUT_DIR, LAUNCHER), html, 'utf8');
 fs.copyFileSync(SRC_LIVE, path.join(OUT_DIR, LIVE_PAGE));
+fs.copyFileSync(SRC_DISCLAIMER, path.join(OUT_DIR, DISCLAIMER));
 for (const name of iconFiles) fs.copyFileSync(path.join(SRC_ICON, name), path.join(OUT_DIR, 'icon', name));
 for (const c of usedClasses) fs.copyFileSync(path.join(SRC_IMAGES, c + '.png'), path.join(OUT_DIR, 'images', c + '.png'));
 for (const f of squadIcons) fs.copyFileSync(path.join(SRC_SQUAD_ICON, f), path.join(OUT_DIR, 'images', '分队', f));
@@ -283,6 +297,7 @@ console.log('  目录 : ' + path.relative(ROOT, OUT_DIR));
 console.log('  压缩包: ' + path.relative(ROOT, ZIP_PATH) + '  (' + (fs.statSync(ZIP_PATH).size / 1048576).toFixed(1) + ' MB)');
 console.log('  启动 : ' + LAUNCHER + '（' + Math.round(Buffer.byteLength(html, 'utf8') / 1024) + ' KB，已内联 Vue 与干员数据）');
 console.log('  直播 : ' + LIVE_PAGE + '（' + Math.round(fs.statSync(SRC_LIVE).size / 1024) + ' KB，由主界面「📺 直播窗口」打开）');
+console.log('  声明 : ' + DISCLAIMER + '（随包分发，含制作者/反馈渠道/版权与免责）');
 console.log('  顶层 : ' + fs.readdirSync(OUT_DIR).sort().join('  |  '));
 console.log('  干员 : ' + ops.length + ' 名, 头像 ' + iconCount + ' 张, 职业图标 ' + usedClasses.length + ' 个');
 console.log('  分队 : ' + squads.length + ' 个, 图标 ' + squadIcons.length + ' 张');
