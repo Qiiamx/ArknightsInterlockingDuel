@@ -31,7 +31,7 @@ const SRC_LIVE = path.join(PUB, '直播展示.html');   // 直播小窗页面(�
 const SRC_DISCLAIMER = path.join(ROOT, '免责声明与版权说明.txt');   // 随包分发的免责声明(仓库根)
 
 const PKG_NAME = '肉鸽随机干员选取器';
-const VERSION = '1.3';                         // 版本号: 必须与 rogue.html 里的 const VERSION 一致(下面会校验)
+const VERSION = '1.2';                         // 版本号: 必须与 rogue.html 里的 const VERSION 一致(下面会校验)
 const PKG_DIR = PKG_NAME + 'v' + VERSION;      // 产物目录/压缩包名: 肉鸽随机干员选取器v1.2
 const LAUNCHER = '开始游戏.html';              // 主界面, 名字即用法
 const LIVE_PAGE = '直播展示.html';             // 直播小窗, 由主界面「📺 直播窗口」打开
@@ -81,6 +81,14 @@ must(fs.existsSync(SRC_DISCLAIMER), '缺少 ' + DISCLAIMER + '(要随包分发�
 const disclaimerText = fs.existsSync(SRC_DISCLAIMER) ? fs.readFileSync(SRC_DISCLAIMER, 'utf8') : '';
 must(disclaimerText.indexOf('x2048x') >= 0, DISCLAIMER + ' 里没有标明制作者与责任人 x2048x');
 must(/B\s*站/.test(disclaimerText), DISCLAIMER + ' 里没有写反馈渠道(B 站私信或评论区)');
+// 对外文本里的版本号必须全部与产物一致 —— 曾经漏改过一次(产物已是 v1.2, 声明里还写着 v1.1)。
+// 注意不能只检查"出现过"：同一份文本里会有多处版本号(版本行 + 数据快照行), 漏改一处就等于没改。
+const staleVersions = (text) => [...new Set(text.match(/v[0-9]+\.[0-9]+/g) || [])].filter((v) => v !== 'v' + VERSION);
+const dStale = staleVersions(disclaimerText);
+must(dStale.length === 0, DISCLAIMER + ' 里有与产物版本(v' + VERSION + ')不一致的版本号: ' + dStale.join(', '));
+must(disclaimerText.indexOf('v' + VERSION) >= 0, DISCLAIMER + ' 里没有版本号 v' + VERSION);
+const lStale = staleVersions(liveHtml);
+must(lStale.length === 0, LIVE_PAGE + ' 里有与产物版本(v' + VERSION + ')不一致的版本号: ' + lStale.join(', '));
 // 暂不公开仓库地址: 三份对外文本里都不允许出现
 for (const [name, text] of [[LAUNCHER, html], [LIVE_PAGE, liveHtml], [DISCLAIMER, disclaimerText]]) {
 	const hit = text.match(/github\.com|github\.io|gitee\.com/i);

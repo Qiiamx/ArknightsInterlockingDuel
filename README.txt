@@ -53,4 +53,4 @@ git 全局配置里写着代理 127.0.0.1:7890，但该代理平时是关的，�
   pwsh tools/git-sync.ps1 -DryRun          # 只探测会走哪条路，不推送
   pwsh tools/git-sync.ps1 -Route direct    # 强制直连
   pwsh tools/git-sync.ps1 -Route proxy     # 强制代理
-  pwsh tools/git-sync.ps1 -Tag v1.1 -ForceTag   # 同时推送（并移动）标签
+  pwsh tools/git-sync.ps1 -Tag v1.2 -ForceTag   # 同时推送（并移动）标签

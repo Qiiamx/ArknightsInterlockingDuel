@@ -9,8 +9,8 @@
   用法：
     pwsh tools/git-sync.ps1                     # 推送默认分支 random-select
     pwsh tools/git-sync.ps1 -Branch master
-    pwsh tools/git-sync.ps1 -Tag v1.1           # 同时推送标签
-    pwsh tools/git-sync.ps1 -Tag v1.1 -ForceTag # 标签需要移动时
+    pwsh tools/git-sync.ps1 -Tag v1.2           # 同时推送标签
+    pwsh tools/git-sync.ps1 -Tag v1.2 -ForceTag # 标签需要移动时
     pwsh tools/git-sync.ps1 -DryRun             # 只探测并报告走哪条路，不推送
     pwsh tools/git-sync.ps1 -Route proxy        # 强制走代理（auto 为默认：直连优先）
 #>
