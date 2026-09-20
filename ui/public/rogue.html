@@ -83,6 +83,14 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 .suggest-nm{color:#eef5fa;font-weight:600;font-size:.95em}
 .suggest-meta{margin-left:auto;color:#93a7b5;font-size:.8em;white-space:nowrap}
 .suggest-more{padding:7px 11px;color:#93a7b5;font-size:.8em;background:#0e1a24}
+.em-row{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:#0e1a24;border:1px solid rgba(255,194,71,.3);border-radius:8px}
+.em-label{color:#ffc247;font-weight:700;font-size:.92em;letter-spacing:1px;white-space:nowrap}
+.em-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 5px 3px 6px;background:#1a2320;border:1px solid #ffc247;border-radius:14px;color:#ffe6b8;font-size:.88em;font-weight:600}
+.em-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#0a1017}
+.em-x{border:none;background:transparent;color:#ffc247;cursor:pointer;font-size:1.05em;line-height:1;padding:0 4px;font-family:inherit}
+.em-x:hover{color:#ff5a5a}
+.em-box{flex:1;min-width:220px}
+.em-hint{color:#93a7b5;font-size:.82em;flex-basis:100%}
 .header h1{font-size:2.05em;font-weight:800;color:#00ffcc;letter-spacing:4px;text-shadow:0 0 12px rgba(0,255,204,.25)}
 .header .sub{font-size:.9em;color:#93a7b5;margin-top:6px;letter-spacing:2px}
 .phase-title{font-size:1.15em;font-weight:700;color:#00ffcc;margin-bottom:14px;letter-spacing:2px;padding-left:8px;border-left:3px solid #00ffcc}
@@ -255,6 +263,29 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         <div v-else style="color:#7b8fa0;font-size:.88em">暂未招募干员</div>
       </div>
 
+      <div v-if="phase==='playing'" class="em-row">
+        <span class="em-label">🛡 应急助力</span>
+        <div v-for="(n,i) in emergency" :key="'em'+n+i" class="em-chip">
+          <img :src="'./icon/头像_'+n+'.png'" :alt="n" @error="onImgHide($event)">
+          <span>{{n}}</span>
+          <button class="em-x" title="支援已用掉：移除后该干员即可重新被抽到" @click="removeEmergency(i)">×</button>
+        </div>
+        <div class="add-box em-box">
+          <input v-model="emergencyName" placeholder="应急招募：输入干员名（首字联想）"
+                 @keyup.enter="addEmergency" @input="emSuggestOpen=true" @focus="emSuggestOpen=true" @blur="emSuggestOpen=false">
+          <div v-if="emSuggestOpen && emSuggestions.length" class="suggest">
+            <div v-for="o in emSuggestions" :key="'es'+o.干员" class="suggest-item" @mousedown.prevent="pickEmergency(o)">
+              <img :src="'./icon/头像_'+o.干员+'.png'" :alt="o.干员" @error="onImgError($event)">
+              <span class="suggest-nm">{{o.干员}}</span>
+              <span class="suggest-meta">{{o.职业}} · {{o.稀有度}}★</span>
+            </div>
+            <div v-if="emSuggestMore>0" class="suggest-more">还有 {{ emSuggestMore }} 个匹配，继续输入可缩小范围…</div>
+          </div>
+        </div>
+        <button class="ticket-btn" @click="addEmergency">加入</button>
+        <span class="em-hint">在列期间该干员<b>不会被抽到</b>（相当于占用队伍名额）；支援用掉后点 × 移除，即可重新抽到。</span>
+      </div>
+
       <div v-if="phase==='playing'" class="add-row">
         <button class="ticket-btn" @click="newGame" style="border-color:#ff5a5a;color:#ff8080">新的一局</button>
         <div class="add-box">
@@ -320,7 +351,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
   <div v-if="showTemp" class="modal-overlay temp-overlay">
     <div class="modal temp-modal">
       <div class="modal-title">＋ 临时干员</div>
-      <div class="modal-notice">输入干员名即可加入（首字联想）；加入后<b>不消耗</b>本次抽取，候选仍然保留</div>
+      <div class="modal-notice">输入干员名即可加入（首字联想）；<b>加入后本次抽取即结束</b>，等同于本次选定了这名干员</div>
       <div class="add-box">
         <input v-model="customName" placeholder="输入干员名（首字即可联想）"
                @keyup.enter="addCustomTemp" @input="suggestOpen=true" @focus="suggestOpen=true" @blur="suggestOpen=false">
@@ -335,7 +366,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
       </div>
       <div class="diff-actions" style="margin-top:16px">
         <button @click="showTemp=false">关闭</button>
-        <button class="primary" @click="addCustomTemp">添加</button>
+        <button class="primary" @click="addCustomTemp">添加并结束本次抽取</button>
       </div>
     </div>
   </div>
@@ -428,7 +459,9 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
             <li>按 <code>Esc</code> 从当前候选里随机强制选 1 名（招募券会优先随到五星）。</li>
             <li>阿米娅的三个形态视为<b>同一名干员</b>：抽到任一形态后，其余形态不再出现。</li>
             <li>开局前（主界面）可用 <b>🎲 随机抽取分队</b>，从未被禁用的分队里随机抽一个（可重复抽）；抽到的分队在开局与对局中都会显示。</li>
-            <li>抽取弹窗内可直接 <b>＋ 临时干员</b>：手动输入或首字联想加入，<b>不消耗</b>本次抽取。</li>
+            <li>抽取弹窗内可直接 <b>＋ 临时干员</b>：手动输入或首字联想加入；<b>加入后本次抽取即结束</b>，等同于本次选定了这名干员。</li>
+            <li>对局中可登记 <b>🛡 应急助力</b>（应急招募）：<b>在列期间该干员不会被抽到</b>（相当于占用队伍名额）；
+              支援用掉后点胶囊上的 <b>×</b> 移除，即可重新抽到。它<u>不是</u>临时招募——不进已招募列表、跨局不保留。</li>
             <li>抽取弹窗内可 <b>↩ 反悔</b>：招募券的抽取「不选取退出」，<b>该次数会被记录</b>并显示在页面上。</li>
             <li>开局弹窗的 <b>↩ 反悔 · 改选职业</b> 是另一回事：选错职业时作废开局候选、返回职业选择
               （已选职业保留可微调），<b>需要二次确认且不计入反悔次数</b>。</li>
@@ -490,7 +523,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 </div>
 <script>
 const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
-const VERSION = '1.1';   // 与打包脚本 tools/pack-rogue.js 的 VERSION 必须一致(打包时会校验)
+const VERSION = '1.2';   // 与打包脚本 tools/pack-rogue.js 的 VERSION 必须一致(打包时会校验)
 const CLS = ['先锋','近卫','重装','狙击','术师','医疗','辅助','特种'];
 const TICKET = {
   '近锋':['近卫','先锋'],'狙医':['狙击','医疗'],'术特':['术师','特种'],'重辅':['重装','辅助'],
@@ -702,8 +735,9 @@ createApp({
     };
 
     const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
-    // 已招募与禁用都按"干员(同一形态组)"过滤: 抽到阿米娅任一形态, 三个形态一起出池
-    const pool=()=>ops.value.filter(o=>!RN.has(charKey(o.干员))&&!banned.has(o.干员));
+    // 已招募、禁用名单、应急助力 都按"干员(同一形态组)"过滤:
+    // 抽到阿米娅任一形态, 三个形态一起出池; 应急助力在列期间该干员也不会被抽到
+    const pool=()=>ops.value.filter(o=>!RN.has(charKey(o.干员))&&!banned.has(o.干员)&&!inEmergency(o.干员));
     // used: 本次抽取的排除集, 键为 charKey(干员)。同一张券的多段配方共用它,
     // 段与段之间(以及同一段内部)既不会抽到同一名干员, 也不会同时出现同一名干员的两个形态。
     // (旧实现是抽完再事后去重, 一旦出现重复就会静默少给几张, 这里改为抽取时排除)
@@ -809,20 +843,30 @@ createApp({
     // 防误触: 已有招募记录时先确认。难度不在这里选, 新的一局回到主界面后重新走流程即可
     const newGame=()=>{
       if(RO.value.length&&!confirm('确定要清空当前这一局吗？已招募的干员不会保留。'))return;
-      SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';lastPicked.value=null;drawResults.value=[];drawnSquad.value=null;undoCount.value=0;showTemp.value=false;phase.value='select-class';
+      SC.value=[];RO.value=[];RN.clear();showModal.value=false;shortageNotice.value='';lastPicked.value=null;drawResults.value=[];drawnSquad.value=null;undoCount.value=0;showTemp.value=false;emergency.value=[];emergencyName.value='';phase.value='select-class';
     };
     /* ---------------- 手动添加: 首字联想 ----------------
-       按干员名的开头匹配(输入第一个字就会列出候选), 点击直接加入;
-       已招募的干员不再出现在联想列表里。 */
-    const suggestOpen=ref(false);
-    const nameMatches=computed(()=>{
-      const q=customName.value.trim();
-      if(!q)return [];
-      return ops.value.filter(o=>o.干员.indexOf(q)===0&&!RN.has(charKey(o.干员)));
-    });
+       按干员名的开头匹配(输入第一个字就会列出候选), 点击直接加入。
+       两条路径共用同一套匹配逻辑: 「临时招募」加入已招募列表并出池;
+       「应急助力」只做临时排除(在队伍期间不可被抽到), 移除后即可重新抽到。 */
+    const suggestOpen=ref(false),emSuggestOpen=ref(false);
+    const emergencyName=ref('');
+    const emergency=ref([]);            // 应急助力名单(存干员名, 比较时按"同一名干员"归组)
+    const prefixMatches=(q,exclude)=>{
+      const t=(q||'').trim();
+      if(!t)return [];
+      return ops.value.filter(o=>o.干员.indexOf(t)===0&&!exclude(o));
+    };
+    const nameMatches=computed(()=>prefixMatches(customName.value,o=>RN.has(charKey(o.干员))));
     const nameSuggestions=computed(()=>nameMatches.value.slice(0,12));
     const suggestMore=computed(()=>Math.max(0,nameMatches.value.length-nameSuggestions.value.length));
+    // 应急助力: 已在名单里的不再出现(Amiya 三形态按同一名干员算)
+    const inEmergency=n=>emergency.value.some(x=>charKey(x)===charKey(n));
+    const emMatches=computed(()=>prefixMatches(emergencyName.value,o=>inEmergency(o.干员)));
+    const emSuggestions=computed(()=>emMatches.value.slice(0,12));
+    const emSuggestMore=computed(()=>Math.max(0,emMatches.value.length-emSuggestions.value.length));
     const pickSuggestion=o=>{customName.value=o.干员;suggestOpen.value=false;addCustom()};
+    const pickEmergency=o=>{emergencyName.value=o.干员;emSuggestOpen.value=false;addEmergency()};
     const addCustom=()=>{
       const n=customName.value.trim();
       if(!n)return;
@@ -837,9 +881,38 @@ createApp({
       }
       customName.value='';suggestOpen.value=false;
     }
-    // 抽取弹窗里的「临时干员」: 复用同一份输入状态与联想逻辑
+    // 应急招募: 加入名单即"占用队伍名额", 抽取时不会出现该干员(按同一名干员归组)
+    const addEmergency=()=>{
+      const n=emergencyName.value.trim();
+      if(!n)return;
+      const exact=ops.value.find(o=>o.干员===n);
+      const m=emMatches.value;                   // 以 n 开头且不在名单里
+      let target=null;
+      if(exact)target=exact;
+      else if(m.length===1)target=m[0];
+      else{
+        alert(m.length?('有 '+m.length+' 个匹配，请从联想列表里选一个。'):('没有以「'+n+'」开头的干员。'));
+        return;
+      }
+      if(inEmergency(target.干员)){alert('「'+target.干员+'」已经在应急助力名单里了。');return}
+      emergency.value.push(target.干员);
+      emergencyName.value='';emSuggestOpen.value=false;
+    };
+    const removeEmergency=i=>{if(i>=0&&i<emergency.value.length)emergency.value.splice(i,1)};
+    // 抽取弹窗里的「临时干员」: 复用同一份输入状态与联想逻辑。
+    // 语义 = 以此代替本次抽取: 添加成功后本次抽取即结束(关闭抽取界面)。
     const openTemp=()=>{customName.value='';suggestOpen.value=false;showTemp.value=true};
-    const addCustomTemp=()=>{const before=RO.value.length;addCustom();if(RO.value.length>before)showTemp.value=false};
+    const addCustomTemp=()=>{
+      const before=RO.value.length;
+      addCustom();
+      if(RO.value.length===before)return;        // 没加成功: 弹窗保持打开并显示原因
+      showTemp.value=false;                      // 1) 关闭临时干员输入弹窗
+      lastPicked.value=RO.value[RO.value.length-1].干员;   // 2) 直播小窗按"本次已选"标注
+      drawResults.value=[];                      // 3) 本次候选作废(选中的不在候选里, 无从高亮)
+      shortageNotice.value='';
+      showModal.value=false;                     // 4) 本次抽取结束, 关闭抽取界面
+      if(phase.value==='start-draw')phase.value='playing'; // 开局抽完 → 进入对局
+    };
     // 抽取弹窗里的「反悔」: 不选取直接退出, 并记录本局次数(供展示/复盘)
     // (开局弹窗走上方的 undoStart, 不计次数)
     const undoDraw=()=>{
@@ -903,6 +976,9 @@ createApp({
       squads,squadGroups,squadPool,bannedSquads,drawnSquad,toggleBanSquad,drawSquad,BAN_SQUAD_KEY,
       // 手动添加的首字联想
       suggestOpen,nameMatches,nameSuggestions,suggestMore,pickSuggestion,
+      // 应急助力(应急招募): 在列期间不会被抽到, 移除后恢复可抽
+      emergency,emergencyName,emSuggestOpen,emMatches,emSuggestions,emSuggestMore,
+      inEmergency,addEmergency,removeEmergency,pickEmergency,
       // 抽取弹窗: 临时干员 / 反悔
       showTemp,undoCount,openTemp,addCustomTemp,undoDraw,undoStart,
       // 简要说明
