@@ -31,7 +31,7 @@ const SRC_LIVE = path.join(PUB, '直播展示.html');   // 直播小窗页面(�
 const SRC_DISCLAIMER = path.join(ROOT, '免责声明与版权说明.txt');   // 随包分发的免责声明(仓库根)
 
 const PKG_NAME = '肉鸽随机干员选取器';
-const VERSION = '1.2';                         // 版本号: 必须与 rogue.html 里的 const VERSION 一致(下面会校验)
+const VERSION = '1.3';                         // 版本号: 必须与 rogue.html 里的 const VERSION 一致(下面会校验)
 const PKG_DIR = PKG_NAME + 'v' + VERSION;      // 产物目录/压缩包名: 肉鸽随机干员选取器v1.2
 const LAUNCHER = '开始游戏.html';              // 主界面, 名字即用法
 const LIVE_PAGE = '直播展示.html';             // 直播小窗, 由主界面「📺 直播窗口」打开

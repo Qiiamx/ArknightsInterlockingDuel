@@ -523,7 +523,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 </div>
 <script>
 const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
-const VERSION = '1.2';   // 与打包脚本 tools/pack-rogue.js 的 VERSION 必须一致(打包时会校验)
+const VERSION = '1.3';   // 与打包脚本 tools/pack-rogue.js 的 VERSION 必须一致(打包时会校验)
 const CLS = ['先锋','近卫','重装','狙击','术师','医疗','辅助','特种'];
 const TICKET = {
   '近锋':['近卫','先锋'],'狙医':['狙击','医疗'],'术特':['术师','特种'],'重辅':['重装','辅助'],
@@ -641,7 +641,7 @@ createApp({
         ['开局招募','每个职业位 6★×'+r.open+'（共 '+r.open*3+' 张六星里选 1 名）'],
         ['单职业券','6★×'+r.one6+' ＋ 5★×'+r.one5+sixOnly],
         ['职业招募券','每职业 6★×'+r.combo6+' ＋ 5★×'+r.combo5+sixOnly],
-        ['定向招募券','6★×'+r.dir6+' ＋ 5★×'+r.dir5+sixOnly],
+        ['定向招募券','6★×'+r.dir6+' ＋ 5★×'+r.dir5+'（均限地形四职业）'],
         ['任意招募券','6★×'+r.any6+'（纯六星，必选一名六星）'],
       ];
     };
@@ -817,8 +817,12 @@ createApp({
       // 任意券统一改为纯六星券, 并以 16 张封顶(简单档 floor(16×1.5)=24 → 16, 终末档 floor(16×0.5)=8)
       if(type==='任意')return {title:'🎲 任意招募券',recipes:[{count:r.any6,rarity:6}]};
       if(type==='地面'||type==='高台'){
-        // 房规: 六星限定在对应地形职业, 五星不限职业(任意张), 属特意设计
-        return {title:'📜 '+type+' 招募券',recipes:[{count:r.dir6,rarity:6,classes:TICKET[type]},{count:r.dir5,rarity:5}]};
+        // 定向券: 六星与五星都限定在对应地形的四个职业内。
+        // 不做每职业保底 —— 四职业合起来当一个池子按张数抽, 只要范围与地形对应即可。
+        return {title:'📜 '+type+' 招募券',recipes:[
+          {count:r.dir6,rarity:6,classes:TICKET[type]},
+          {count:r.dir5,rarity:5,classes:TICKET[type]},
+        ]};
       }
       const recipes=[];
       for(const c of TICKET[type])recipes.push({count:r.combo6,rarity:6,classes:[c]},{count:r.combo5,rarity:5,classes:[c]});
