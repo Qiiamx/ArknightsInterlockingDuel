@@ -459,6 +459,15 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
             <li v-else>当前没有禁用任何干员与分队。</li>
           </ul>
         </div>
+        <div class="help-sec">
+          <div class="help-h">▍免责声明与版权</div>
+          <ul>
+            <li>本工具是《明日方舟》的<b>非官方同人作品</b>，与鹰角网络（Hypergryph）无关；仅供玩家交流、自用与直播，<b>禁止任何商业用途</b>。</li>
+            <li>干员名称、干员头像、职业图标与分队图标等素材<b>版权归鹰角网络所有</b>，本工具仅作检索与随机抽取展示。</li>
+            <li>内置干员数据是<b>打包时的快照</b>（<b>v{{ VERSION }}</b> 收录 {{ opsTotal }} 名），可能滞后于游戏版本，请以游戏内为准。</li>
+            <li>原作者：<b>Qiiamx</b>（联锁对抗 / AID）｜本工具的扩展与打包：<b>x2048x</b></li>
+          </ul>
+        </div>
       </div>
       <div class="diff-actions" style="margin-top:16px">
         <button class="primary" @click="showHelp=false">知道了</button>
@@ -639,6 +648,7 @@ createApp({
     const squads=ref([]),drawnSquad=ref(null);
     const sixStars=computed(()=>ops.value.filter(o=>o.稀有度==='6'));
     const sixStarTotal=computed(()=>sixStars.value.length);
+    const opsTotal=computed(()=>ops.value.length);
     const bannedCount=computed(()=>banned.size);
     // 按 8 个职业分组以便检索; 搜索框按名称任意位置匹配, 无结果的分组自动隐藏
     const banGroups=computed(()=>{
@@ -885,7 +895,7 @@ createApp({
       // 跳过
       canSkip,skipTicket,
       // 全局设置: 禁用干员 / 禁用分队
-      banned,showBan,banQuery,sixStars,sixStarTotal,bannedCount,banGroups,banResultCount,
+      banned,showBan,banQuery,sixStars,sixStarTotal,opsTotal,bannedCount,banGroups,banResultCount,
       openBanPicker,toggleBan,clearBans,loadBans,saveBans,BAN_KEY,
       // 分队
       squads,squadGroups,squadPool,bannedSquads,drawnSquad,toggleBanSquad,drawSquad,BAN_SQUAD_KEY,
