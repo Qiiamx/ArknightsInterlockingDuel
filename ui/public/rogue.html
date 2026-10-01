@@ -133,6 +133,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 .modal-title{font-size:1.15em;font-weight:700;color:#00ffcc;text-align:center;margin-bottom:6px;letter-spacing:2px}
 .modal-notice{font-size:.82em;color:#93a7b5;text-align:center;margin-bottom:16px;letter-spacing:1px}
 .modal-warn{font-size:.84em;color:#ffc247;text-align:center;margin:-10px 0 14px;letter-spacing:1px;line-height:1.6;font-weight:600}
+.modal-scope{font-size:.8em;color:#7fd7c4;text-align:center;margin:-10px 0 14px;letter-spacing:.5px;line-height:1.7}
 .diff-modal{max-width:780px}
 .diff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
 .diff-card{padding:12px 14px;border:2px solid #2b4256;border-radius:8px;background:#12202c;cursor:pointer;transition:all .2s;user-select:none}
@@ -329,6 +330,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
       <div class="modal-title">{{modalTitle}}</div>
       <div class="modal-notice">点击干员头像进行选择 · 按 Esc 随机强制选择</div>
       <div v-if="shortageNotice" class="modal-warn">{{shortageNotice}}</div>
+      <div v-if="scopeNotice" class="modal-scope">{{scopeNotice}}</div>
       <div class="draw-grid">
         <div v-for="op in drawResults" :key="op.干员+'-'+op._key" class="draw-card" :class="'r'+op.稀有度" @click="pickOperator(op)">
           <img class="av" :src="'./icon/头像_'+op.干员+'.png'" :alt="op.干员" @error="onImgError($event)">
@@ -338,7 +340,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         </div>
       </div>
       <div class="modal-actions">
-        <button class="temp-btn" @click="openTemp">＋ 临时干员</button>
+        <button class="temp-btn" @click="openTemp">{{ ticketType==='start' ? '✎ 自选指定干员' : '＋ 临时干员' }}</button>
         <button v-if="ticketType==='start'" class="undo-btn" @click="undoStart">↩ 反悔 · 改选职业</button>
         <button v-else class="undo-btn" @click="undoDraw">
           ↩ 反悔 · 不选取退出{{ undoCount ? '（本局已 '+undoCount+' 次）' : '' }}
@@ -350,8 +352,9 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 
   <div v-if="showTemp" class="modal-overlay temp-overlay">
     <div class="modal temp-modal">
-      <div class="modal-title">＋ 临时干员</div>
-      <div class="modal-notice">输入干员名即可加入（首字联想）；<b>加入后本次抽取即结束</b>，等同于本次选定了这名干员</div>
+      <div class="modal-title">{{ tempIsStart ? '✎ 自选指定干员（开局）' : '＋ 临时干员' }}</div>
+      <div v-if="tempIsStart" class="modal-notice">输入干员名即可指定（首字联想）；<b>指定后本次开局即结束</b>，等同于开局就选了这名干员，随后直接进入对局</div>
+      <div v-else class="modal-notice">输入干员名即可加入（首字联想）；<b>加入后本次抽取即结束</b>，等同于本次选定了这名干员</div>
       <div class="add-box">
         <input v-model="customName" placeholder="输入干员名（首字即可联想）"
                @keyup.enter="addCustomTemp" @input="suggestOpen=true" @focus="suggestOpen=true" @blur="suggestOpen=false">
@@ -366,7 +369,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
       </div>
       <div class="diff-actions" style="margin-top:16px">
         <button @click="showTemp=false">关闭</button>
-        <button class="primary" @click="addCustomTemp">添加并结束本次抽取</button>
+        <button class="primary" @click="addCustomTemp">{{ tempIsStart ? '指定并开始对局' : '添加并结束本次抽取' }}</button>
       </div>
     </div>
   </div>
@@ -452,20 +455,23 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
         <div class="help-sec">
           <div class="help-h">▍抽取规则<span style="color:#667;font-size:.9em">（当前难度：{{ curDiff().name }} · {{ curDiff().tag }}）</span></div>
           <ul>
-            <li>先选满 <b>3 个职业位</b>，点「开始招募」，从开局候选里选 1 名作为起始干员。</li>
+            <li>先选满 <b>3 个职业位</b>，点「开始招募」，从开局候选里选 1 名作为起始干员。
+              若想直接指定某名干员，点开局候选界面里的 <b>✎ 自选指定干员</b>（首字联想），<b>指定后开局即结束</b>，随后进入对局。</li>
             <li>3 个职业位<b>可以重复选同一职业</b>（例如医疗×3），此时开局候选都来自该职业。</li>
             <li v-for="p in curPreview" :key="'hp'+p[0]">{{ p[0] }}：<code>{{ p[1] }}</code></li>
             <li>之后点下方招募券继续招募，<b>点击干员头像</b>即完成招募（每次选 1 名）。</li>
             <li>按 <code>Esc</code> 从当前候选里随机强制选 1 名（招募券会优先随到五星）。</li>
             <li>阿米娅的三个形态视为<b>同一名干员</b>：抽到任一形态后，其余形态不再出现。</li>
             <li>开局前（主界面）可用 <b>🎲 随机抽取分队</b>，从未被禁用的分队里随机抽一个（可重复抽）；抽到的分队在开局与对局中都会显示。</li>
-            <li>抽取弹窗内可直接 <b>＋ 临时干员</b>：手动输入或首字联想加入；<b>加入后本次抽取即结束</b>，等同于本次选定了这名干员。</li>
+            <li>抽取弹窗内可直接 <b>＋ 临时干员</b>（开局候选界面里叫 <b>✎ 自选指定干员</b>）：手动输入或首字联想加入；
+              <b>加入后本次抽取即结束</b>，等同于本次选定了这名干员。点联想条目、按回车、点按钮三者效果一致。</li>
             <li>对局中可登记 <b>🛡 应急助力</b>（应急招募）：<b>在列期间该干员不会被抽到</b>（相当于占用队伍名额）；
               支援用掉后点胶囊上的 <b>×</b> 移除，即可重新抽到。它<u>不是</u>临时招募——不进已招募列表、跨局不保留。</li>
             <li>抽取弹窗内可 <b>↩ 反悔</b>：招募券的抽取「不选取退出」，<b>该次数会被记录</b>并显示在页面上。</li>
             <li>开局弹窗的 <b>↩ 反悔 · 改选职业</b> 是另一回事：选错职业时作废开局候选、返回职业选择
               （已选职业保留可微调），<b>需要二次确认且不计入反悔次数</b>。</li>
             <li>张数随难度变化；池子不够时弹窗顶部会提示实际张数。</li>
+            <li>弹窗内会写明 <b>本次候选范围</b>：哪几个职业、各出几张六星与五星（例：<code>近卫 / 先锋：2 六星 + 3 五星</code>），可据此核对与券面是否一致。</li>
           </ul>
         </div>
         <div class="help-sec">
@@ -523,7 +529,7 @@ body{background:radial-gradient(circle at 50% 0%,#0c1826,#05090e 55%,#04070b);co
 </div>
 <script>
 const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
-const VERSION = '1.2';   // 与打包脚本 tools/pack-rogue.js 的 VERSION 必须一致(打包时会校验)
+const VERSION = '1.3';   // 与打包脚本 tools/pack-rogue.js 的 VERSION 必须一致(打包时会校验)
 const CLS = ['先锋','近卫','重装','狙击','术师','医疗','辅助','特种'];
 const TICKET = {
   '近锋':['近卫','先锋'],'狙医':['狙击','医疗'],'术特':['术师','特种'],'重辅':['重装','辅助'],
@@ -560,9 +566,31 @@ createApp({
     const phase=ref('loading'),errorMsg=ref(''),ops=ref([]);
     const SC=ref([]),RO=ref([]),RN=reactive(new Set());
     const showModal=ref(false),customName=ref(''),modalTitle=ref(''),drawResults=ref([]),ticketType=ref(''),shortageNotice=ref('');
+    // 本次弹窗实际用的配方: 用来在弹窗里直接显示"候选范围与张数", 范围错了能一眼看出来
+    const currentRecipes=ref([]);
     const showDiff=ref(false),diffKey=ref('normal'),custom6=ref(2),custom5=ref(3),runDiff=ref(null),showHelp=ref(false),lastPicked=ref(null);
     // 抽取弹窗内的两个补充动作: 临时干员(额外加入, 不消耗本次抽取) / 反悔(不选取退出, 记录次数)
     const showTemp=ref(false),undoCount=ref(0);
+    // 临时干员弹窗在"开局"里的语义不同(自选指定干员), 文案跟着切换
+    const tempIsStart=computed(()=>showTemp.value&&ticketType.value==='start');
+    // 候选范围与张数: 直接写进弹窗, 便于核对"这张券该出哪些职业"
+    const scopeNotice=computed(()=>{
+      const rs=currentRecipes.value;
+      if(!rs.length)return '';
+      const byScope={},order=[];
+      for(const r of rs){
+        const key=(r.classes&&r.classes.length)?r.classes.join(' / '):'任意职业';
+        if(!byScope[key]){byScope[key]={six:0,five:0};order.push(key)}
+        if(String(r.rarity)==='6')byScope[key].six+=r.count;else byScope[key].five+=r.count;
+      }
+      const parts=order.map(k=>{
+        const v=byScope[k],bits=[];
+        if(v.six)bits.push(v.six+' 六星');
+        if(v.five)bits.push(v.five+' 五星');
+        return k+'：'+bits.join(' + ');
+      });
+      return '本次候选范围 — '+parts.join('；');
+    });
 
     /* ---------------- 直播窗口 ----------------
        主界面把「已招募 + 本次抽取结果」推给独立的小窗页面(直播展示.html),
@@ -819,9 +847,11 @@ createApp({
     const startDraw=()=>{
       if(SC.value.length!==3)return;
       const r=curRecipe();
-      const {res,expected,shortage}=drawByRecipes(SC.value.map(c=>({count:r.open,rarity:6,classes:[c]})));
+      const rs=SC.value.map(c=>({count:r.open,rarity:6,classes:[c]}));
+      const {res,expected,shortage}=drawByRecipes(rs);
       // 池子空时不进对局: 留在职业选择页让玩家重选, 避免"空手开局"
       if(!res.length){alert('无可用六星干员！请重新选择职业。');return}
+      currentRecipes.value=rs;
       lastPicked.value=null;   // 新一轮候选, 尚未做选择
       drawResults.value=res.sort((a,b)=>Number(b.稀有度)-Number(a.稀有度)).map((o,i)=>({...o,_key:'s'+i}));
       shortageNotice.value=shortage>0?`⚠ 干员池不足：开局招募应有 ${expected} 张，实际只有 ${res.length} 张`+banHint():'';
@@ -852,6 +882,7 @@ createApp({
       const {title,recipes}=ticketRecipes(type,sc);
       const {res,expected,shortage}=drawByRecipes(recipes);
       if(!res.length){alert('已无可招募干员！');return}
+      currentRecipes.value=recipes;
       lastPicked.value=null;   // 新一轮候选, 尚未做选择
       drawResults.value=res.sort((a,b)=>Number(b.稀有度)-Number(a.稀有度)).map((o,i)=>({...o,_key:'d'+i}));
       shortageNotice.value=shortage>0?`⚠ 干员池不足：本券应有 ${expected} 张，实际只有 ${res.length} 张`+banHint():'';
@@ -1011,7 +1042,7 @@ createApp({
       emergency,emergencyName,emSuggestOpen,emMatches,emSuggestions,emSuggestMore,
       inEmergency,addEmergency,removeEmergency,pickEmergency,
       // 抽取弹窗: 临时干员 / 反悔
-      showTemp,undoCount,openTemp,addCustomTemp,undoDraw,undoStart,
+      showTemp,undoCount,openTemp,addCustomTemp,undoDraw,undoStart,tempIsStart,scopeNotice,currentRecipes,
       // 简要说明
       showHelp};
   }
